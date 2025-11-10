@@ -1,0 +1,23 @@
+/* 大标题（Es war einmal） */
+.title {
+  font-family: 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: clamp(20px, 6vw, 80px);
+  letter-spacing: .02em;
+  color: black;
+  text-shadow: 0 2px 6px rgba(0,0,0,.25);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* 全局正文基线（给 body 一个明确的默认字体/字号/颜色） */
+.text {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

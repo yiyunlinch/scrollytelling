@@ -1,0 +1,29 @@
+/* ======================== 动画定义 ======================== */
+
+/* 向下箭头弹跳动画 */
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+/* 第2页标题从底部滑入 */
+@keyframes p2-title-up {
+  from {
+    transform: translate(-50%, 120%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, -300%);
+    opacity: 1;
+  }
+}
+
+/* ======================== 第一页缩小移动动画 ======================== */
