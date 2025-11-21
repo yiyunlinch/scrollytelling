@@ -17,62 +17,49 @@
 
 <main>
 
-  <!-- ===== 1+2页整体容器（第1页 sticky，第2页正常） ===== -->
+  <!-- 第1-3页：草地 + Besuche 推进 -->
   <div class="cover-transition-wrapper">
 
     <!-- 第1页：草地 -->
     <section class="page page1" id="page1" aria-label="第1页：草地">
       <main class="scene" id="scene1">
         <div class="season grass active" aria-hidden="true"></div>
-      
-   <div class="title-fixed">
-  <h1 class="title">Hier war ich einmal</h1>
-</div>
 
-<!-- 把羊群移到 title-fixed 外面 -->
-<div class="flock" id="flock-page1" aria-hidden="true">
-  <div class="sheep" id="sheep1" style="background-image:url('./images/sheep/sheep1.webp')"></div>
-  <div class="sheep" id="sheep2" style="background-image:url('./images/sheep/sheep2.webp')"></div>
-  <div class="sheep" id="sheep3" style="background-image:url('./images/sheep/sheep3.webp')"></div>
-  <div class="sheep" id="sheep4" style="background-image:url('./images/sheep/sheephero.webp')"></div>
-</div>
+        <div class="title-fixed">
+          <h1 class="title">Hier war ich einmal</h1>
+        </div>
+
+        <div class="flock" id="flock-page1" aria-hidden="true">
+          <div class="sheep" id="sheep1" style="background-image:url('./images/sheep/sheep1.webp')"></div>
+          <div class="sheep" id="sheep2" style="background-image:url('./images/sheep/sheep2.webp')"></div>
+          <div class="sheep" id="sheep3" style="background-image:url('./images/sheep/sheep3.webp')"></div>
+          <div class="sheep" id="sheep4" style="background-image:url('./images/sheep/sheephero.webp')"></div>
+        </div>
       </main>
 
-      <!-- 右上角向下箭头 -->
       <button class="down-arrow" id="toPage2" aria-label="滑到第2页">
         <span class="arrow-stem"></span>
         <span class="arrow-head"></span>
       </button>
     </section>
 
-<!-- 第2页：Besuche1 -->
-<section class="page page2" id="page2" aria-label="第2页：Besuche1">
-  <main class="Besuche1" id="scene1-1">
-     <div class="text-group-right" style="color:#ffffff;">
-    <p class="text">Ich habe viele Besuche.</p></div>
-  </main>
-</section>
+    <!-- 第2页：Besuche1 -->
+    <section class="page page2" id="page2" aria-label="第2页：Besuche1">
+      <main class="Besuche1" id="scene1-1">
+        <div class="text-group-right" style="color:#ffffff;">
+          <p class="text">Ich habe viele Besuche.</p>
+        </div>
+      </main>
+    </section>
 
-<!-- 第2.1页：Besuche2 -->
-<section class="page page2a" id="page2a" aria-label="第2.1页：Besuche2">
-  <main class="Besuche2" id="scene1-2">
-    <div class="title-fixed" aria-hidden="true"></div>
-  </main>
-</section>
+    <!-- 第3页：Besuche2 -->
+    <section class="page page3" id="page3" aria-label="第3页：Besuche2">
+      <main class="Besuche2" id="scene1-2">
+        <div class="title-fixed" aria-hidden="true"></div>
+      </main>
+    </section>
 
-<!-- 第2.2页：Besuche3 -->
-<section class="page page2b" id="page2b" aria-label="第2.2页：Besuche3">
-  <main class="Besuche3" id="scene1-3">
-    <div class="title-fixed" aria-hidden="true"></div>
-  </main>
-</section>
- 
   </div>
-
-
-
-
- 
 
   <!-- hero 羊（固定层） -->
   <div id="sheephero-wrapper" aria-hidden="true">
@@ -80,49 +67,44 @@
          style="background-image:url('./images/sheep/sheephero.webp')"></div>
   </div>
 
-  <!-- 挖土机（固定层，只在第4~7页出现并循环） -->
+  <!-- 挖土机（固定层，只在工地页出现并循环） -->
   <div id="digger-fixed" aria-hidden="true">
     <img src="./images/digger.webp" alt="Digger"
          style="width:100%;height:100%;object-fit:contain;">
   </div>
 
-<!-- 第3页：眼睛交互 ver.1 -->
-<section class="page page3" id="page3" aria-label="第3页：眼睛交互">
-  <div class="eye-interaction-container">
-    <div class="black-background"></div>
-    <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
+  <!-- 第4页：眼睛交互 -->
+  <section class="page page4" id="page4" aria-label="第4页：眼睛交互">
+    <div class="eye-interaction-container">
+      <div class="black-background"></div>
+      <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
 
-    <div class="eye-window" id="eyeWindow5">
-      <img class="maxi-image" id="maxiImage5" src="./images/Maxi/Maxi1.jpg" alt="Maxi View">
-      <div class="eye-lid eye-lid-top"></div>
-      <div class="eye-lid eye-lid-bottom"></div>
+      <div class="eye-window" id="eyeWindow5">
+        <img class="maxi-image" id="maxiImage5" src="./images/Maxi/Maxi1.jpg" alt="Maxi View">
+        <div class="eye-lid eye-lid-top"></div>
+        <div class="eye-lid eye-lid-bottom"></div>
+      </div>
+
+      <div class="click-icon" id="clickIcon5">
+        <img src="./images/click.webp" alt="Click to interact">
+      </div>
+      <div class="click-overlay" id="clickOverlay5"></div>
     </div>
 
-    <div class="click-icon" id="clickIcon5">
-      <img src="./images/click.webp" alt="Click to interact">
+    <div class="handhandy-wrap">
+      <img src="./images/hand/handhandy.webp"
+           alt="handhandy"
+           id="handhandyImg"
+           class="handhandy-img">
     </div>
-    <div class="click-overlay" id="clickOverlay5"></div>
-  </div>
-  <!-- handhandy：放到第3页 -->
-<div class="handhandy-wrap">
-  <img src="./images/hand/handhandy.webp"
-       alt="handhandy"
-       id="handhandyImg"
-       class="handhandy-img">
-</div>
 
+    <div class="hand-wrap">
+      <img src="./images/hand/hand.webp" alt="hand" id="handImg4" class="hand-img">
+    </div>
+  </section>
 
-  <!-- ✅ hand 放在第3页里，使用唯一 id -->
-  <div class="hand-wrap">
-    <img src="./images/hand/hand.webp" alt="hand" id="handImg3" class="hand-img">
-  </div>
-</section>
-
-
-
-
-  <!-- ===== 第4页：秋天上半 + 文本 ===== -->
-  <section class="page page4" id="page4" aria-label="第3页：文字动画页">
+  <!-- 第5页：秋天上半 + 文本 -->
+  <section class="page page5" id="page5" aria-label="第5页：秋天上半">
     <div class="backgroundtop"
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
@@ -134,32 +116,27 @@
       <p class="text">Niemand gehörte hier – wir alle waren Teil der Erde.</p>
     </div>
     <div class="handflower-wrap">
-  <img src="./images/hand/handflower.webp" alt="handflower" id="handflowerImg" class="handflower-img">
-</div>
-<div class="pole-wrap">
-  <img src="./images/hand/pole.webp" alt="pole" id="poleImg" class="pole-img">
-</div>
+      <img src="./images/hand/handflower.webp" alt="handflower" id="handflowerImg" class="handflower-img">
+    </div>
+    <div class="pole-wrap">
+      <img src="./images/hand/pole.webp" alt="pole" id="poleImg" class="pole-img">
+    </div>
   </section>
 
-  <!-- ===== 第5页：秋天下半 ===== -->
-  <section class="page page5" id="page5" aria-label="第4页：秋天下半部分">
+  <!-- 第6页：秋天下半 -->
+  <section class="page page6" id="page6" aria-label="第6页：秋天下半部分">
     <div class="backgroundbottom"
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
 
     <div class="fade-to-black" aria-hidden="true"></div>
     <div class="pol1-wrap">
-  <img src="./images/hand/pole1.webp" alt="pol1" id="pol1Img" class="pol1-img">
-</div>
-  
-    
+      <img src="./images/hand/pole1.webp" alt="pol1" id="pol1Img" class="pol1-img">
+    </div>
   </section>
 
-
-
-
-  <!-- ===== 第6页：工地上半 ===== -->
-  <section class="page page6" id="page6" aria-label="第6页：工地上半部分">
+  <!-- 第7页：工地上半 -->
+  <section class="page page7" id="page7" aria-label="第7页：工地上半部分">
     <div class="backgroundtop"
          style="
            background-image: url('./images/baustelle.jpg');
@@ -168,14 +145,10 @@
            background-repeat: no-repeat;
          "
          aria-hidden="true"></div>
-
-   
-  
   </section>
 
-  <!-- ===== 第7页：工地下半 ===== -->
-   <div class="cover-transition-78">
-  <section class="page page7" id="page7" aria-label="第7页：工地下半部分">
+  <!-- 第8页：工地下半 -->
+  <section class="page page8" id="page8" aria-label="第8页：工地下半部分">
     <div class="backgroundbottom"
          style="
            background-image: url('./images/baustelle.jpg');
@@ -184,120 +157,70 @@
            background-repeat: no-repeat;
          "
          aria-hidden="true"></div>
-        
 
-        <div class="kinder-wrap">
-    <img src="./images/kinder.webp" alt="Kinder" class="kinder-img" id="kinderImg" />
-  </div>
-    <!-- 左右对白图层 -->
-<div id="dialogOverlay">
-  <img id="schauLeft"  class="dialog-img" src="./images/text/schauleft.webp"  alt="Schau left">
-  <img id="schauRight" class="dialog-img" src="./images/text/schauright.webp" alt="Schau right">
-</div>
-
+    <div class="kinder-wrap">
+      <img src="./images/kinder.webp" alt="Kinder" class="kinder-img" id="kinderImg" />
+    </div>
+    <div id="dialogOverlay">
+      <img id="schauLeft"  class="dialog-img" src="./images/text/schauleft.webp"  alt="Schau left">
+      <img id="schauRight" class="dialog-img" src="./images/text/schauright.webp" alt="Schau right">
+    </div>
   </section>
 
-<!-- ===== 第8页：眼睛交互 ver.2 ===== -->
-  <section class="page page8" id="page8" aria-label="第10页：眼睛交互">
-    <div class="eye-interaction-container">
-      <div class="black-background"></div>
-         <!-- 新增：白线羊勾线（透明底PNG） -->
-    <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
-
-      <div class="eye-window" id="eyeWindow10">
-        <img class="maxi-image" id="maxiImage10" src="" alt="Augen-Bild">
-        <div class="eye-lid eye-lid-top"></div>
-        <div class="eye-lid eye-lid-bottom"></div>
+  <!-- 第9页：schild + truck -->
+  <section class="page page9" id="page9" aria-label="第9页：schild + truck">
+    <main class="scene" id="scene9">
+      <div class="season schild active">
+        <img src="images/fullschild.jpg" alt="schild" class="schild-img" style="width:100%;height:100%;object-fit:cover;">
       </div>
 
-      <div class="click-icon" id="clickIcon10">
-        <img src="./images/click.webp" alt="Click to interact">
+      <div class="text-group-left" style="color:#000000;">
+        <p class="text">Jetzt steht hier ein neues Gebäude und ein Schild.</p>
+        <p class="text">Nur selten hört man noch Kinder lachen.</p>
       </div>
 
-      <div class="click-overlay" id="clickOverlay10"></div>
-    </div>
-
-          <div class="text-group-right" style="color:#fff;">
-      <p class="text">Ich wurde in die Ecke getrieben.</p>
-      <p class="text">Die Kinder lachten und riefen noch.</p>
-      <p class="text">Ich hielt den Atem an,</p>
-      <p class="text">um die Erde zu spüren.</p>
-    </div>
-    <div class="p8-anim" aria-hidden="true"></div>
-
-    
+      <div id="transporterAnim"
+          style="position:absolute;left:-200px;bottom:18%;width:180px;height:100px;pointer-events:none;z-index:30;">
+        <img src="./images/transporter.webp" alt="Transporter" style="width:100%;height:100%;object-fit:contain;">
+      </div>
+    </main>
   </section>
 
-<!-- ===== 第9页 ===== -->
-<section class="page page9" id="page9" aria-label="第9页：schild + truck">
-  <main class="scene" id="scene9">
+  <!-- 第10页：羊轮廓 + 诗句 + 点击出现文字 -->
+  <section class="page page10" id="page10" aria-label="第10页：Fenster">
+    <img class="sheep-outline-base" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
 
-    <!-- 背景：一张 Schild 照片 -->
-    <div class="season schild active">
-      <img src="images/fullschild.jpg" alt="schild" class="schild-img" style="width:100%;height:100%;object-fit:cover;">
+    <div class="text-group-right" style="color:#fff;">
+      <p>Es war einmal</p>
+      <p>der Wind und ich erinnern uns leise.</p>
     </div>
 
-    <!-- 文本 -->
-    <div class="text-group-left" style="color:#000000;">
-      <p class="text">Jetzt steht hier ein neues Gebäude und ein Schild.</p>
-      <p class="text">Nur selten hört man noch Kinder lachen.</p>
+    <div class="click-icon" id="clickIconFinal">
+      <img src="./images/click.webp" alt="Click">
     </div>
 
-    <!-- 小货车 -->
-    <div id="transporterAnim"
-        style="position:absolute;left:-200px;bottom:18%;width:180px;height:100px;pointer-events:none;z-index:30;">
-      <img src="./images/transporter.webp" alt="Transporter" style="width:100%;height:100%;object-fit:contain;">
+    <div class="final-text" id="finalText">
+      <p>Ein Fenster-Geschichte</p>
+      <p>von mir und meiner Tochter.</p>
+      <p>— Yiyunlin</p>
+    </div>
+    <div class="handflower-wrap">
+      <img src="./images/hand/handflower.webp"
+           alt="handflower"
+           id="lastHandflowerImg"
+           class="last-handflower">
     </div>
 
-
-  </main>
-</section>
-
-
-  
-
-<!-- ===== 最后一页：羊轮廓 + 诗句 + 点击出现文字 ===== -->
-<section class="page page11" id="page11" aria-label="最后一页：Fenster">
-
-  <!-- 羊 100% 轮廓 -->
-  <img class="sheep-outline-base" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
-
-  <!-- 右上角文字（保留） -->
-  <div class="text-group-right" style="color:#fff;">
-    <p>Es war einmal</p>
-    <p>der Wind und ich erinnern uns leise.</p>
-  </div>
-
-  <!-- 点击手 -->
-  <div class="click-icon" id="clickIconFinal">
-    <img src="./images/click.webp" alt="Click">
-  </div>
-
-  <!-- 点击出现的文字 -->
-<div class="final-text" id="finalText">
-  <p>Ein Fenster-Geschichte</p>
-  <p>von mir und meiner Tochter.</p>
-  <p>— Yiyunlin</p>
-</div>
-<div class="handflower-wrap">
-  <img src="./images/hand/handflower.webp"
-       alt="handflower"
-       id="lastHandflowerImg"
-       class="last-handflower">
-</div>
-
-
-  <!-- 可选右侧滚动条 -->
-  <aside class="global-scrollbar">
-    <div class="scrollbar-track">
-      <div class="scrollbar-thumb"></div>
-    </div>
-  </aside>
-
-  <!-- 加版本号防缓存 -->
-  <script defer src="./script.js?v=15"></script>
+    <aside class="global-scrollbar">
+      <div class="scrollbar-track">
+        <div class="scrollbar-thumb"></div>
+      </div>
+    </aside>
+  </section>
 
 </main>
+
+<script defer src="./script.js?v=15"></script>
 
 <footer style="display: contents;"></footer>
 

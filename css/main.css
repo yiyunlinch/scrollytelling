@@ -48,7 +48,7 @@ body {
   background-position: center center;
 }
 
-//* ===== 羊群只在 Page1 ===== */
+/* ===== 羊群只在 Page1 ===== */
 #page1 {
   position: relative;
 }
@@ -122,22 +122,21 @@ body {
   position: relative;
   height: 100vh;
   overflow: hidden;
-  z-index: 2;
+  z-index: 118;
 }
 
 .cover-transition-wrapper {
   position: relative;
-  height: 400vh;
+  height: 300vh;
 }
-#page2, #page2a, #page2b {
+#page2, #page3 {
   position: sticky;
   top: 0;
   height: 100vh;
   overflow: hidden;
 }
-#page2  { z-index: 120; }
-#page2a { z-index: 119; }
-#page2b { z-index: 118; }
+#page2  { z-index: 119; }
+#page3 { z-index: 120; }
 
 
  
@@ -187,18 +186,17 @@ body {
 }
 /* 第2页 */
 
-/* ========= Page2 + Page2a + Page2b：推入后保留，无淡入淡出 ========= */
+/* ========= Page2 + Page3：推入后保留，无淡入淡出 ========= */
 
-/* 包含 Page1~Page2b 的总容器（高度 4 屏） */
+/* 包含 Page1~Page3 的总容器（高度 3 屏） */
 .cover-transition-wrapper {
   position: relative;
-  height: 400vh; /* Page1 + Page2 + Page2a + Page2b = 4屏 */
+  height: 300vh; /* Page1 + Page2 + Page3 = 3屏 */
 }
 
-/* 三页都 sticky 叠放在同一位置，才能形成“推入”效果 */
+/* 两页 sticky 叠放在同一位置，形成推入效果 */
 #page2,
-#page2a,
-#page2b {
+#page3 {
   position: sticky !important;
   top: 0;
   height: 100vh;
@@ -209,13 +207,11 @@ body {
 
 /* 层级顺序：后出现的页在更上层 */
 #page2  { z-index: 118; }  /* 最底 */
-#page2a { z-index: 119; }  /* 中间 */
-#page2b { z-index: 120; }  /* 最上 */
+#page3 { z-index: 119; }  /* 最上 */
 
 /* 背景容器（纯铺图，无过渡） */
 .Besuche1,
-.Besuche2,
-.Besuche3 {
+.Besuche2 {
   position: absolute;
   inset: 0;
   background-size: cover;
@@ -229,11 +225,10 @@ body {
 /* 对应背景图 */
 .Besuche1 { background-image: url('../images/Maxi/Maxi2.jpg'); }
 .Besuche2 { background-image: url('../images/Maxi/Maxi3.jpg'); }
-.Besuche3 { background-image: url('../images/Maxi/Maxi4.jpg'); }
 
 
-/* 第4页 */
-#page4 { position: relative; }
+/* 第5页 */
+#page5 { position: relative; }
 .backgroundtop {
   position: absolute;
   inset: 0;
@@ -243,7 +238,7 @@ body {
   filter: saturate(1.05);
   z-index: 0;
 }
-#page4 .p3-anim {
+#page5 .p3-anim {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -279,8 +274,8 @@ body {
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 
-/* 第4页 */
-#page5 { position: relative; }
+/* 第6页 */
+#page6 { position: relative; }
 .backgroundbottom {
   position: absolute;
   inset: 0;
@@ -298,7 +293,7 @@ body {
   transition: background 1s ease-out;
 }
 
-/* 第3页 / 第10页：眼睛交互块 */
+/* 第4页：眼睛交互块 */
 .sheep-outline {
   position: absolute;
   inset: 0;
@@ -315,8 +310,7 @@ body {
 }
 
 
-#page3,
-#page8 {
+#page4 {
   position: relative;
 }
 .eye-interaction-container {
@@ -404,7 +398,7 @@ body {
   cursor: pointer;
   pointer-events: auto;
 }
-/* 点击图标（第5/第10页） */
+/* 点击图标（第4/第10页） */
 .click-icon {
   position: absolute;
   right: 50%;
@@ -434,8 +428,8 @@ body {
 }
 
 
-/* 第6/7页 */
-#page6, #page7 {
+/* 第7/8页 */
+#page7, #page8 {
   position: relative;
   width: 100%;
   height: 100vh;
@@ -443,8 +437,8 @@ body {
 }
 
 /* fallback 防止没inline style时塌掉 */
-#page6 .backgroundtop,
-#page7 .backgroundbottom {
+#page7 .backgroundtop,
+#page8 .backgroundbottom {
   position: absolute;
   inset: 0;
   background-size: cover;
@@ -476,20 +470,13 @@ body {
   position: relative;
   height: 100vh;
   overflow: visible;
-  z-index: 7; /* 新增，压过 #page8 的 z-index:6 */
+  z-index: 7;
 }
 
 
 
 
 
-
-/* 第8页：文字层优先级 */
-#page8 .text-group-left {
-  z-index: 30;
-  position: absolute;
-  transition: transform 1.2s cubic-bezier(.7,0,.3,1);
-}
 
 /* 第9页背景在最下面 */
 #page9 .season.schild {
@@ -511,31 +498,15 @@ body {
 }
 
 
-/* 第11页 */
-#page11 {
-  position: relative;
-  height: 100vh;
-  overflow: hidden;
-}
-.backgroundoriginal {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  filter: saturate(1.05);
-  z-index: 0;
-}
-
 /* 货车（第9页）缩放 */
 #transporterAnim {
   transform: scale(8);
 }
 
 /* === Kinder 图出现动画相关 === */
-#page7 {
+#page8 {
   position: relative;
-   z-index: 5;  
+  z-index: 5;  
 }
 
 /* 这个容器是整张图的运动空间（参考底边） */
@@ -590,8 +561,8 @@ body {
   
 }
 
-/* === 第3页 handhandy === */
-#page3 .handhandy-wrap {
+/* === 第4页 handhandy === */
+#page4 .handhandy-wrap {
   position: absolute;
   bottom: 80%;
   left: 100%;
@@ -599,7 +570,7 @@ body {
   z-index: 1000;
   overflow: visible;
 }
-#page3 .handhandy-img {
+#page4 .handhandy-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -607,13 +578,13 @@ body {
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
-#page3 .handhandy-img.visible {
+#page4 .handhandy-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }
 
-/* === 第3页 手臂草动画相关 === */
-#page3 .hand-wrap {
+/* === 第4页 手臂草动画相关 === */
+#page4 .hand-wrap {
   position: absolute;
   bottom: 10%;
   left: 100%;
@@ -622,7 +593,7 @@ body {
   overflow: visible;
 }
 
-#page3 .hand-img {
+#page4 .hand-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -631,37 +602,15 @@ body {
   opacity: 0;
 }
 
-#page3 .hand-img.visible {
+#page4 .hand-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }
 
 
 
-/* 7→8 覆盖过渡容器：总高 200vh */
-.cover-transition-78 {
-  position: relative;
-  height: 200vh; /* 第7页占第1屏的 sticky + 第8页占第2屏正常流 */
-}
-
-/* 第7页改成 sticky，允许元素探出（对白要用到），层级略低于第8页 */
-#page7 {
-  position: sticky;  /* 关键 */
-  top: 0;            /* 关键 */
-  height: 100vh;
-  overflow: visible; /* 让 schauLeft/schauRight 可越界显示 */
-  z-index: 5;        /* 要高过第6页，但低于第8页 */
-}
-
-/* 第8页正常流，但层级 > 第7页，这样“盖上来” */
-#page8 {
-  position: relative;
-  height: 100vh;
-  z-index: 6;        /* 让第8页覆盖在第7页之上，产生“顶上去”的效果 */
-}
-
-//* ===== 最后一页 ===== */
-#page11 {
+/* ===== 最后一页 ===== */
+#page10 {
   background: #000;
   position: relative;
   height: 100vh;
@@ -686,22 +635,6 @@ body {
 }
 
 
-/* 右上角诗句 */
-.final-poem {
-  position: absolute;
-  right: 6%;
-  top: 8%;
-  color: #fff;
-  font-size: 1.6rem;
-  text-align: right;
-  line-height: 1.4;
-  z-index: 3;
-  opacity: 0.8;
-}
-
-
-
-
 /* 点击出现的文字 */
 .final-text {
   position: absolute;
@@ -724,15 +657,15 @@ body {
 
 
 
-/* === 第4页 pole（右下，从右侧滑入）=== */
-#page4 .pole-wrap {
+/* === 第5页 pole（右下，从右侧滑入）=== */
+#page5 .pole-wrap {
   position: absolute;
   right: 0;
   bottom:-40%;
   z-index: 1000;
   overflow: visible;
 }
-#page4 .pole-img {
+#page5 .pole-img {
   width: 240px;             /* 你可调 */
   height: auto;
   transform-origin: bottom right;
@@ -740,20 +673,20 @@ body {
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
-#page4 .pole-img.visible {
+#page5 .pole-img.visible {
   transform: translateX(0%) scale(2); /* 向内滑入 */
   opacity: 1;
 }
 
-/* === 第5页 pol1（右下，从右侧滑入）=== */
-#page5 .pol1-wrap {
+/* === 第6页 pol1（右下，从右侧滑入）=== */
+#page6 .pol1-wrap {
   position: absolute;
   right: 0;
   bottom: -20%;
   z-index: 1000;
   overflow: visible;
 }
-#page5 .pol1-img {
+#page6 .pol1-img {
   width: 340px;             /* 你可调 */
   height: auto;
   transform-origin: bottom right;
@@ -761,7 +694,7 @@ body {
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
-#page5 .pol1-img.visible {
+#page6 .pol1-img.visible {
    transform: translateX(0) scale(2.4);
   opacity: 1;
 }
@@ -770,7 +703,7 @@ body {
 
 
 /* 最后一页 handflower 位置 */
-#page11 .handflower-wrap {
+#page10 .handflower-wrap {
   position: absolute;
   right: 0;
   bottom: 15%;
@@ -779,7 +712,7 @@ body {
 }
 
 /* 初始：藏在右边（正方向 = 容器外） */
-#page11 .last-handflower {
+#page10 .last-handflower {
   width: 200px;
   transform-origin: bottom right;
   transform: translateX(35%) scale(2); /* ✅ 从右外开始 */
@@ -788,7 +721,7 @@ body {
 }
 
 /* 出现：滑回到画面 */
-#page11 .last-handflower.visible {
+#page10 .last-handflower.visible {
   transform: translateX(35%) scale(2); /* ✅ 回到原位 */
   opacity: 1;
 }
@@ -817,4 +750,3 @@ body {
   text-shadow: 0 4px 8px rgba(0,0,0,0.5);
   letter-spacing: 2px;
 }
-
