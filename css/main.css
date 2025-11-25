@@ -2,7 +2,8 @@
 body {
   margin: 0;
   background: #000;
-  overflow: hidden; /* 全局横向滑页，禁用默认滚动条 */
+  overflow-x: hidden;
+  overflow-y: auto; /* 允许竖向滚动，横向仍隐藏 */
   font-size: 20px;
 }
 
@@ -143,7 +144,7 @@ body {
 .cover-h-track {
   display: flex;
   flex-direction: row;
-  width: calc(100vw * 11); /* 11页 */
+  width: calc(100vw * 2); /* 2页（前两页横滑） */
   height: 100%;
   will-change: transform;
   transition: transform 0.45s ease;

@@ -1,7 +1,8 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 let currentPageIndex = 0;
-let pages = [];
+let trackPages = [];
+let allPages = [];
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
 let eyeStage = 0;      // 0 初始, 1 显示 sheepeye, 2 溶解, 3 可翻页
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
@@ -13,21 +14,37 @@ function easeInOutQuad(t) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  pages = Array.from(document.querySelectorAll('.cover-h-track .page'));
+  trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
+  allPages   = Array.from(document.querySelectorAll('.page'));
   const track = document.querySelector('.cover-h-track');
+  const TRACK_COUNT = trackPages.length;
 
-  /* === 全局页面平移导航 === */
+  /* === 全局页面导航（仅前2页横滑） === */
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+  function setActive(idx) {
+    allPages.forEach((p, i) => p.classList.toggle('active', i === idx));
+  }
+  function dispatchPageChange(idx) {
+    if (idx === currentPageIndex) {
+      setActive(idx);
+      return;
+    }
+    currentPageIndex = idx;
+    setActive(idx);
+    window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
+  }
 
   function goToPage(idx, animate = true) {
-    idx = clamp(idx, 0, pages.length - 1);
-    currentPageIndex = idx;
+    idx = clamp(idx, 0, TRACK_COUNT - 1);
+    const target = trackPages[idx];
+    const globalIdx = allPages.indexOf(target);
     if (track) {
       track.style.transition = animate ? 'transform 0.45s ease' : 'none';
       track.style.transform = `translateX(${-idx * 100}vw)`;
     }
-    pages.forEach((p, i) => p.classList.toggle('active', i === currentPageIndex));
-    window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
+    if (globalIdx >= 0) {
+      dispatchPageChange(globalIdx);
+    }
     // 进入新页面后添加冷却，防止连续翻页
     globalScrollLockUntil = performance.now() + 650;
   }
@@ -90,8 +107,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const now = performance.now();
     const stillCooling = now < Math.max(eyeLockUntil, globalScrollLockUntil);
+    const inTrack = currentPageIndex < TRACK_COUNT;
 
-    if (currentPageIndex === 0 && dir > 0) {
+    if (inTrack && currentPageIndex === 0 && dir > 0) {
       if (stillCooling) {
         e.preventDefault();
         return;
@@ -123,6 +141,19 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    if (!inTrack) {
+      return; // 后面正常竖向滚动
+    }
+
+    // 在横向区域内，若已在最后一页且继续向下，交给正常滚动，但遵守冷却
+    if (currentPageIndex === TRACK_COUNT - 1 && dir > 0) {
+      if (stillCooling) {
+        e.preventDefault();
+        return;
+      }
+      return;
+    }
+
     if (stillCooling) {
       e.preventDefault();
       return;
@@ -132,6 +163,30 @@ window.addEventListener('DOMContentLoaded', () => {
     goToPage(currentPageIndex + dir);
     globalScrollLockUntil = performance.now() + EYE_COOLDOWN;
   }, { passive: false });
+
+  /* ====== 竖向页面可见性触发 pagechange ====== */
+  try {
+    const observer = new IntersectionObserver(entries => {
+      let best = null;
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const ratio = entry.intersectionRatio;
+        if (ratio < 0.55) continue;
+        const idx = allPages.indexOf(entry.target);
+        if (idx < TRACK_COUNT) continue; // 前两页由 goToPage 控制
+        if (!best || ratio > best.ratio) {
+          best = { idx, ratio };
+        }
+      }
+      if (best && best.idx !== currentPageIndex) {
+        dispatchPageChange(best.idx);
+      }
+    }, { threshold: [0.55, 0.7, 0.85] });
+
+    allPages.slice(TRACK_COUNT).forEach(p => observer.observe(p));
+  } catch (e) {
+    console.error('IntersectionObserver error', e);
+  }
 
 
 /* ====== 小羊群：Page1 内部 + 分离力（不重叠） ====== */
@@ -280,7 +335,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!btn) return;
       btn.addEventListener('click', e => {
         e.preventDefault();
-        goToPage(2);
+        goToPage(1);
       });
     })();
   } catch (e) { console.error('initArrow error', e); }
