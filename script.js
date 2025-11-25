@@ -3,7 +3,8 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 let currentPageIndex = 0;
 let pages = [];
 let eyeOpened = false; // 首屏眼睛是否已通过滚轮打开
-let eyeOpenCooldown = false; // 打开后的小延时，防止惯性切页
+let eyeScattered = false; // 首屏羊轮廓是否已散开
+let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -35,19 +36,29 @@ window.addEventListener('DOMContentLoaded', () => {
   // Wheel 导航
   let wheelLock = false;
   window.addEventListener('wheel', e => {
-    // 首屏眼睛：首次下滑先打开，不切换页面
-    if (currentPageIndex === 0 && e.deltaY > 0 && !eyeOpened) {
-      e.preventDefault();
-      eyeOpened = true;
-      eyeOpenCooldown = true;
-      window.dispatchEvent(new Event('eye-open'));
-      setTimeout(() => { eyeOpenCooldown = false; }, 400); // 吸收惯性
-      return;
-    }
-
-    if (currentPageIndex === 0 && eyeOpenCooldown) {
-      e.preventDefault();
-      return;
+    if (currentPageIndex === 0) {
+      const now = performance.now();
+      // 第一次下滑：仅睁眼
+      if (e.deltaY > 0 && !eyeOpened) {
+        e.preventDefault();
+        eyeOpened = true;
+        eyeLockUntil = now + 600; // 吸收惯性
+        window.dispatchEvent(new Event('eye-open'));
+        return;
+      }
+      // 冷却期内阻止翻页/散开
+      if (now < eyeLockUntil) {
+        e.preventDefault();
+        return;
+      }
+      // 第二次下滑：轮廓散开
+      if (e.deltaY > 0 && eyeOpened && !eyeScattered) {
+        e.preventDefault();
+        eyeScattered = true;
+        eyeLockUntil = now + 400;
+        window.dispatchEvent(new Event('eye-scatter'));
+        return;
+      }
     }
 
     if (wheelLock) return;
@@ -67,6 +78,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const clickOverlay = document.getElementById('clickOverlay5');
   const clickIcon    = document.getElementById('clickIcon5');
   const blackBg     = eyeWindow?.closest('.eye-interaction-container')?.querySelector('.black-background');
+  const sheepOutline = document.querySelector('.sheep-outline');
 
   // ✅ 仅保留一张图片
   const IMG = './images/Maxi/Maxi5.jpg';
@@ -128,6 +140,14 @@ window.addEventListener('DOMContentLoaded', () => {
         isOpen = true;
         openEye();
       }
+    });
+
+    // 支持滚轮触发轮廓散开（第2次下滑）
+    window.addEventListener('eye-scatter', () => {
+      if (!sheepOutline) return;
+      if (sheepOutline.classList.contains('scatter-out')) return;
+      sheepOutline.classList.add('scatter-out');
+      setTimeout(() => { sheepOutline.style.visibility = 'hidden'; }, 1000);
     });
   }
 })();

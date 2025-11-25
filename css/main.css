@@ -302,6 +302,27 @@ body {
   transform-origin: left center;
   transform: translateX(-8vw) scale(1);
 }
+.sheep-outline.scatter-out {
+  animation: sheepScatter 1s ease forwards;
+}
+
+@keyframes sheepScatter {
+  0% {
+    opacity: 0.9;
+    transform: translateX(-8vw) scale(1);
+    filter: blur(0px);
+  }
+  70% {
+    opacity: 0.4;
+    transform: translateX(-20vw) scale(1.2);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-28vw) scale(1.3);
+    filter: blur(6px);
+  }
+}
 
 
 #page3 {
