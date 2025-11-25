@@ -15,8 +15,7 @@ body {
 
 
 #page1 {
-  position: sticky;
-  top: 0;
+  position: relative;
   height: 100vh;
   overflow: hidden;
   z-index: 1;
@@ -130,7 +129,37 @@ body {
 .cover-transition-wrapper {
   position: relative;
   height: 500vh;
+  overflow: visible;
 }
+
+/* 前两页：纵向滚动驱动水平滑入 */
+.cover-h-row {
+  position: relative;
+  height: 200vh;      /* 2 屏高度，给滑入预留空间 */
+  overflow: hidden;
+  background: url('../images/sommer.jpg') center/cover no-repeat;
+}
+.cover-h-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.cover-h-track {
+  display: flex;
+  flex-direction: row;
+  width: 200vw;
+  height: 100%;
+  will-change: transform;
+}
+.cover-h-track .page {
+  flex: 0 0 100vw;
+  height: 100vh;
+  position: relative;
+  transform: translateZ(0);
+}
+
+/* 后续页垂直继续 */
 #page4, #page5 {
   position: sticky;
   top: 0;

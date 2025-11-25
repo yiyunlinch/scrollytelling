@@ -234,14 +234,68 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!btn || !page2) return;
       btn.addEventListener('click', e => {
         e.preventDefault();
-        smoothScrollToY(page2.offsetTop, 800);
+        // 水平滚动到第二页
+        const container = btn.closest('.cover-h-row');
+        if (container) {
+          container.scrollTo({ left: container.clientWidth, behavior: 'smooth' });
+        } else {
+          smoothScrollToY(page2.offsetTop, 800);
+        }
       });
     })();
   } catch (e) { console.error('initArrow error', e); }
 
+  /* ====== 首屏下滚 → 第二页从右滑入（锁定垂直，直到滑完）
+     复用提示：
+     - hRow: 外层高 200vh 的容器（见 .cover-h-row）
+     - track: 内部横向 flex 轨道（宽 200vw，两屏）
+     - wheel 事件累计 progress 0~1，驱动 track translateX(-progress*100vw)
+     - progress<1 时阻止纵向滚动，progress==1 后一次性跳到容器底部
+     后续页面若需要同样的平移，可复制此模式，替换容器/轨道选择器。 */
+  try {
+    const hRow   = document.querySelector('.cover-h-row');
+    const track  = document.querySelector('.cover-h-track');
+    if (hRow && track) {
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      let progress = 0;      // 0~1
+
+      function render() {
+        const tx = -progress * 100; // 整轨道左移
+        track.style.transform = `translateX(${tx}vw)`;
+      }
+
+      function onWheel(e) {
+        const rect = hRow.getBoundingClientRect();
+        if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
+
+        const delta = e.deltaY;
+        if (delta === 0) return;
+
+        const vh = window.innerHeight;
+        const next = clamp(progress + delta / vh, 0, 1);
+
+        // 仅在需要横向过渡时拦截：未完成，或在终点反向滑回
+        const shouldHandle =
+          (progress > 0 && progress < 1) ||
+          (progress === 0 && delta > 0) ||
+          (progress === 1 && delta < 0);
+
+        if (shouldHandle) {
+          e.preventDefault();
+          progress = next;
+          render();
+        }
+      }
+
+      window.addEventListener('wheel', onWheel, { passive: false });
+      window.addEventListener('resize', render, { passive: true });
+      render();
+    }
+  } catch (e) { console.error('page2 slide-in error', e); }
 
 
-  /* ====== 小货车 (第9页) 往左循环 ====== */
+
+  /* ====== 小货车 (第10页) 往左循环 ====== */
   try {
     function initMovingAnimOnce(elemId, containerId) {
       const elem = document.getElementById(elemId);
@@ -278,7 +332,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initMovingAnimOnce('transporterAnim', 'page10');
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
- /* ====== 挖土机：第7页内循环；离开第7页后以3倍速收尾 ====== */
+ /* ====== 挖土机：第8页内循环；离开第8页后以3倍速收尾 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
   const page8 = document.getElementById('page8');
@@ -286,7 +340,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 状态
   // "idle"：不在范围或已完全收尾隐藏
-  // "running"：在第6页范围内循环右进左出
+  // "running"：在第8页范围内循环右进左出
   // "finishing"：离开范围后做最后一趟，以 3x 速度跑出屏幕
   let state = "idle";
 
@@ -398,7 +452,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const rect = page9.getBoundingClientRect();
         const vh   = window.innerHeight;
 
-        // 让第7页底边接近视口底部的倒数200px，驱动孩子往上浮
+        // 让第9页底边接近视口底部的倒数200px，驱动孩子往上浮
         const bottomToViewportBottom = vh - rect.bottom;
 // 👉 新增“提前量”，单位 px，数值越大，出现越早
 const EARLY_START = 400;   // 你可以改 300/600 微调早晚
@@ -489,7 +543,7 @@ try {
 
   
 
-//* ===== HERO SHEEP：第5→第7页 路径 + 锚定第7页顶部 ===== */
+//* ===== HERO SHEEP：第6→第8页 路径 + 锚定第8页顶部 ===== */
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
   const page6 = document.getElementById('page6');
@@ -497,24 +551,24 @@ try {
   if (!hero || !page6 || !page8) return;
 
   function updateHero() {
-    const r5 = page6.getBoundingClientRect();
-    const r7 = page8.getBoundingClientRect();
+    const r6 = page6.getBoundingClientRect();
+    const r8 = page8.getBoundingClientRect();
     const vh = window.innerHeight;
 
     // 出现与隐藏规则
-    const beforePage5 = r5.top >= vh * 0.10;    // 第5页还没到
-    const afterPage7  = r7.bottom <= 0;         // 第7页滚过去
-    const shouldShow  = !beforePage5 && !afterPage7;
+    const beforePage6 = r6.top >= vh * 0.10;    // 第6页还没到
+    const afterPage8  = r8.bottom <= 0;         // 第8页滚过去
+    const shouldShow  = !beforePage6 && !afterPage8;
 
     hero.style.opacity = shouldShow ? '1' : '0';
     if (!shouldShow) return;
 
-    // 进度 t: 0=第5页起点 → 1=第7页顶部
-    let t = 1 - Math.min(Math.max(r5.bottom / vh, 0), 1);
+    // 进度 t: 0=第6页起点 → 1=第8页顶部
+    let t = 1 - Math.min(Math.max(r6.bottom / vh, 0), 1);
 
     // 路径参数
     const startY = 0.20;   // 屏幕上 20%
-    const endY   = 0.35;   // 第7页出现时，停在屏幕上方 30%
+    const endY   = 0.35;   // 第8页出现时，停在屏幕上方 30%
     const startX = 0.50;   // 居中
     const endX   = 0.35;   // 左侧 20%
     const startScale = 1.00;
@@ -527,15 +581,15 @@ try {
 
     hero.style.transform = `translate(-50%, -50%) scale(${s})`;
 
-    // 如果还没到第7页顶，按轨迹走
+    // 如果还没到第8页顶，按轨迹走
     if (t < 1) {
       hero.style.position = 'fixed';
       hero.style.left = `${xPos * 100}%`;
       hero.style.top  = `${y * 100}%`;
     } else {
-      // ✅ 到终点后，跟随第7页顶部一起上升
+      // ✅ 到终点后，跟随第8页顶部一起上升
       hero.style.position = 'fixed';
-      const offset = Math.min(r7.top, 0); 
+      const offset = Math.min(r8.top, 0); 
       hero.style.left = `${endX * 100}%`;
       hero.style.top = `calc(${endY * 100}% + ${offset}px)`;
     }
@@ -565,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
   clickToggle('clickIconFinal', 'finalText');
 });
 
-/* 第5页：pole 出现/消失（右下从右侧滑入） */
+/* 第6页：pole 出现/消失（右下从右侧滑入） */
 (function initPoleOnPage5() {
   const page6 = document.getElementById('page6');
   const pole  = document.getElementById('poleImg');
@@ -584,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePole();
 })();
 
-/* 第6页：pol1 出现/消失（右下从右侧滑入） */
+/* 第7页：pol1 出现/消失（右下从右侧滑入） */
 (function initPol1OnPage6() {
   const page7 = document.getElementById('page7');
   const pol1  = document.getElementById('pol1Img');
