@@ -2,13 +2,13 @@
 body {
   margin: 0;
   background: #000;
-  overflow-x: hidden;
+  overflow: hidden; /* 全局横向滑页，禁用默认滚动条 */
   font-size: 20px;
 }
 
 .page {
   position: relative;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
   overflow: visible;
 }
@@ -126,31 +126,27 @@ body {
   z-index: 118;
 }
 
+/* 所有页面横向滑动轨道 */
 .cover-transition-wrapper {
   position: relative;
-  height: 500vh;
-  overflow: visible;
-}
-
-/* 前两页：纵向滚动驱动水平滑入 */
-.cover-h-row {
-  position: relative;
-  height: 200vh;      /* 2 屏高度，给滑入预留空间 */
-  overflow: hidden;
-  background: url('../images/sommer.jpg') center/cover no-repeat;
-}
-.cover-h-sticky {
-  position: sticky;
-  top: 0;
+  width: 100vw;
   height: 100vh;
+  overflow: hidden;
+}
+.cover-h-row,
+.cover-h-sticky {
+  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 .cover-h-track {
   display: flex;
   flex-direction: row;
-  width: 200vw;
+  width: calc(100vw * 11); /* 11页 */
   height: 100%;
   will-change: transform;
+  transition: transform 0.45s ease;
 }
 .cover-h-track .page {
   flex: 0 0 100vw;
@@ -158,16 +154,6 @@ body {
   position: relative;
   transform: translateZ(0);
 }
-
-/* 后续页垂直继续 */
-#page4, #page5 {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
-}
-#page4  { z-index: 119; }
-#page5 { z-index: 120; }
 
 
  
@@ -217,29 +203,6 @@ body {
 }
 /* 第2页 */
 
-/* ========= Page4 + Page5：推入后保留，无淡入淡出 ========= */
-
-/* 包含 Page1~Page5 的总容器（高度 5 屏） */
-.cover-transition-wrapper {
-  position: relative;
-  height: 500vh; /* Page1 + Page2 + Page3 + Page4 + Page5 = 5屏 */
-}
-
-/* 两页 sticky 叠放在同一位置，形成推入效果 */
-#page4,
-#page5 {
-  position: sticky !important;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
-  opacity: 1 !important;          /* 始终不透明 */
-  transition: none !important;
-}
-
-/* 层级顺序：后出现的页在更上层 */
-#page4  { z-index: 119; }  /* 最底 */
-#page5 { z-index: 120; }  /* 最上 */
-
 /* 背景容器（纯铺图，无过渡） */
 .Besuche1,
 .Besuche2 {
@@ -263,8 +226,8 @@ body {
 .backgroundtop {
   position: absolute;
   inset: 0;
-  background-size: 100% 200vh;
-  background-position: center top;
+  background-size: cover;
+  background-position: center center;
   background-repeat: no-repeat;
   filter: saturate(1.05);
   z-index: 0;
@@ -310,8 +273,8 @@ body {
 .backgroundbottom {
   position: absolute;
   inset: 0;
-  background-size: 100% 200vh;
-  background-position: center -100vh;
+  background-size: cover;
+  background-position: center center;
   background-repeat: no-repeat;
   filter: saturate(1.05);
   z-index: 0;
@@ -472,9 +435,9 @@ body {
 #page9 .backgroundbottom {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
 }
 
 /* block67 两半式背景（可复用） */

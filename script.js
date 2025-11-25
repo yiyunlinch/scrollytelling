@@ -1,5 +1,7 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+let currentPageIndex = 0;
+let pages = [];
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -7,22 +9,41 @@ function easeInOutQuad(t) {
     : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
-function smoothScrollToY(targetY, duration = 800) {
-  const startY = window.scrollY || window.pageYOffset;
-  const delta = targetY - startY;
-  const start = performance.now();
-  function step(now) {
-    const p = Math.min((now - start) / duration, 1);
-    const eased = easeInOutQuad(p);
-    window.scrollTo(0, startY + delta * eased);
-    if (p < 1) requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
 window.addEventListener('DOMContentLoaded', () => {
+  pages = Array.from(document.querySelectorAll('.page'));
+  const track = document.querySelector('.cover-h-track');
 
-  /* ====== 第4页眼睛交互（只显示 Maxi5） ====== */
+  /* === 全局页面平移导航 === */
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+  function goToPage(idx, animate = true) {
+    idx = clamp(idx, 0, pages.length - 1);
+    currentPageIndex = idx;
+    if (track) {
+      track.style.transition = animate ? 'transform 0.45s ease' : 'none';
+      track.style.transform = `translateX(${-idx * 100}vw)`;
+    }
+    pages.forEach((p, i) => p.classList.toggle('active', i === currentPageIndex));
+    window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
+  }
+
+  // 初始定位第一页
+  goToPage(0, false);
+
+  // Wheel 导航
+  let wheelLock = false;
+  window.addEventListener('wheel', e => {
+    if (wheelLock) return;
+    wheelLock = true;
+    setTimeout(() => wheelLock = false, 200);
+
+    const dir = e.deltaY > 0 ? 1 : -1;
+    if (dir === 0) return;
+    e.preventDefault();
+    goToPage(currentPageIndex + dir);
+  }, { passive: false });
+
+/* ====== 第4页眼睛交互（只显示 Maxi5） ====== */
 (function initEyePage5() {
   const eyeWindow   = document.getElementById('eyeWindow5');
   const maxiImage   = document.getElementById('maxiImage5');
@@ -230,260 +251,109 @@ window.addEventListener('DOMContentLoaded', () => {
   try {
     (function initArrow() {
       const btn = $('#toPage2');
-      const page2 = $('#page2'); // 新的空白草地页
-      if (!btn || !page2) return;
+      if (!btn) return;
       btn.addEventListener('click', e => {
         e.preventDefault();
-        // 水平滚动到第二页
-        const container = btn.closest('.cover-h-row');
-        if (container) {
-          container.scrollTo({ left: container.clientWidth, behavior: 'smooth' });
-        } else {
-          smoothScrollToY(page2.offsetTop, 800);
-        }
+        goToPage(1);
       });
     })();
   } catch (e) { console.error('initArrow error', e); }
 
-  /* ====== 首屏下滚 → 第二页从右滑入（锁定垂直，直到滑完）
-     复用提示：
-     - hRow: 外层高 200vh 的容器（见 .cover-h-row）
-     - track: 内部横向 flex 轨道（宽 200vw，两屏）
-     - wheel 事件累计 progress 0~1，驱动 track translateX(-progress*100vw)
-     - progress<1 时阻止纵向滚动，progress==1 后一次性跳到容器底部
-     后续页面若需要同样的平移，可复制此模式，替换容器/轨道选择器。 */
+  // 原首屏滚动滑页逻辑已整合到全局导航，单独逻辑移除
+
+
+
+  /* ====== 小货车 (第10页) 往左循环，按页激活 ====== */
   try {
-    const hRow   = document.querySelector('.cover-h-row');
-    const track  = document.querySelector('.cover-h-track');
-    if (hRow && track) {
-      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-      let progress = 0;      // 0~1
-
-      function render() {
-        const tx = -progress * 100; // 整轨道左移
-        track.style.transform = `translateX(${tx}vw)`;
-      }
-
-      function onWheel(e) {
-        const rect = hRow.getBoundingClientRect();
-        if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
-
-        const delta = e.deltaY;
-        if (delta === 0) return;
-
-        const vh = window.innerHeight;
-        const next = clamp(progress + delta / vh, 0, 1);
-
-        // 仅在需要横向过渡时拦截：未完成，或在终点反向滑回
-        const shouldHandle =
-          (progress > 0 && progress < 1) ||
-          (progress === 0 && delta > 0) ||
-          (progress === 1 && delta < 0);
-
-        if (shouldHandle) {
-          e.preventDefault();
-          progress = next;
-          render();
-        }
-      }
-
-      window.addEventListener('wheel', onWheel, { passive: false });
-      window.addEventListener('resize', render, { passive: true });
-      render();
-    }
-  } catch (e) { console.error('page2 slide-in error', e); }
-
-
-
-  /* ====== 小货车 (第10页) 往左循环 ====== */
-  try {
-    function initMovingAnimOnce(elemId, containerId) {
+    function initMovingAnimOnce(elemId, pageIdx) {
       const elem = document.getElementById(elemId);
-      const container = document.getElementById(containerId);
-      if (!elem || !container) return;
+      if (!elem) return;
 
       let x = window.innerWidth;
       const speed = 1.25;
       const elemWidth = 180;
+      let running = false;
 
       function animate() {
+        if (!running) return;
         x -= speed;
         if (x < -elemWidth * 3) x = window.innerWidth;
         elem.style.left = `${x}px`;
-        if (elem._animating) requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
       }
 
-      function onScroll() {
-        const rect = container.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-          if (!elem._animating) {
-            elem._animating = true;
-            requestAnimationFrame(animate);
-          }
-        } else {
-          elem._animating = false;
+      function onPageChange(idx) {
+        running = idx === pageIdx;
+        if (running) {
+          x = window.innerWidth;
+          requestAnimationFrame(animate);
         }
       }
 
-      window.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('resize', onScroll, { passive: true });
-      onScroll();
+      window.addEventListener('resize', () => { x = window.innerWidth; }, { passive: true });
+      window.addEventListener('pagechange', e => onPageChange(e.detail.index));
+      onPageChange(currentPageIndex);
     }
-    initMovingAnimOnce('transporterAnim', 'page10');
+    initMovingAnimOnce('transporterAnim', 9);
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
- /* ====== 挖土机：第8页内循环；离开第8页后以3倍速收尾 ====== */
+ /* ====== 挖土机：第8页内循环，按页激活 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
-  const page8 = document.getElementById('page8');
-  if (!digger || !page8) return;
-
-  // 状态
-  // "idle"：不在范围或已完全收尾隐藏
-  // "running"：在第8页范围内循环右进左出
-  // "finishing"：离开范围后做最后一趟，以 3x 速度跑出屏幕
-  let state = "idle";
+  if (!digger) return;
 
   let x = window.innerWidth;
-  const baseSpeed = 4;     // 原始速度
-  let curSpeed = baseSpeed; // 当前速度（finishing 时提到 3x）
-  const approxWidth = 180 * 2; // ~360px (scale(5))
-  let animating = false;
-
-  function inActiveRange() {
-    const scrollY = window.scrollY || window.pageYOffset;
-    const viewMid = scrollY + window.innerHeight * 0.5;
-    const startY = page8.offsetTop;
-    const endY   = page8.offsetTop + page8.offsetHeight;
-    return viewMid >= startY && viewMid <= endY;
-  }
-
-  function startFromRight() {
-    digger.style.display = 'block';
-    x = window.innerWidth * 2;
-    digger.style.left = x + 'px';
-    curSpeed = baseSpeed; // 进入 running 恢复正常速度
-    state = "running";
-  }
+  const baseSpeed = 4;
+  let running = false;
 
   function step() {
-    if (state === "idle") {
-      animating = false;
-      return;
-    }
-
-    x -= curSpeed;
+    if (!running) return;
+    x -= baseSpeed;
+    if (x < -360) x = window.innerWidth * 1.2;
     digger.style.left = x + 'px';
-
-    if (state === "running") {
-      // 在范围内循环
-      if (x + approxWidth < 0) {
-        if (inActiveRange()) {
-          x = window.innerWidth + 40;
-          digger.style.left = x + 'px';
-        } else {
-          // 离开范围，进入 finishing，并把速度提到 3x
-          state = "finishing";
-          curSpeed = baseSpeed * 3;
-        }
-      }
-    } else if (state === "finishing") {
-      // 只做最后一趟，3x 速度直至完全出屏
-      if (x + approxWidth < 0) {
-        digger.style.display = 'none';
-        state = "idle";
-        animating = false;
-        return;
-      }
-    }
-
     requestAnimationFrame(step);
   }
 
-  function ensureAnimating() {
-    if (!animating) {
-      animating = true;
+  function onPageChange(idx) {
+    const active = idx === 7; // page8
+    running = active;
+    digger.style.display = active ? 'block' : 'none';
+    if (active) {
+      x = window.innerWidth * 1.2;
       requestAnimationFrame(step);
     }
   }
 
-  function handleScrollState() {
-    const active = inActiveRange();
-
-    if (active) {
-      if (state === "idle") {
-        startFromRight();                 // 进入范围 → 出现并以正常速度循环
-      } else if (state === "finishing") {
-        // 用户又滚回来了 → 继续 running，并把速度恢复
-        state = "running";
-        curSpeed = baseSpeed;
-      }
-    } else {
-      if (state === "running") {
-        // 离开范围 → 进入 finishing，并把速度提到 3x
-        state = "finishing";
-        curSpeed = baseSpeed * 3;
-      }
-    }
-
-    if (state !== "idle") ensureAnimating();
-  }
-
-  window.addEventListener('scroll', handleScrollState, { passive: true });
-  window.addEventListener('resize', handleScrollState, { passive: true });
-  handleScrollState();
+  window.addEventListener('resize', () => { x = window.innerWidth; }, { passive: true });
+  window.addEventListener('pagechange', e => onPageChange(e.detail.index));
+  onPageChange(currentPageIndex);
 })();
 
  
  
-  /* ====== 第9页 Kinder 上浮 + 对白图 ====== */
+  /* ====== 第9页 Kinder 上浮 + 对白图（按页激活） ====== */
   try {
     (function initKinderAndDialogOnPage8() {
-      const page9      = document.getElementById('page9');
       const kinderImg  = document.getElementById('kinderImg');
       const schauLeft  = document.getElementById('schauLeft');
       const schauRight = document.getElementById('schauRight');
 
-      if (!page9 || !kinderImg || !schauLeft || !schauRight) return;
+      if (!kinderImg || !schauLeft || !schauRight) return;
 
-      let dialogShown = false; // 只触发一次
-
-      function updateKinderAndMaybeShowDialog() {
-        const rect = page9.getBoundingClientRect();
-        const vh   = window.innerHeight;
-
-        // 让第9页底边接近视口底部的倒数200px，驱动孩子往上浮
-        const bottomToViewportBottom = vh - rect.bottom;
-// 👉 新增“提前量”，单位 px，数值越大，出现越早
-const EARLY_START = 400;   // 你可以改 300/600 微调早晚
-const revealDistance = 200;
-
-// 关键：把提前量加进触发
-let progress = (bottomToViewportBottom + EARLY_START) / revealDistance;
-
-// 仍然做 0~1 的夹取
-if (progress < 0) progress = 0;
-if (progress > 1) progress = 1;
-
-        if (progress < 0) progress = 0;
-        if (progress > 1) progress = 1;
-
-        // translateY: 100% -> 0%
-        const translatePercent = 100 * (1 - progress);
-        kinderImg.style.transform = `translateY(${translatePercent}%)`;
-
-        // 完全出现后，展示对白
-        if (progress >= 1 && !dialogShown) {
-          dialogShown = true;
-          schauLeft.style.opacity  = '1';
+      function activate(active) {
+        if (active) {
+          kinderImg.style.transform = 'translateY(0%)';
+          schauLeft.style.opacity = '1';
           schauRight.style.opacity = '1';
+        } else {
+          kinderImg.style.transform = 'translateY(100%)';
+          schauLeft.style.opacity = '0';
+          schauRight.style.opacity = '0';
         }
       }
 
-      window.addEventListener('scroll', updateKinderAndMaybeShowDialog, { passive: true });
-      window.addEventListener('resize', updateKinderAndMaybeShowDialog, { passive: true });
-
-      updateKinderAndMaybeShowDialog();
+      window.addEventListener('pagechange', e => activate(e.detail.index === 8));
+      activate(currentPageIndex === 8);
     })();
   } catch (e) {
     console.error('initKinderAndDialogOnPage8 error', e);
@@ -499,18 +369,12 @@ if (progress > 1) progress = 1;
   const handImg = document.getElementById('handhandyImg');
   if (!page1 || !handImg) return;
 
-  function updateHand() {
-    const rect = page1.getBoundingClientRect();
-    const vh = window.innerHeight;
-
-    // ✅ 提前出现
-    const visible = rect.top < vh * 0.7 && rect.bottom > vh * 0.2;
-    handImg.classList.toggle('visible', visible);
+  function updateHand(active) {
+    handImg.classList.toggle('visible', active);
   }
 
-  window.addEventListener('scroll', updateHand, { passive: true });
-  window.addEventListener('resize', updateHand, { passive: true });
-  updateHand();
+  window.addEventListener('pagechange', e => updateHand(e.detail.index === 0));
+  updateHand(currentPageIndex === 0);
 })();
 
 /* 第1页 handhandy 草出现/消失 */
@@ -521,18 +385,12 @@ try {
     const handImg = document.getElementById('handImg4');
     if (!page1 || !handImg) return;
 
-    function updateHand() {
-      const rect = page1.getBoundingClientRect();
-      const vh   = window.innerHeight;
-
-      // 第1页进入可见区时显示（阈值可微调）
-      const visible = rect.top < vh * 0.25 && rect.bottom > vh * 0.4;
-      handImg.classList.toggle('visible', visible);
+    function updateHand(active) {
+      handImg.classList.toggle('visible', active);
     }
 
-    window.addEventListener('scroll', updateHand, { passive: true });
-    window.addEventListener('resize', updateHand, { passive: true });
-    updateHand();
+    window.addEventListener('pagechange', e => updateHand(e.detail.index === 0));
+    updateHand(currentPageIndex === 0);
   })();
 } catch (e) {
   console.error('initHandOnPage4 error', e);
@@ -543,61 +401,31 @@ try {
 
   
 
-//* ===== HERO SHEEP：第6→第8页 路径 + 锚定第8页顶部 ===== */
+//* ===== HERO SHEEP：按页离散位置 ===== */
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
-  const page6 = document.getElementById('page6');
-  const page8 = document.getElementById('page8');
-  if (!hero || !page6 || !page8) return;
+  if (!hero) return;
 
-  function updateHero() {
-    const r6 = page6.getBoundingClientRect();
-    const r8 = page8.getBoundingClientRect();
-    const vh = window.innerHeight;
+  // index -> {x%, y%, scale}
+  const poses = {
+    5: { x: 50, y: 20, s: 1.0 },  // page6
+    6: { x: 45, y: 25, s: 0.6 },  // page7
+    7: { x: 35, y: 35, s: 0.3 }   // page8
+  };
 
-    // 出现与隐藏规则
-    const beforePage6 = r6.top >= vh * 0.10;    // 第6页还没到
-    const afterPage8  = r8.bottom <= 0;         // 第8页滚过去
-    const shouldShow  = !beforePage6 && !afterPage8;
-
-    hero.style.opacity = shouldShow ? '1' : '0';
-    if (!shouldShow) return;
-
-    // 进度 t: 0=第6页起点 → 1=第8页顶部
-    let t = 1 - Math.min(Math.max(r6.bottom / vh, 0), 1);
-
-    // 路径参数
-    const startY = 0.20;   // 屏幕上 20%
-    const endY   = 0.35;   // 第8页出现时，停在屏幕上方 30%
-    const startX = 0.50;   // 居中
-    const endX   = 0.35;   // 左侧 20%
-    const startScale = 1.00;
-    const endScale   = 0.3; // ✅ 缩小
-
-    // 插值
-    const y = startY + (endY - startY) * t;
-    const s = startScale + (endScale - startScale) * t;
-    const xPos = startX + (endX - startX) * t;
-
-    hero.style.transform = `translate(-50%, -50%) scale(${s})`;
-
-    // 如果还没到第8页顶，按轨迹走
-    if (t < 1) {
-      hero.style.position = 'fixed';
-      hero.style.left = `${xPos * 100}%`;
-      hero.style.top  = `${y * 100}%`;
-    } else {
-      // ✅ 到终点后，跟随第8页顶部一起上升
-      hero.style.position = 'fixed';
-      const offset = Math.min(r8.top, 0); 
-      hero.style.left = `${endX * 100}%`;
-      hero.style.top = `calc(${endY * 100}% + ${offset}px)`;
-    }
+  function applyPose(idx) {
+    const pose = poses[idx];
+    const active = !!pose;
+    hero.style.opacity = active ? '1' : '0';
+    if (!active) return;
+    hero.style.position = 'fixed';
+    hero.style.left = `${pose.x}%`;
+    hero.style.top  = `${pose.y}%`;
+    hero.style.transform = `translate(-50%, -50%) scale(${pose.s})`;
   }
 
-  window.addEventListener('scroll', updateHero, { passive: true });
-  window.addEventListener('resize', updateHero, { passive: true });
-  updateHero();
+  window.addEventListener('pagechange', e => applyPose(e.detail.index));
+  applyPose(currentPageIndex);
 })();
 
 /* === 通用：点击切换显隐（支持来回切换） === */
@@ -619,60 +447,31 @@ document.addEventListener('DOMContentLoaded', () => {
   clickToggle('clickIconFinal', 'finalText');
 });
 
-/* 第6页：pole 出现/消失（右下从右侧滑入） */
-(function initPoleOnPage5() {
-  const page6 = document.getElementById('page6');
+/* 第6页：pole 显隐（按页） */
+(function initPoleOnPage6() {
   const pole  = document.getElementById('poleImg');
-  if (!page6 || !pole) return;
-
-  function updatePole() {
-    const rect = page6.getBoundingClientRect();
-    const vh   = window.innerHeight;
-    // 早点出现：0.8 / 0.2 （可改成 0.9 / 0.1 更早）
-    const visible = rect.top < vh * 0.2 && rect.bottom > vh * 0.01;
-    pole.classList.toggle('visible', visible);
-  }
-
-  window.addEventListener('scroll', updatePole, { passive: true });
-  window.addEventListener('resize', updatePole, { passive: true });
-  updatePole();
+  if (!pole) return;
+  const toggle = active => pole.classList.toggle('visible', active);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 5));
+  toggle(currentPageIndex === 5);
 })();
 
-/* 第7页：pol1 出现/消失（右下从右侧滑入） */
-(function initPol1OnPage6() {
-  const page7 = document.getElementById('page7');
+/* 第7页：pol1 显隐（按页） */
+(function initPol1OnPage7() {
   const pol1  = document.getElementById('pol1Img');
-  if (!page7 || !pol1) return;
-
-  function updatePol1() {
-    const rect = page7.getBoundingClientRect();
-    const vh   = window.innerHeight;
-    // 早点出现：0.8 / 0.2
-    const visible = rect.top < vh * 0.3 && rect.bottom > vh * 0.01;
-    pol1.classList.toggle('visible', visible);
-  }
-
-  window.addEventListener('scroll', updatePol1, { passive: true });
-  window.addEventListener('resize', updatePol1, { passive: true });
-  updatePol1();
+  if (!pol1) return;
+  const toggle = active => pol1.classList.toggle('visible', active);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 6));
+  toggle(currentPageIndex === 6);
 })();
 
-/* Page10 handflower appear/disappear */
+/* Page11 handflower 显隐（按页） */
 (function initLastHandflower() {
-  const page11 = document.getElementById('page11');
   const img = document.getElementById('lastHandflowerImg');
-  if (!page11 || !img) return;
-
-  function update() {
-    const rect = page11.getBoundingClientRect();
-    const vh = window.innerHeight;
-    const visible = rect.top < vh * 0.2 && rect.bottom > vh * 0.4;
-    img.classList.toggle('visible', visible);
-  }
-
-  window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update, { passive: true });
-  update();
+  if (!img) return;
+  const toggle = active => img.classList.toggle('visible', active);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 10));
+  toggle(currentPageIndex === 10);
 })();
 
 // 统一第2/11页 click 手位置
