@@ -21,8 +21,27 @@
     <div class="cover-h-row">
       <div class="cover-h-sticky">
         <div class="cover-h-track">
-          <!-- 第1页：草地 -->
-          <section class="page page1" id="page1" aria-label="第1页：草地">
+          <!-- 新顺序 第1页：眼睛交互（原第3页） -->
+          <section class="page page3" id="page3" aria-label="第1页：眼睛交互">
+            <div class="eye-interaction-container">
+              <div class="black-background"></div>
+              <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
+
+              <div class="eye-window" id="eyeWindow5">
+                <img class="maxi-image" id="maxiImage5" src="./images/Maxi/Maxi1.jpg" alt="Maxi View">
+                <div class="eye-lid eye-lid-top"></div>
+                <div class="eye-lid eye-lid-bottom"></div>
+              </div>
+
+              <div class="click-icon" id="clickIcon5">
+                <img src="./images/click.webp" alt="Click to interact">
+              </div>
+              <div class="click-overlay" id="clickOverlay5"></div>
+            </div>
+          </section>
+
+          <!-- 新顺序 第2页：草地（原第1页） -->
+          <section class="page page1" id="page1" aria-label="第2页：草地">
             <main class="scene" id="scene1">
               <div class="season grass active" aria-hidden="true"></div>
 
@@ -55,30 +74,11 @@
             </button>
           </section>
 
-          <!-- 第2页：草地同背景 -->
-          <section class="page page2" id="page2" aria-label="第2页：草地背景">
+          <!-- 新顺序 第3页：草地同背景（原第2页） -->
+          <section class="page page2" id="page2" aria-label="第3页：草地背景">
             <main class="scene" aria-hidden="true">
               <div class="season grass active"></div>
             </main>
-          </section>
-
-          <!-- 第3页：眼睛交互 -->
-          <section class="page page3" id="page3" aria-label="第3页：眼睛交互">
-            <div class="eye-interaction-container">
-              <div class="black-background"></div>
-              <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
-
-              <div class="eye-window" id="eyeWindow5">
-                <img class="maxi-image" id="maxiImage5" src="./images/Maxi/Maxi1.jpg" alt="Maxi View">
-                <div class="eye-lid eye-lid-top"></div>
-                <div class="eye-lid eye-lid-bottom"></div>
-              </div>
-
-              <div class="click-icon" id="clickIcon5">
-                <img src="./images/click.webp" alt="Click to interact">
-              </div>
-              <div class="click-overlay" id="clickOverlay5"></div>
-            </div>
           </section>
 
           <!-- 第4页：Besuche1 -->
