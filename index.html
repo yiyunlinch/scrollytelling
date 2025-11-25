@@ -17,7 +17,7 @@
 
 <main>
 
-  <!-- 第1-3页：草地 + Besuche 推进 -->
+  <!-- 第1-4页：草地 + 眼睛 + Besuche 推进 -->
   <div class="cover-transition-wrapper">
 
     <!-- 第1页：草地 -->
@@ -37,14 +37,45 @@
         </div>
       </main>
 
+      <!-- 草地手势 (原第2页 handgrass) -->
+      <div class="handhandy-wrap">
+        <img src="./images/hand/handhandy.webp"
+             alt="handhandy"
+             id="handhandyImg"
+             class="handhandy-img">
+      </div>
+
+      <div class="hand-wrap">
+        <img src="./images/hand/hand.webp" alt="hand" id="handImg4" class="hand-img">
+      </div>
+
       <button class="down-arrow" id="toPage2" aria-label="滑到第2页">
         <span class="arrow-stem"></span>
         <span class="arrow-head"></span>
       </button>
     </section>
 
-    <!-- 第2页：Besuche1 -->
-    <section class="page page2" id="page2" aria-label="第2页：Besuche1">
+    <!-- 第2页：眼睛交互（原第4页前移） -->
+    <section class="page page2" id="page2" aria-label="第2页：眼睛交互">
+      <div class="eye-interaction-container">
+        <div class="black-background"></div>
+        <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
+
+        <div class="eye-window" id="eyeWindow5">
+          <img class="maxi-image" id="maxiImage5" src="./images/Maxi/Maxi1.jpg" alt="Maxi View">
+          <div class="eye-lid eye-lid-top"></div>
+          <div class="eye-lid eye-lid-bottom"></div>
+        </div>
+
+      <div class="click-icon" id="clickIcon5">
+        <img src="./images/click.webp" alt="Click to interact">
+      </div>
+      <div class="click-overlay" id="clickOverlay5"></div>
+    </div>
+    </section>
+
+    <!-- 第3页：Besuche1（原第2页后移） -->
+    <section class="page page3" id="page3" aria-label="第3页：Besuche1">
       <main class="Besuche1" id="scene1-1">
         <div class="text-group-right" style="color:#ffffff;">
           <p class="text">Ich habe viele Besuche.</p>
@@ -52,8 +83,8 @@
       </main>
     </section>
 
-    <!-- 第3页：Besuche2 -->
-    <section class="page page3" id="page3" aria-label="第3页：Besuche2">
+    <!-- 第4页：Besuche2（原第3页后移） -->
+    <section class="page page4" id="page4" aria-label="第4页：Besuche2">
       <main class="Besuche2" id="scene1-2">
         <div class="title-fixed" aria-hidden="true"></div>
       </main>
@@ -72,36 +103,6 @@
     <img src="./images/digger.webp" alt="Digger"
          style="width:100%;height:100%;object-fit:contain;">
   </div>
-
-  <!-- 第4页：眼睛交互 -->
-  <section class="page page4" id="page4" aria-label="第4页：眼睛交互">
-    <div class="eye-interaction-container">
-      <div class="black-background"></div>
-      <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
-
-      <div class="eye-window" id="eyeWindow5">
-        <img class="maxi-image" id="maxiImage5" src="./images/Maxi/Maxi1.jpg" alt="Maxi View">
-        <div class="eye-lid eye-lid-top"></div>
-        <div class="eye-lid eye-lid-bottom"></div>
-      </div>
-
-      <div class="click-icon" id="clickIcon5">
-        <img src="./images/click.webp" alt="Click to interact">
-      </div>
-      <div class="click-overlay" id="clickOverlay5"></div>
-    </div>
-
-    <div class="handhandy-wrap">
-      <img src="./images/hand/handhandy.webp"
-           alt="handhandy"
-           id="handhandyImg"
-           class="handhandy-img">
-    </div>
-
-    <div class="hand-wrap">
-      <img src="./images/hand/hand.webp" alt="hand" id="handImg4" class="hand-img">
-    </div>
-  </section>
 
   <!-- 第5页：秋天上半 + 文本 -->
   <section class="page page5" id="page5" aria-label="第5页：秋天上半">

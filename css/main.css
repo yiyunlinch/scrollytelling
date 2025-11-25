@@ -65,7 +65,7 @@ body {
 #flock-page1 .sheep {
   position: absolute;
   display: block;
-  width: clamp(360px, 48vw, 800px); /* ✅ 尺寸 */
+  width: clamp(180px, 28vw, 400px); /* ✅ 尺寸 */
   aspect-ratio: 1 / 1;
   background-size: contain;
   background-repeat: no-repeat;
@@ -80,6 +80,8 @@ body {
 #sheephero-wrapper {
   position: fixed;
   inset: 0;
+  left: 50%;                  /* 居中 */
+  top: 20%;                   /* 距视口顶部 20% */
   pointer-events: none;
   z-index: 100000;
 }
@@ -127,16 +129,16 @@ body {
 
 .cover-transition-wrapper {
   position: relative;
-  height: 300vh;
+  height: 400vh;
 }
-#page2, #page3 {
+#page3, #page4 {
   position: sticky;
   top: 0;
   height: 100vh;
   overflow: hidden;
 }
-#page2  { z-index: 119; }
-#page3 { z-index: 120; }
+#page3  { z-index: 119; }
+#page4 { z-index: 120; }
 
 
  
@@ -186,17 +188,17 @@ body {
 }
 /* 第2页 */
 
-/* ========= Page2 + Page3：推入后保留，无淡入淡出 ========= */
+/* ========= Page3 + Page4：推入后保留，无淡入淡出 ========= */
 
-/* 包含 Page1~Page3 的总容器（高度 3 屏） */
+/* 包含 Page1~Page4 的总容器（高度 4 屏） */
 .cover-transition-wrapper {
   position: relative;
-  height: 300vh; /* Page1 + Page2 + Page3 = 3屏 */
+  height: 400vh; /* Page1 + Page2 + Page3 + Page4 = 4屏 */
 }
 
 /* 两页 sticky 叠放在同一位置，形成推入效果 */
-#page2,
-#page3 {
+#page3,
+#page4 {
   position: sticky !important;
   top: 0;
   height: 100vh;
@@ -206,8 +208,8 @@ body {
 }
 
 /* 层级顺序：后出现的页在更上层 */
-#page2  { z-index: 118; }  /* 最底 */
-#page3 { z-index: 119; }  /* 最上 */
+#page3  { z-index: 119; }  /* 最底 */
+#page4 { z-index: 120; }  /* 最上 */
 
 /* 背景容器（纯铺图，无过渡） */
 .Besuche1,
@@ -310,7 +312,7 @@ body {
 }
 
 
-#page4 {
+#page2 {
   position: relative;
 }
 .eye-interaction-container {
@@ -561,8 +563,8 @@ body {
   
 }
 
-/* === 第4页 handhandy === */
-#page4 .handhandy-wrap {
+/* === 第1页 handhandy（草地手） === */
+#page1 .handhandy-wrap {
   position: absolute;
   bottom: 80%;
   left: 100%;
@@ -570,7 +572,7 @@ body {
   z-index: 1000;
   overflow: visible;
 }
-#page4 .handhandy-img {
+#page1 .handhandy-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -578,13 +580,13 @@ body {
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
-#page4 .handhandy-img.visible {
+#page1 .handhandy-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }
 
-/* === 第4页 手臂草动画相关 === */
-#page4 .hand-wrap {
+/* === 第1页 手臂草动画相关 === */
+#page1 .hand-wrap {
   position: absolute;
   bottom: 10%;
   left: 100%;
@@ -593,7 +595,7 @@ body {
   overflow: visible;
 }
 
-#page4 .hand-img {
+#page1 .hand-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -602,7 +604,7 @@ body {
   opacity: 0;
 }
 
-#page4 .hand-img.visible {
+#page1 .hand-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }

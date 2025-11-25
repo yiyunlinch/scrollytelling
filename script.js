@@ -102,15 +102,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const SAFE_RADIUS    = 220;    // 分离感知半径（越大越不容易靠太近）
   const SEP_WEIGHT     = 1.10;   // 分离力权重（再挤一点就加大）
   const WANDER_JITTER  = 9;      // 微扰随机游走强度（越大越飘）
-  const EDGE_PUSH      = 140;    // 边界回弹强度
   const TARGET_BIAS    = 0.04;   // 向目标点的“慢慢靠近”权重
 
-  // 垂直活动带：top 20% ~ top 60%（== 屏幕下方 40% 不进入）
-  const TOP_BAND = 0.10;   // 上方 20% 不进入
-  const Y_MAX_FRAC = 0.50; // 允许到屏幕高度的 60%
+  // 垂直活动带：放开到全屏高度
+  const TOP_BAND = 0.00;
+  const Y_MAX_FRAC = 1.00;
 
   const rand  = (a, b) => a + Math.random() * (b - a);
-  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
   function getBounds() {
     return { w: flock.clientWidth, h: flock.clientHeight };
@@ -191,18 +189,9 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       // 边界推回（靠近边缘时给一个反向力，保证不越界）
-      let edgeX = 0, edgeY = 0;
-      const xmin = w * 0.05, xmax = w * 0.95;
-      const ymin = yMin(h),  ymax = yMax(h);
-
-      if (s.x < xmin) edgeX += EDGE_PUSH;
-      if (s.x > xmax) edgeX -= EDGE_PUSH;
-      if (s.y < ymin) edgeY += EDGE_PUSH;
-      if (s.y > ymax) edgeY -= EDGE_PUSH;
-
-      // 合成速度：旧速度 + 分离 + 目标轻拉 + 微扰 + 边界
-      s.vx += sepX * dt + toTargetX * TARGET_BIAS * dt + jitterX + edgeX * dt;
-      s.vy += sepY * dt + toTargetY * TARGET_BIAS * dt + jitterY + edgeY * dt;
+      // 合成速度：旧速度 + 分离 + 目标轻拉 + 微扰
+      s.vx += sepX * dt + toTargetX * TARGET_BIAS * dt + jitterX;
+      s.vy += sepY * dt + toTargetY * TARGET_BIAS * dt + jitterY;
 
       // 限速
       const spd = Math.hypot(s.vx, s.vy);
@@ -217,10 +206,6 @@ window.addEventListener('DOMContentLoaded', () => {
     for (const s of sheeps) {
       s.x += s.vx * dt;
       s.y += s.vy * dt;
-
-      // 约束在允许区间
-      s.x = clamp(s.x, w * 0.05, w * 0.95);
-      s.y = clamp(s.y, yMin(h),  yMax(h));
 
       // 到达目标附近则换一个新目标
       if (Math.hypot(s.tx - s.x, s.ty - s.y) < 24) {
@@ -452,16 +437,16 @@ if (progress > 1) progress = 1;
 
 }); // END DOMContentLoaded
 
-/* ====== 第4页 hand 图片出现/消失（眼睛页） ====== */
+/* ====== 第1页 hand 图片出现/消失（草地手） ====== */
 
-/* 第4页 handhandy 图片出现/消失 */
-(function initHandhandyOnPage4() {
-  const page4 = document.getElementById('page4');
+/* 第1页 handhandy 图片出现/消失 */
+(function initHandhandyOnPage1() {
+  const page1 = document.getElementById('page1');
   const handImg = document.getElementById('handhandyImg');
-  if (!page4 || !handImg) return;
+  if (!page1 || !handImg) return;
 
   function updateHand() {
-    const rect = page4.getBoundingClientRect();
+    const rect = page1.getBoundingClientRect();
     const vh = window.innerHeight;
 
     // ✅ 提前出现
@@ -474,19 +459,19 @@ if (progress > 1) progress = 1;
   updateHand();
 })();
 
-/* 第4页 handhandy 草出现/消失 */
+/* 第1页 handhandy 草出现/消失 */
 
 try {
-  (function initHandOnPage4() {
-    const page4  = document.getElementById('page4');
+  (function initHandOnPage1() {
+    const page1  = document.getElementById('page1');
     const handImg = document.getElementById('handImg4');
-    if (!page4 || !handImg) return;
+    if (!page1 || !handImg) return;
 
     function updateHand() {
-      const rect = page4.getBoundingClientRect();
+      const rect = page1.getBoundingClientRect();
       const vh   = window.innerHeight;
 
-      // 第4页进入可见区时显示（阈值可微调）
+      // 第1页进入可见区时显示（阈值可微调）
       const visible = rect.top < vh * 0.25 && rect.bottom > vh * 0.4;
       handImg.classList.toggle('visible', visible);
     }
@@ -636,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
   update();
 })();
 
-// 统一第4/10页 click 手位置
+// 统一第2/10页 click 手位置
 (function unifyClickIcons() {
   ['clickIcon5', 'clickIconFinal'].forEach(id => {
     const el = document.getElementById(id);
