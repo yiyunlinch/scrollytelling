@@ -230,7 +230,7 @@ window.addEventListener('DOMContentLoaded', () => {
   try {
     (function initArrow() {
       const btn = $('#toPage2');
-      const page2 = $('#page2');
+      const page2 = $('#page2'); // 新的空白草地页
       if (!btn || !page2) return;
       btn.addEventListener('click', e => {
         e.preventDefault();
@@ -275,14 +275,14 @@ window.addEventListener('DOMContentLoaded', () => {
       window.addEventListener('resize', onScroll, { passive: true });
       onScroll();
     }
-    initMovingAnimOnce('transporterAnim', 'page9');
+    initMovingAnimOnce('transporterAnim', 'page10');
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
  /* ====== 挖土机：第7页内循环；离开第7页后以3倍速收尾 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
-  const page7 = document.getElementById('page7');
-  if (!digger || !page7) return;
+  const page8 = document.getElementById('page8');
+  if (!digger || !page8) return;
 
   // 状态
   // "idle"：不在范围或已完全收尾隐藏
@@ -299,8 +299,8 @@ window.addEventListener('DOMContentLoaded', () => {
   function inActiveRange() {
     const scrollY = window.scrollY || window.pageYOffset;
     const viewMid = scrollY + window.innerHeight * 0.5;
-    const startY = page7.offsetTop;
-    const endY   = page7.offsetTop + page7.offsetHeight;
+    const startY = page8.offsetTop;
+    const endY   = page8.offsetTop + page8.offsetHeight;
     return viewMid >= startY && viewMid <= endY;
   }
 
@@ -382,20 +382,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
  
  
-  /* ====== 第8页 Kinder 上浮 + 对白图 ====== */
+  /* ====== 第9页 Kinder 上浮 + 对白图 ====== */
   try {
     (function initKinderAndDialogOnPage8() {
-      const page8      = document.getElementById('page8');
+      const page9      = document.getElementById('page9');
       const kinderImg  = document.getElementById('kinderImg');
       const schauLeft  = document.getElementById('schauLeft');
       const schauRight = document.getElementById('schauRight');
 
-      if (!page8 || !kinderImg || !schauLeft || !schauRight) return;
+      if (!page9 || !kinderImg || !schauLeft || !schauRight) return;
 
       let dialogShown = false; // 只触发一次
 
       function updateKinderAndMaybeShowDialog() {
-        const rect = page8.getBoundingClientRect();
+        const rect = page9.getBoundingClientRect();
         const vh   = window.innerHeight;
 
         // 让第7页底边接近视口底部的倒数200px，驱动孩子往上浮
@@ -492,13 +492,13 @@ try {
 //* ===== HERO SHEEP：第5→第7页 路径 + 锚定第7页顶部 ===== */
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
-  const page5 = document.getElementById('page5');
-  const page7 = document.getElementById('page7');
-  if (!hero || !page5 || !page7) return;
+  const page6 = document.getElementById('page6');
+  const page8 = document.getElementById('page8');
+  if (!hero || !page6 || !page8) return;
 
   function updateHero() {
-    const r5 = page5.getBoundingClientRect();
-    const r7 = page7.getBoundingClientRect();
+    const r5 = page6.getBoundingClientRect();
+    const r7 = page8.getBoundingClientRect();
     const vh = window.innerHeight;
 
     // 出现与隐藏规则
@@ -567,12 +567,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* 第5页：pole 出现/消失（右下从右侧滑入） */
 (function initPoleOnPage5() {
-  const page5 = document.getElementById('page5');
+  const page6 = document.getElementById('page6');
   const pole  = document.getElementById('poleImg');
-  if (!page5 || !pole) return;
+  if (!page6 || !pole) return;
 
   function updatePole() {
-    const rect = page5.getBoundingClientRect();
+    const rect = page6.getBoundingClientRect();
     const vh   = window.innerHeight;
     // 早点出现：0.8 / 0.2 （可改成 0.9 / 0.1 更早）
     const visible = rect.top < vh * 0.2 && rect.bottom > vh * 0.01;
@@ -586,12 +586,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* 第6页：pol1 出现/消失（右下从右侧滑入） */
 (function initPol1OnPage6() {
-  const page6 = document.getElementById('page6');
+  const page7 = document.getElementById('page7');
   const pol1  = document.getElementById('pol1Img');
-  if (!page6 || !pol1) return;
+  if (!page7 || !pol1) return;
 
   function updatePol1() {
-    const rect = page6.getBoundingClientRect();
+    const rect = page7.getBoundingClientRect();
     const vh   = window.innerHeight;
     // 早点出现：0.8 / 0.2
     const visible = rect.top < vh * 0.3 && rect.bottom > vh * 0.01;
@@ -605,12 +605,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* Page10 handflower appear/disappear */
 (function initLastHandflower() {
-  const page10 = document.getElementById('page10');
+  const page11 = document.getElementById('page11');
   const img = document.getElementById('lastHandflowerImg');
-  if (!page10 || !img) return;
+  if (!page11 || !img) return;
 
   function update() {
-    const rect = page10.getBoundingClientRect();
+    const rect = page11.getBoundingClientRect();
     const vh = window.innerHeight;
     const visible = rect.top < vh * 0.2 && rect.bottom > vh * 0.4;
     img.classList.toggle('visible', visible);
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
   update();
 })();
 
-// 统一第2/10页 click 手位置
+// 统一第2/11页 click 手位置
 (function unifyClickIcons() {
   ['clickIcon5', 'clickIconFinal'].forEach(id => {
     const el = document.getElementById(id);

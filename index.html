@@ -17,7 +17,7 @@
 
 <main>
 
-  <!-- 第1-4页：草地 + 眼睛 + Besuche 推进 -->
+  <!-- 第1-5页：草地 + 草地2 + 眼睛 + Besuche 推进 -->
   <div class="cover-transition-wrapper">
 
     <!-- 第1页：草地 -->
@@ -55,8 +55,15 @@
       </button>
     </section>
 
-    <!-- 第2页：眼睛交互（原第4页前移） -->
-    <section class="page page2" id="page2" aria-label="第2页：眼睛交互">
+    <!-- 第2页：草地同背景（空白） -->
+    <section class="page page2" id="page2" aria-label="第2页：草地背景">
+      <main class="scene" aria-hidden="true">
+        <div class="season grass active"></div>
+      </main>
+    </section>
+
+    <!-- 第3页：眼睛交互（原第2页后移） -->
+    <section class="page page3" id="page3" aria-label="第3页：眼睛交互">
       <div class="eye-interaction-container">
         <div class="black-background"></div>
         <img class="sheep-outline" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
@@ -74,8 +81,8 @@
     </div>
     </section>
 
-    <!-- 第3页：Besuche1（原第2页后移） -->
-    <section class="page page3" id="page3" aria-label="第3页：Besuche1">
+    <!-- 第4页：Besuche1（原第3页后移） -->
+    <section class="page page4" id="page4" aria-label="第4页：Besuche1">
       <main class="Besuche1" id="scene1-1">
         <div class="text-group-right" style="color:#ffffff;">
           <p class="text">Ich habe viele Besuche.</p>
@@ -83,8 +90,8 @@
       </main>
     </section>
 
-    <!-- 第4页：Besuche2（原第3页后移） -->
-    <section class="page page4" id="page4" aria-label="第4页：Besuche2">
+    <!-- 第5页：Besuche2（原第4页后移） -->
+    <section class="page page5" id="page5" aria-label="第5页：Besuche2">
       <main class="Besuche2" id="scene1-2">
         <div class="title-fixed" aria-hidden="true"></div>
       </main>
@@ -104,8 +111,8 @@
          style="width:100%;height:100%;object-fit:contain;">
   </div>
 
-  <!-- 第5页：秋天上半 + 文本 -->
-  <section class="page page5" id="page5" aria-label="第5页：秋天上半">
+  <!-- 第6页：秋天上半 + 文本 -->
+  <section class="page page6" id="page6" aria-label="第6页：秋天上半">
     <div class="backgroundtop"
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
@@ -124,8 +131,8 @@
     </div>
   </section>
 
-  <!-- 第6页：秋天下半 -->
-  <section class="page page6" id="page6" aria-label="第6页：秋天下半部分">
+  <!-- 第7页：秋天下半 -->
+  <section class="page page7" id="page7" aria-label="第7页：秋天下半部分">
     <div class="backgroundbottom"
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
@@ -136,8 +143,8 @@
     </div>
   </section>
 
-  <!-- 第7页：工地上半 -->
-  <section class="page page7" id="page7" aria-label="第7页：工地上半部分">
+  <!-- 第8页：工地上半 -->
+  <section class="page page8" id="page8" aria-label="第8页：工地上半部分">
     <div class="backgroundtop"
          style="
            background-image: url('./images/baustelle.jpg');
@@ -148,8 +155,8 @@
          aria-hidden="true"></div>
   </section>
 
-  <!-- 第8页：工地下半 -->
-  <section class="page page8" id="page8" aria-label="第8页：工地下半部分">
+  <!-- 第9页：工地下半 -->
+  <section class="page page9" id="page9" aria-label="第9页：工地下半部分">
     <div class="backgroundbottom"
          style="
            background-image: url('./images/baustelle.jpg');
@@ -168,8 +175,8 @@
     </div>
   </section>
 
-  <!-- 第9页：schild + truck -->
-  <section class="page page9" id="page9" aria-label="第9页：schild + truck">
+  <!-- 第10页：schild + truck -->
+  <section class="page page10" id="page10" aria-label="第10页：schild + truck">
     <main class="scene" id="scene9">
       <div class="season schild active">
         <img src="images/fullschild.jpg" alt="schild" class="schild-img" style="width:100%;height:100%;object-fit:cover;">
@@ -187,8 +194,8 @@
     </main>
   </section>
 
-  <!-- 第10页：羊轮廓 + 诗句 + 点击出现文字 -->
-  <section class="page page10" id="page10" aria-label="第10页：Fenster">
+  <!-- 第11页：羊轮廓 + 诗句 + 点击出现文字 -->
+  <section class="page page11" id="page11" aria-label="第11页：Fenster">
     <img class="sheep-outline-base" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
 
     <div class="text-group-right" style="color:#fff;">
