@@ -40,6 +40,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const topLayer = document.querySelector('.eye-layer-top');       // sheepblack.jpg
     const midLayer = document.querySelector('.eye-layer-middle');    // sheepeye.png
     const baseLayer = document.querySelector('.eye-layer-base');     // Maxi5 背景
+    const visitsText = document.getElementById('visitsText');
 
     function showMid() {
       if (topLayer) topLayer.style.opacity = '0';
@@ -55,6 +56,10 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    function showText() {
+      if (visitsText) visitsText.classList.add('show');
+    }
+
     function reset() {
       if (topLayer) topLayer.style.opacity = '1';
       if (midLayer) {
@@ -62,10 +67,11 @@ window.addEventListener('DOMContentLoaded', () => {
         midLayer.classList.remove('dissolve');
       }
       if (baseLayer) baseLayer.style.opacity = '1';
+      if (visitsText) visitsText.classList.remove('show');
     }
 
     reset();
-    return { showMid, dissolveMid, reset };
+    return { showMid, dissolveMid, showText, reset };
   })();
 
   // Wheel 导航 + 首屏分阶段
@@ -101,6 +107,7 @@ window.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         eyeStage = 2;
         eyeLayers.dissolveMid();
+        eyeLayers.showText();
         setEyeCooldown();
         return;
       }
@@ -396,17 +403,17 @@ window.addEventListener('DOMContentLoaded', () => {
 /* 第1页 handhandy 草出现/消失 */
 
 try {
-  (function initHandOnPage1() {
-    const page1  = document.getElementById('page1');
+  (function initHandOnPage4() {
+    const page4  = document.getElementById('page4');
     const handImg = document.getElementById('handImg4');
-    if (!page1 || !handImg) return;
+    if (!page4 || !handImg) return;
 
     function updateHand(active) {
       handImg.classList.toggle('visible', active);
     }
 
-    window.addEventListener('pagechange', e => updateHand(e.detail.index === 1));
-    updateHand(currentPageIndex === 1);
+    window.addEventListener('pagechange', e => updateHand(e.detail.index === 2));
+    updateHand(currentPageIndex === 2);
   })();
 } catch (e) {
   console.error('initHandOnPage4 error', e);
@@ -422,26 +429,81 @@ try {
   const hero  = document.getElementById('sheephero');
   if (!hero) return;
 
-  // index -> {x%, y%, scale}
-  const poses = {
-    3: { x: 50, y: 20, s: 1.0 },  // page6
-    4: { x: 45, y: 25, s: 0.6 },  // page7
-    5: { x: 35, y: 35, s: 0.3 }   // page8
-  };
+  let running = false;
+  let phase = 'idle'; // idle | toCenter | wander
+  let x = -30;
+  let y = 20;
+  let targetX = 50;
+  let targetY = 20;
+  let lastTs = performance.now();
 
-  function applyPose(idx) {
-    const pose = poses[idx];
-    const active = !!pose;
-    hero.style.opacity = active ? '1' : '0';
-    if (!active) return;
-    hero.style.position = 'fixed';
-    hero.style.left = `${pose.x}%`;
-    hero.style.top  = `${pose.y}%`;
-    hero.style.transform = `translate(-50%, -50%) scale(${pose.s})`;
+  const SPEED_CENTER = 30; // vw per second toward center
+  const SPEED_WANDER = 12; // vw per second when wandering
+
+  function pickWanderTarget() {
+    targetX = 50 + (Math.random() * 24 - 12); // +/-12%
+    targetY = 20 + (Math.random() * 12 - 6);  // +/-6%
   }
 
-  window.addEventListener('pagechange', e => applyPose(e.detail.index));
-  applyPose(currentPageIndex);
+  function step(ts) {
+    if (!running) return;
+    const dt = Math.min((ts - lastTs) / 1000, 0.05);
+    lastTs = ts;
+
+    if (phase === 'toCenter') {
+      const dx = targetX - x;
+      const stepX = Math.sign(dx) * Math.min(Math.abs(dx), SPEED_CENTER * dt);
+      x += stepX;
+      if (Math.abs(dx) < 0.2) {
+        phase = 'wander';
+        pickWanderTarget();
+      }
+    } else if (phase === 'wander') {
+      const dx = targetX - x;
+      const dy = targetY - y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 0.3) {
+        pickWanderTarget();
+      } else {
+        const stepDist = SPEED_WANDER * dt;
+        const t = Math.min(stepDist / dist, 1);
+        x += dx * t;
+        y += dy * t;
+      }
+    }
+
+    hero.style.left = `${x}%`;
+    hero.style.top  = `${y}%`;
+    hero.style.transform = 'translate(-50%, -50%) scale(1)';
+    requestAnimationFrame(step);
+  }
+
+  function activate() {
+    if (running) return;
+    running = true;
+    phase = 'toCenter';
+    x = -30; // start off-screen to the left
+    y = 20;
+    targetX = 50;
+    targetY = 20;
+    lastTs = performance.now();
+    hero.style.opacity = '1';
+    requestAnimationFrame(step);
+  }
+
+  function deactivate() {
+    running = false;
+    phase = 'idle';
+    hero.style.opacity = '0';
+  }
+
+  function onPageChange(idx) {
+    if (idx === 1) activate();
+    else deactivate();
+  }
+
+  window.addEventListener('pagechange', e => onPageChange(e.detail.index));
+  onPageChange(currentPageIndex);
 })();
 
 /* === 通用：点击切换显隐（支持来回切换） === */
