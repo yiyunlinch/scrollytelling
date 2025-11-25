@@ -4,6 +4,7 @@ let currentPageIndex = 0;
 let pages = [];
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
 let eyeStage = 0;      // 0 初始, 1 显示 sheepeye, 2 溶解, 3 可翻页
+let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -12,7 +13,7 @@ function easeInOutQuad(t) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  pages = Array.from(document.querySelectorAll('.page'));
+  pages = Array.from(document.querySelectorAll('.cover-h-track .page'));
   const track = document.querySelector('.cover-h-track');
 
   /* === 全局页面平移导航 === */
@@ -27,6 +28,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     pages.forEach((p, i) => p.classList.toggle('active', i === currentPageIndex));
     window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
+    // 进入新页面后添加冷却，防止连续翻页
+    globalScrollLockUntil = performance.now() + 650;
   }
 
   // 初始定位第一页
@@ -66,12 +69,12 @@ window.addEventListener('DOMContentLoaded', () => {
   })();
 
   // Wheel 导航 + 首屏分阶段
-  let wheelLock = false;
-  const PAGE_WHEEL_DELAY = 200;
   const EYE_COOLDOWN = 650;
 
   function setEyeCooldown() {
-    eyeLockUntil = performance.now() + EYE_COOLDOWN;
+    const now = performance.now();
+    eyeLockUntil = now + EYE_COOLDOWN;
+    globalScrollLockUntil = Math.max(globalScrollLockUntil, now + EYE_COOLDOWN);
   }
 
   window.addEventListener('wheel', e => {
@@ -79,7 +82,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (dir === 0) return;
 
     const now = performance.now();
-    const stillCooling = now < eyeLockUntil;
+    const stillCooling = now < Math.max(eyeLockUntil, globalScrollLockUntil);
 
     if (currentPageIndex === 0 && dir > 0) {
       if (stillCooling) {
@@ -115,12 +118,9 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (wheelLock) return;
-    wheelLock = true;
-    setTimeout(() => wheelLock = false, PAGE_WHEEL_DELAY);
-
     e.preventDefault();
     goToPage(currentPageIndex + dir);
+    globalScrollLockUntil = performance.now() + EYE_COOLDOWN;
   }, { passive: false });
 
 
@@ -270,7 +270,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!btn) return;
       btn.addEventListener('click', e => {
         e.preventDefault();
-        goToPage(1);
+        goToPage(2);
       });
     })();
   } catch (e) { console.error('initArrow error', e); }
@@ -310,7 +310,7 @@ window.addEventListener('DOMContentLoaded', () => {
       window.addEventListener('pagechange', e => onPageChange(e.detail.index));
       onPageChange(currentPageIndex);
     }
-    initMovingAnimOnce('transporterAnim', 9);
+    initMovingAnimOnce('transporterAnim', 7);
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
  /* ====== 挖土机：第8页内循环，按页激活 ====== */
@@ -331,7 +331,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function onPageChange(idx) {
-    const active = idx === 7; // page8
+    const active = idx === 5; // page8
     running = active;
     digger.style.display = active ? 'block' : 'none';
     if (active) {
@@ -368,8 +368,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      window.addEventListener('pagechange', e => activate(e.detail.index === 8));
-      activate(currentPageIndex === 8);
+      window.addEventListener('pagechange', e => activate(e.detail.index === 6));
+      activate(currentPageIndex === 6);
     })();
   } catch (e) {
     console.error('initKinderAndDialogOnPage8 error', e);
@@ -389,8 +389,8 @@ window.addEventListener('DOMContentLoaded', () => {
     handImg.classList.toggle('visible', active);
   }
 
-  window.addEventListener('pagechange', e => updateHand(e.detail.index === 0));
-  updateHand(currentPageIndex === 0);
+  window.addEventListener('pagechange', e => updateHand(e.detail.index === 1));
+  updateHand(currentPageIndex === 1);
 })();
 
 /* 第1页 handhandy 草出现/消失 */
@@ -405,8 +405,8 @@ try {
       handImg.classList.toggle('visible', active);
     }
 
-    window.addEventListener('pagechange', e => updateHand(e.detail.index === 0));
-    updateHand(currentPageIndex === 0);
+    window.addEventListener('pagechange', e => updateHand(e.detail.index === 1));
+    updateHand(currentPageIndex === 1);
   })();
 } catch (e) {
   console.error('initHandOnPage4 error', e);
@@ -424,9 +424,9 @@ try {
 
   // index -> {x%, y%, scale}
   const poses = {
-    5: { x: 50, y: 20, s: 1.0 },  // page6
-    6: { x: 45, y: 25, s: 0.6 },  // page7
-    7: { x: 35, y: 35, s: 0.3 }   // page8
+    3: { x: 50, y: 20, s: 1.0 },  // page6
+    4: { x: 45, y: 25, s: 0.6 },  // page7
+    5: { x: 35, y: 35, s: 0.3 }   // page8
   };
 
   function applyPose(idx) {
@@ -468,8 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pole  = document.getElementById('poleImg');
   if (!pole) return;
   const toggle = active => pole.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 5));
-  toggle(currentPageIndex === 5);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 3));
+  toggle(currentPageIndex === 3);
 })();
 
 /* 第7页：pol1 显隐（按页） */
@@ -477,8 +477,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pol1  = document.getElementById('pol1Img');
   if (!pol1) return;
   const toggle = active => pol1.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 6));
-  toggle(currentPageIndex === 6);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 4));
+  toggle(currentPageIndex === 4);
 })();
 
 /* Page11 handflower 显隐（按页） */
@@ -486,8 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const img = document.getElementById('lastHandflowerImg');
   if (!img) return;
   const toggle = active => img.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 10));
-  toggle(currentPageIndex === 10);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 8));
+  toggle(currentPageIndex === 8);
 })();
 
 // 统一第2/11页 click 手位置
