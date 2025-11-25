@@ -76,6 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Wheel 导航 + 首屏分阶段
   const EYE_COOLDOWN = 650;
+  const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
 
   function setEyeCooldown() {
     const now = performance.now();
@@ -114,7 +115,9 @@ window.addEventListener('DOMContentLoaded', () => {
       if (eyeStage === 2) {
         e.preventDefault();
         eyeStage = 3;
+        window.dispatchEvent(new Event('hero-start'));
         setEyeCooldown();
+        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
         goToPage(1);
         return;
       }
@@ -437,8 +440,8 @@ try {
   let targetY = 20;
   let lastTs = performance.now();
 
-  const SPEED_CENTER = 30; // vw per second toward center
-  const SPEED_WANDER = 12; // vw per second when wandering
+  const SPEED_CENTER = 15; // vw per second toward center (slower)
+  const SPEED_WANDER = 6;  // vw per second when wandering (slower)
 
   function pickWanderTarget() {
     targetX = 50 + (Math.random() * 24 - 12); // +/-12%
@@ -474,7 +477,7 @@ try {
 
     hero.style.left = `${x}%`;
     hero.style.top  = `${y}%`;
-    hero.style.transform = 'translate(-50%, -50%) scale(1)';
+    hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
     requestAnimationFrame(step);
   }
 
@@ -497,13 +500,7 @@ try {
     hero.style.opacity = '0';
   }
 
-  function onPageChange(idx) {
-    if (idx === 1) activate();
-    else deactivate();
-  }
-
-  window.addEventListener('pagechange', e => onPageChange(e.detail.index));
-  onPageChange(currentPageIndex);
+  window.addEventListener('hero-start', () => activate());
 })();
 
 /* === 通用：点击切换显隐（支持来回切换） === */
