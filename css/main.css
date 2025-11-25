@@ -333,85 +333,60 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
-.black-background {
+.eye-interaction-container.show-maxi {
+  background-image: url('../images/Maxi/Maxi5.jpg');
+}
+.eye-layer-stack {
   position: absolute;
   inset: 0;
-  background: #000;
-  z-index: 1;
-  opacity: 1;
-  transition: opacity 0.6s cubic-bezier(.7,0,.3,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-/* === 眼睛窗口：最简单椭圆 3:1 === */
-.eye-window {
+.eye-layer {
   position: absolute;
-  top: 50%;
-  left: 50%;            /* 居中 */
-  width: 40vw;          /* ✅ 放大一倍 */
-  height: 20vw;         /* 3:1 比例 */
-  max-width: 2000px;
-  max-height: 1600px;
-  transform: translate(-50%, -50%);
-  overflow: hidden;
-  z-index: 3;
-  transition: height 0.5s ease;
-
-  /* ✅ 圆形压扁椭圆 */
-  border-radius: 50%;
-  background: transparent;
-}
-
-/* ✅ 眼睛“睁开”状态 */
-.eye-window.open {
-  height: 20vw;         /* 保持 3:1 */
-}
-
-/* === 上下眼皮（保留眨眼支持）=== */
-.eye-lid {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  background: #000;
-  z-index: 4;
-  transition: height 0.4s cubic-bezier(.7,0,.3,1);
+  width: min(95vw, 1547px);
+  max-height: 95vh;
+  height: auto;
+  object-fit: contain;
   pointer-events: none;
 }
-
-.eye-lid-top {
-  top: 0;
-  height: 50%;
-  border-top-left-radius: 50% 100%;
-  border-top-right-radius: 50% 100%;
+.eye-layer-base { z-index: 1; opacity: 1; }
+.eye-layer-middle {
+  z-index: 2;
+  opacity: 0;
+  --cut: 0%;
+  mask-image: radial-gradient(circle at 50% 50%,
+    transparent 0%,
+    transparent var(--cut, 0%),
+    black calc(var(--cut, 0%) + 2%),
+    black 100%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%,
+    transparent 0%,
+    transparent var(--cut, 0%),
+    black calc(var(--cut, 0%) + 2%),
+    black 100%);
+  mask-mode: alpha;
+  -webkit-mask-mode: alpha;
 }
-
-.eye-lid-bottom {
-  bottom: 0;
-  height: 50%;
-  border-bottom-left-radius: 50% 100%;
-  border-bottom-right-radius: 50% 100%;
+.eye-layer-middle.dissolve {
+  animation: eyeMiddleDissolve 1s ease-in forwards;
 }
+.eye-layer-top { z-index: 3; opacity: 1; }
 
-/* ✅ “睁眼” → 眼皮打开 */
-.eye-window.open .eye-lid-top,
-.eye-window.open .eye-lid-bottom {
-  height: 0 !important;
-}
-
-
-.maxi-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-.click-overlay {
-  position: absolute;
-  inset: 0;
-  background: transparent;
-  z-index: 10;
-  cursor: pointer;
-  pointer-events: auto;
+@keyframes eyeMiddleDissolve {
+  from {
+    --cut: 0%;
+    opacity: 1;
+  }
+  to {
+    --cut: 140%;
+    opacity: 0;
+  }
 }
 /* 点击图标（第4/第10页） */
 .click-icon {

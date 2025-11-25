@@ -2,9 +2,8 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 let currentPageIndex = 0;
 let pages = [];
-let eyeOpened = false; // 首屏眼睛是否已通过滚轮打开
-let eyeScattered = false; // 首屏羊轮廓是否已散开
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
+let eyeStage = 0;      // 0 初始, 1 显示 sheepeye, 2 溶解, 3 可翻页
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -33,124 +32,96 @@ window.addEventListener('DOMContentLoaded', () => {
   // 初始定位第一页
   goToPage(0, false);
 
-  // Wheel 导航
+  /* ====== 第1页：三张图分三次下拉 ====== */
+  const eyeLayers = (() => {
+    const topLayer = document.querySelector('.eye-layer-top');       // sheepblack.jpg
+    const midLayer = document.querySelector('.eye-layer-middle');    // sheepeye.png
+    const baseLayer = document.querySelector('.eye-layer-base');     // Maxi5 背景
+
+    function showMid() {
+      if (topLayer) topLayer.style.opacity = '0';
+      if (midLayer) {
+        midLayer.style.opacity = '1';
+        midLayer.classList.remove('dissolve');
+      }
+    }
+
+    function dissolveMid() {
+      if (midLayer) {
+        midLayer.classList.add('dissolve');
+      }
+    }
+
+    function reset() {
+      if (topLayer) topLayer.style.opacity = '1';
+      if (midLayer) {
+        midLayer.style.opacity = '0';
+        midLayer.classList.remove('dissolve');
+      }
+      if (baseLayer) baseLayer.style.opacity = '1';
+    }
+
+    reset();
+    return { showMid, dissolveMid, reset };
+  })();
+
+  // Wheel 导航 + 首屏分阶段
   let wheelLock = false;
+  const PAGE_WHEEL_DELAY = 200;
+  const EYE_COOLDOWN = 650;
+
+  function setEyeCooldown() {
+    eyeLockUntil = performance.now() + EYE_COOLDOWN;
+  }
+
   window.addEventListener('wheel', e => {
-    if (currentPageIndex === 0) {
-      const now = performance.now();
-      // 第一次下滑：仅睁眼
-      if (e.deltaY > 0 && !eyeOpened) {
-        e.preventDefault();
-        eyeOpened = true;
-        eyeLockUntil = now + 600; // 吸收惯性
-        window.dispatchEvent(new Event('eye-open'));
-        return;
-      }
-      // 冷却期内阻止翻页/散开
-      if (now < eyeLockUntil) {
+    const dir = e.deltaY > 0 ? 1 : -1;
+    if (dir === 0) return;
+
+    const now = performance.now();
+    const stillCooling = now < eyeLockUntil;
+
+    if (currentPageIndex === 0 && dir > 0) {
+      if (stillCooling) {
         e.preventDefault();
         return;
       }
-      // 第二次下滑：轮廓散开
-      if (e.deltaY > 0 && eyeOpened && !eyeScattered) {
+
+      if (eyeStage === 0) {
         e.preventDefault();
-        eyeScattered = true;
-        eyeLockUntil = now + 400;
-        window.dispatchEvent(new Event('eye-scatter'));
+        eyeStage = 1;
+        eyeLayers.showMid();
+        setEyeCooldown();
+        return;
+      }
+      if (eyeStage === 1) {
+        e.preventDefault();
+        eyeStage = 2;
+        eyeLayers.dissolveMid();
+        setEyeCooldown();
+        return;
+      }
+      if (eyeStage === 2) {
+        e.preventDefault();
+        eyeStage = 3;
+        setEyeCooldown();
+        goToPage(1);
         return;
       }
     }
 
+    if (stillCooling) {
+      e.preventDefault();
+      return;
+    }
+
     if (wheelLock) return;
     wheelLock = true;
-    setTimeout(() => wheelLock = false, 200);
+    setTimeout(() => wheelLock = false, PAGE_WHEEL_DELAY);
 
-    const dir = e.deltaY > 0 ? 1 : -1;
-    if (dir === 0) return;
     e.preventDefault();
     goToPage(currentPageIndex + dir);
   }, { passive: false });
-
-/* ====== 第4页眼睛交互（只显示 Maxi5） ====== */
-(function initEyePage5() {
-  const eyeWindow   = document.getElementById('eyeWindow5');
-  const maxiImage   = document.getElementById('maxiImage5');
-  const clickOverlay = document.getElementById('clickOverlay5');
-  const clickIcon    = document.getElementById('clickIcon5');
-  const blackBg     = eyeWindow?.closest('.eye-interaction-container')?.querySelector('.black-background');
-  const sheepOutline = document.querySelector('.sheep-outline');
-
-  // ✅ 仅保留一张图片
-  const IMG = './images/Maxi/Maxi5.jpg';
-
-  let isOpen = false;
-
-  if (maxiImage) {
-    maxiImage.style.transition = 'opacity 0.25s ease';
-  }
-
-  function showImg() {
-    if (!maxiImage) return;
-    maxiImage.style.opacity = '0';
-    setTimeout(() => {
-      maxiImage.src = IMG;
-      maxiImage.onload = () => { maxiImage.style.opacity = '1'; };
-    }, 20);
-  }
-
-  function closeEye() {
-    blackBg.style.opacity = '1';
-    blackBg.style.pointerEvents = 'auto';
-    eyeWindow.classList.remove('open');
-
-    // 还原闭眼状态
-    eyeWindow.querySelectorAll('.eye-lid').forEach(l => l.style.height = '');
-    maxiImage.style.opacity = '0';
-    setTimeout(() => { maxiImage.src = ''; }, 200);
-  }
-
-  function openEye() {
-    blackBg.style.opacity = '0';
-    blackBg.style.pointerEvents = 'none';
-    eyeWindow.classList.add('open');
-
-    // 让眼皮张开
-    eyeWindow.querySelectorAll('.eye-lid').forEach(l => l.style.height = '0px');
-
-    // ✅ 始终显示同一张图
-    showImg();
-  }
-
-  function toggleEye() {
-    isOpen = !isOpen;
-    if (isOpen) openEye();
-    else closeEye();
-  }
-
-  if (eyeWindow && maxiImage && clickOverlay && blackBg) {
-    // 初始为闭眼状态
-    closeEye();
-
-    clickOverlay.addEventListener('click', toggleEye);
-    if (clickIcon) clickIcon.addEventListener('click', toggleEye);
-
-    // 支持滚轮触发打开
-    window.addEventListener('eye-open', () => {
-      if (!isOpen) {
-        isOpen = true;
-        openEye();
-      }
-    });
-
-    // 支持滚轮触发轮廓散开（第2次下滑）
-    window.addEventListener('eye-scatter', () => {
-      if (!sheepOutline) return;
-      if (sheepOutline.classList.contains('scatter-out')) return;
-      sheepOutline.classList.add('scatter-out');
-      setTimeout(() => { sheepOutline.style.visibility = 'hidden'; }, 1000);
-    });
-  }
-})();
 
 
 /* ====== 小羊群：Page1 内部 + 分离力（不重叠） ====== */
