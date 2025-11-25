@@ -320,7 +320,7 @@ window.addEventListener('DOMContentLoaded', () => {
       window.addEventListener('pagechange', e => onPageChange(e.detail.index));
       onPageChange(currentPageIndex);
     }
-    initMovingAnimOnce('transporterAnim', 7);
+    initMovingAnimOnce('transporterAnim', 6);
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
  /* ====== 挖土机：第8页内循环，按页激活 ====== */
@@ -341,7 +341,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function onPageChange(idx) {
-    const active = idx === 5; // page8
+    const active = idx === 4; // page8
     running = active;
     digger.style.display = active ? 'block' : 'none';
     if (active) {
@@ -378,8 +378,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      window.addEventListener('pagechange', e => activate(e.detail.index === 6));
-      activate(currentPageIndex === 6);
+      window.addEventListener('pagechange', e => activate(e.detail.index === 5));
+      activate(currentPageIndex === 5);
     })();
   } catch (e) {
     console.error('initKinderAndDialogOnPage8 error', e);
@@ -406,10 +406,10 @@ window.addEventListener('DOMContentLoaded', () => {
 /* 第1页 handhandy 草出现/消失 */
 
 try {
-  (function initHandOnPage4() {
-    const page4  = document.getElementById('page4');
+  (function initHandOnPage6() {
+    const page6  = document.getElementById('page6');
     const handImg = document.getElementById('handImg4');
-    if (!page4 || !handImg) return;
+    if (!page6 || !handImg) return;
 
     function updateHand(active) {
       handImg.classList.toggle('visible', active);
@@ -419,7 +419,7 @@ try {
     updateHand(currentPageIndex === 2);
   })();
 } catch (e) {
-  console.error('initHandOnPage4 error', e);
+  console.error('initHandOnPage6 error', e);
 }
 
 
@@ -527,8 +527,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pole  = document.getElementById('poleImg');
   if (!pole) return;
   const toggle = active => pole.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 3));
-  toggle(currentPageIndex === 3);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 2));
+  toggle(currentPageIndex === 2);
 })();
 
 /* 第7页：pol1 显隐（按页） */
@@ -536,8 +536,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pol1  = document.getElementById('pol1Img');
   if (!pol1) return;
   const toggle = active => pol1.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 4));
-  toggle(currentPageIndex === 4);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 3));
+  toggle(currentPageIndex === 3);
 })();
 
 /* Page11 handflower 显隐（按页） */
@@ -545,8 +545,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const img = document.getElementById('lastHandflowerImg');
   if (!img) return;
   const toggle = active => img.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 8));
-  toggle(currentPageIndex === 8);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 7));
+  toggle(currentPageIndex === 7);
 })();
 
 // 统一第2/11页 click 手位置

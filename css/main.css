@@ -582,9 +582,8 @@ body {
   opacity: 1;
 }
 
-/* === 第1页 手臂草动画相关 === */
-#page1 .hand-wrap,
-#page4 .hand-wrap {
+/* 手臂草动画（第6页） */
+#page6 .hand-wrap {
   position: absolute;
   bottom: 10%;
   left: 100%;
@@ -593,8 +592,7 @@ body {
   overflow: visible;
 }
 
-#page1 .hand-img,
-#page4 .hand-img {
+#page6 .hand-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -603,8 +601,7 @@ body {
   opacity: 0;
 }
 
-#page1 .hand-img.visible,
-#page4 .hand-img.visible {
+#page6 .hand-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }
