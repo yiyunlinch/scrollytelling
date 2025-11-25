@@ -98,12 +98,12 @@ window.addEventListener('DOMContentLoaded', () => {
     else closeEye();
   }
 
-  if (eyeWindow && maxiImage && clickOverlay && clickIcon && blackBg) {
+  if (eyeWindow && maxiImage && clickOverlay && blackBg) {
     // 初始为闭眼状态
     closeEye();
 
     clickOverlay.addEventListener('click', toggleEye);
-    clickIcon.addEventListener('click', toggleEye);
+    if (clickIcon) clickIcon.addEventListener('click', toggleEye);
   }
 })();
 

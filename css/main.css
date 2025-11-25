@@ -300,7 +300,7 @@ body {
 
   /* ✅ 缩小 + 左移 */
   transform-origin: left center;
-  transform: translateX(-8vw) scale(0.7);
+  transform: translateX(-8vw) scale(1);
 }
 
 
@@ -326,11 +326,11 @@ body {
 .eye-window {
   position: absolute;
   top: 50%;
-  left: 35%;            /* 你原来是 35%，保留 */
-  width: 20vw;          /* ✅ 宽度 */
-  height: 8vw;         /* ✅ 3:1 比例 => 30 : 10 */
-  max-width: 800px;
-  max-height: 533px;
+  left: 50%;            /* 居中 */
+  width: 40vw;          /* ✅ 放大一倍 */
+  height: 20vw;         /* 3:1 比例 */
+  max-width: 2000px;
+  max-height: 1600px;
   transform: translate(-50%, -50%);
   overflow: hidden;
   z-index: 3;
@@ -343,7 +343,7 @@ body {
 
 /* ✅ 眼睛“睁开”状态 */
 .eye-window.open {
-  height: 10vw;         /* 保持 3:1 （睁开时不改变比例） */
+  height: 20vw;         /* 保持 3:1 */
 }
 
 /* === 上下眼皮（保留眨眼支持）=== */
