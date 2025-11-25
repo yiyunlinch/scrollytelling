@@ -2,6 +2,8 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 let currentPageIndex = 0;
 let pages = [];
+let eyeOpened = false; // 首屏眼睛是否已通过滚轮打开
+let eyeOpenCooldown = false; // 打开后的小延时，防止惯性切页
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -33,6 +35,21 @@ window.addEventListener('DOMContentLoaded', () => {
   // Wheel 导航
   let wheelLock = false;
   window.addEventListener('wheel', e => {
+    // 首屏眼睛：首次下滑先打开，不切换页面
+    if (currentPageIndex === 0 && e.deltaY > 0 && !eyeOpened) {
+      e.preventDefault();
+      eyeOpened = true;
+      eyeOpenCooldown = true;
+      window.dispatchEvent(new Event('eye-open'));
+      setTimeout(() => { eyeOpenCooldown = false; }, 400); // 吸收惯性
+      return;
+    }
+
+    if (currentPageIndex === 0 && eyeOpenCooldown) {
+      e.preventDefault();
+      return;
+    }
+
     if (wheelLock) return;
     wheelLock = true;
     setTimeout(() => wheelLock = false, 200);
@@ -104,6 +121,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     clickOverlay.addEventListener('click', toggleEye);
     if (clickIcon) clickIcon.addEventListener('click', toggleEye);
+
+    // 支持滚轮触发打开
+    window.addEventListener('eye-open', () => {
+      if (!isOpen) {
+        isOpen = true;
+        openEye();
+      }
+    });
   }
 })();
 
