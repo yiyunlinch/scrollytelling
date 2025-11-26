@@ -110,14 +110,14 @@ body {
 /* 挖土机（固定层） */
 #digger-fixed {
   position: fixed;
-  bottom: 18%;
+  top: 0%;              /* 再抬高，贴近顶部 */
   left: 120vw;             /* 初始在屏幕右侧外 */
   width: 180px;
   height: 100px;
   pointer-events: none;
   z-index: 500;            /* 背景(0-20) < digger(500) < 羊(9999) < sheephero(100000) */
   transform: scale(5);
-  display: none;           /* 只在第4~7页的范围内才显示和循环 */
+  display: none;         
 }
 
 /* 第2页 */

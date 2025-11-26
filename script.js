@@ -380,20 +380,54 @@ window.addEventListener('DOMContentLoaded', () => {
 initMovingAnimOnce('transporterAnim', 7);
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
- /* ====== 挖土机：第8页内循环，按页激活 ====== */
+/* ====== 挖土机：第8页内循环，按页激活 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
   if (!digger) return;
 
-  let x = window.innerWidth;
-  const baseSpeed = 4;
   let running = false;
+  let dir = -1; // -1: right -> left, 1: left -> right
+  let x = 0;
+  const SPEED = 9.5;
+  const MARGIN = 80;
+  const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
+  let firstRun = true;
+  let flipSign = 1; // 1 不翻，-1 反转，之后每次出屏切换
+
+  function bounds() {
+    const w = window.innerWidth;
+    const ew = (digger.offsetWidth || 180) * BASE_SCALE;
+    return { left: -ew - MARGIN, right: w + ew + MARGIN };
+  }
+
+  function applyTransform() {
+    digger.style.left = `${x}px`;
+    digger.style.transform = `scale(${BASE_SCALE}) scaleX(${flipSign})`;
+  }
+
+  function resetSide(nextDir) {
+    dir = nextDir;
+    if (firstRun) {
+      firstRun = false;    // 首次不翻转
+    } else {
+      flipSign *= -1;      // 之后每次出屏都翻转
+    }
+    const { left, right } = bounds();
+    x = dir === -1 ? right : left;
+    applyTransform();
+  }
 
   function step() {
     if (!running) return;
-    x -= baseSpeed;
-    if (x < -360) x = window.innerWidth * 1.2;
-    digger.style.left = x + 'px';
+    const { left, right } = bounds();
+    x += dir * SPEED;
+    if (dir === -1 && x <= left) {
+      resetSide(1);  // 到左侧后反转，改为左->右
+    } else if (dir === 1 && x >= right) {
+      resetSide(-1); // 到右侧后反转，改为右->左
+    } else {
+      applyTransform();
+    }
     requestAnimationFrame(step);
   }
 
@@ -402,12 +436,14 @@ initMovingAnimOnce('transporterAnim', 7);
     running = active;
     digger.style.display = active ? 'block' : 'none';
     if (active) {
-      x = window.innerWidth * 1.2;
+      firstRun = true;
+      flipSign = 1;
+      resetSide(-1); // 进入时从右往左
       requestAnimationFrame(step);
     }
   }
 
-  window.addEventListener('resize', () => { x = window.innerWidth; }, { passive: true });
+  window.addEventListener('resize', () => resetSide(dir), { passive: true });
   window.addEventListener('pagechange', e => onPageChange(e.detail.index));
   onPageChange(currentPageIndex);
 })();
