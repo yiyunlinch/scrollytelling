@@ -125,7 +125,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
   const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
-  const PRIVAT_RELEASE_COOLDOWN = 800; // page6 掉落后停顿一小会再允许翻页
 
   function setEyeCooldown(extra = 0) {
     const now = performance.now();
@@ -181,23 +180,24 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!inTrack) {
-      // page6 -> page7 过渡：先掉落 privat，再下一次滚动才允许翻页
+      // page6 -> page7 过渡：先冷却，再掉落 privat，再下一次滚动才允许翻页
       if (currentPageIndex === 5 && dir > 0) {
         if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
           e.preventDefault();
           return;
         }
         if (privatStage === 0) {
+          // 第一次滚动：只进入冷却，仍停留在第6页
           e.preventDefault();
           privatStage = 1;
-          privatDrop.drop();
-          setPrivatCooldown();
+          setPrivatCooldown(500);
           return;
         } else if (privatStage === 1) {
-          // 再滚一次也先拦住，加一段停顿
+          // 第二次滚动：触发掉落动画，仍停留在第6页
           e.preventDefault();
           privatStage = 2;
-          setPrivatCooldown(PRIVAT_RELEASE_COOLDOWN);
+          privatDrop.drop();
+          setPrivatCooldown(600); // 掉落后稍作停顿
           return;
         } else if (privatStage === 2) {
           if (stillCooling) {
