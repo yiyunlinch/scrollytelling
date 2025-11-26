@@ -591,7 +591,7 @@ body {
 /* === 第1页 handhandy（草地手） === */
 #page1 .handhandy-wrap {
   position: absolute;
-  bottom: 80%;
+  bottom: 70%;
   left: 100%;
   transform: translateY(100%);
   z-index: 1000;
@@ -604,6 +604,7 @@ body {
   transform: translateX(0) scale(2);
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
+  transition-delay: 2s;
 }
 #page1 .handhandy-img.visible {
   transform: translateX(-100%) scale(2);
@@ -613,7 +614,7 @@ body {
 /* 手臂草动画（第6页） */
 #page6 .hand-wrap {
   position: absolute;
-  bottom: 10%;
+  bottom: 90%;
   left: 100%;
   transform: translateY(100%);  /* 如果太低就改 80% 或 60% */
   z-index: 1000;
@@ -627,6 +628,7 @@ body {
   transform: translateX(0) scale(2);
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
+  
 }
 
 #page6 .hand-img.visible {
