@@ -109,14 +109,14 @@ body {
 
 /* 挖土机（固定层） */
 #digger-fixed {
-  position: fixed;
-  top: 50%;                /* 固定在第5页的中线位置 */
-  left: 120vw;             /* 初始在屏幕右侧外 */
+  position: absolute;       /* 锚定在第5页内部 */
+  top: 50%;                 /* 页面中线 */
+  left: 120%;               /* 初始在屏幕右侧外 */
   width: 180px;
   height: 100px;
   pointer-events: none;
-  z-index: 500;            /* 背景(0-20) < digger(500) < 羊(9999) < sheephero(100000) */
-  transform: translateY(-50%) scale(5);
+  z-index: 500;             /* 背景(0-20) < digger(500) < 羊(9999) < sheephero(100000) */
+  transform: translate(-50%, -50%) scale(5);
   display: none;         
 }
 

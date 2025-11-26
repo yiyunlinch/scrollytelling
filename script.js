@@ -495,15 +495,15 @@ initMovingAnimOnce('transporterAnim', 7);
 /* ====== 挖土机：第8页内循环，按页激活 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
-  if (!digger) return;
+  const container = document.getElementById('page5');
+  if (!digger || !container) return;
 
   let running = false;
   let dir = -1; // -1: right -> left, 1: left -> right
   let x = 0;
-  const SPEED = 7.5;  // 适度加速
+  const SPEED = 7.5;  // 水平移动速度
   const MARGIN = 80;  // 保持原外侧缓冲
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
-  const Y_POS = 50;   // vh，固定在一条水平线上
   let firstRun = true;
   let flipSign = 1; // 1 不翻，-1 反转，之后每次出屏切换
   let activePage = false;
@@ -512,15 +512,15 @@ initMovingAnimOnce('transporterAnim', 7);
   const EXIT_TIMEOUT = 2000; // 最长离场时间
 
   function bounds() {
-    const w = window.innerWidth;
+    const w = container.clientWidth || window.innerWidth;
     const ew = (digger.offsetWidth || 180) * BASE_SCALE;
     return { left: -ew - MARGIN, right: w + ew + MARGIN };
   }
 
   function applyTransform() {
     digger.style.left = `${x}px`;
-    digger.style.top = `${Y_POS}vh`;
-    digger.style.transform = `translateY(-50%) scale(${BASE_SCALE}) scaleX(${flipSign})`;
+    digger.style.top = '50%'; // 始终沿着容器中线
+    digger.style.transform = `translate(-50%, -50%) scale(${BASE_SCALE}) scaleX(${flipSign})`;
   }
 
   function resetSide(nextDir) {
@@ -684,9 +684,13 @@ try {
   let targetX = 50;
   let targetY = 20;
   let lastTs = performance.now();
-  let frozen = false; // 到达工地页 20% 后冻结
+  let locked = false; // 到达工地页锁定
+  let lockLeftPx = null;
+  let lockTopPx = null;
+  const LOCK_TOP_VH = 22; // 锁定后固定到视窗 2% 高度
+  let lastPageTop = 0; // 记录 page5 顶部位置，用于判断滚动方向
 
-  const FREEZE_PROGRESS = 0.2;
+  const LOCK_PROGRESS = 0.2;
   const clamp01 = v => Math.max(0, Math.min(1, v));
 
   const SPEED_CENTER = 15; // vw per second toward center (slower)
@@ -701,29 +705,32 @@ try {
     if (!running) return;
     const dt = Math.min((ts - lastTs) / 1000, 0.05);
     lastTs = ts;
-    updateFreeze(); // 每帧更新冻结判定
+    updateLock(); // 每帧更新锁定判定
 
-    if (!frozen) {
-      if (phase === 'toCenter') {
-        const dx = targetX - x;
-        const stepX = Math.sign(dx) * Math.min(Math.abs(dx), SPEED_CENTER * dt);
-        x += stepX;
-        if (Math.abs(dx) < 0.2) {
-          phase = 'wander';
-          pickWanderTarget();
-        }
-      } else if (phase === 'wander') {
-        const dx = targetX - x;
-        const dy = targetY - y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 0.3) {
-          pickWanderTarget();
-        } else {
-          const stepDist = SPEED_WANDER * dt;
-          const t = Math.min(stepDist / dist, 1);
-          x += dx * t;
-          y += dy * t;
-        }
+    if (locked) {
+      requestAnimationFrame(step);
+      return;
+    }
+
+    if (phase === 'toCenter') {
+      const dx = targetX - x;
+      const stepX = Math.sign(dx) * Math.min(Math.abs(dx), SPEED_CENTER * dt);
+      x += stepX;
+      if (Math.abs(dx) < 0.2) {
+        phase = 'wander';
+        pickWanderTarget();
+      }
+    } else if (phase === 'wander') {
+      const dx = targetX - x;
+      const dy = targetY - y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 0.3) {
+        pickWanderTarget();
+      } else {
+        const stepDist = SPEED_WANDER * dt;
+        const t = Math.min(stepDist / dist, 1);
+        x += dx * t;
+        y += dy * t;
       }
     }
 
@@ -733,18 +740,45 @@ try {
     requestAnimationFrame(step);
   }
 
-  function updateFreeze() {
+  function updateLock() {
     if (!page8) return;
     const rect = page8.getBoundingClientRect();
     const h = rect.height || page8.offsetHeight || window.innerHeight || 1;
     const top = rect.top || 0;
     const progress = clamp01((-top) / h); // 0 顶刚出现, 1 顶经过一屏高
-    const shouldFreeze = progress >= FREEZE_PROGRESS;
-    if (shouldFreeze === frozen) return;
-    frozen = shouldFreeze;
-    if (!frozen) {
-      lastTs = performance.now(); // 解冻时避免时间跳变
+    const shouldLock = progress >= LOCK_PROGRESS;
+    const scrollingUp = top > lastPageTop; // page 顶部向下移动是下滚，向上移动是上滚
+
+    if (shouldLock && !locked) {
+      lockHero();
+    } else if (locked && scrollingUp) {
+      // 只有上滚时才解锁恢复原轨迹
+      unlockHero();
     }
+
+    lastPageTop = top;
+  }
+
+  function lockHero() {
+    // 锁定时直接放在视窗中线，顶部更高的位置
+    lockLeftPx = window.innerWidth / 2;
+    lockTopPx = (window.innerHeight * LOCK_TOP_VH) / 100;
+    locked = true;
+    hero.style.position = 'fixed';
+    hero.style.left = `${lockLeftPx}px`;
+    hero.style.top = `${lockTopPx}px`;
+    hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
+  }
+
+  function unlockHero() {
+    locked = false;
+    lockLeftPx = null;
+    lockTopPx = null;
+    hero.style.left = `${x}%`;
+    hero.style.top  = `${y}%`;
+    hero.style.position = 'fixed';
+    hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
+    lastTs = performance.now();
   }
 
   function activate() {
@@ -757,7 +791,7 @@ try {
     targetY = 20;
     lastTs = performance.now();
     hero.style.opacity = '1';
-    updateFreeze();
+    updateLock();
     requestAnimationFrame(step);
   }
 
@@ -768,8 +802,12 @@ try {
   }
 
   window.addEventListener('hero-start', () => activate());
-  window.addEventListener('scroll', updateFreeze, { passive: true });
-  window.addEventListener('resize', updateFreeze, { passive: true });
+  window.addEventListener('scroll', () => {
+    updateLock();
+  }, { passive: true });
+  window.addEventListener('resize', () => {
+    updateLock();
+  }, { passive: true });
 })();
 
 /* 羊群只在第1页显示（容器改为 fixed 后手动控制） */
