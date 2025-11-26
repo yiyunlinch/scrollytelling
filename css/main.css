@@ -493,34 +493,8 @@ body {
   z-index: 0;
 }
 
-#page10 {
-  position: relative;
-  height: 100vh;
-  overflow: visible;
-  z-index: 7;
-}
-
-
-
-
-
-
-/* 第10页背景在最下面 */
-#page10 .season.schild {
-  z-index: 0 !important;
-}
-
-#page10 .schild-img {
-  position: absolute;
-  inset: 0;
-  z-index: 0 !important;
-}
-
-#page10 .text-group-left {
-  z-index: 20;
-}
-
-#page10 #transporterAnim {
+/* 最后一页货车层级 */
+#page11 #transporterAnim {
   z-index: 30 !important;
 }
 

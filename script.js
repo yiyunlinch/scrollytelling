@@ -374,10 +374,10 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       window.addEventListener('resize', () => { x = window.innerWidth; }, { passive: true });
-      window.addEventListener('pagechange', e => onPageChange(e.detail.index));
-      onPageChange(currentPageIndex);
-    }
-    initMovingAnimOnce('transporterAnim', 6);
+  window.addEventListener('pagechange', e => onPageChange(e.detail.index));
+  onPageChange(currentPageIndex);
+}
+initMovingAnimOnce('transporterAnim', 7);
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
  /* ====== 挖土机：第8页内循环，按页激活 ====== */
@@ -398,7 +398,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function onPageChange(idx) {
-    const active = idx === 4; // page8
+    const active = idx === 5; // page8
     running = active;
     digger.style.display = active ? 'block' : 'none';
     if (active) {
@@ -435,8 +435,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      window.addEventListener('pagechange', e => activate(e.detail.index === 5));
-      activate(currentPageIndex === 5);
+      window.addEventListener('pagechange', e => activate(e.detail.index === 6));
+      activate(currentPageIndex === 6);
     })();
   } catch (e) {
     console.error('initKinderAndDialogOnPage8 error', e);
@@ -472,8 +472,8 @@ try {
       handImg.classList.toggle('visible', active);
     }
 
-    window.addEventListener('pagechange', e => updateHand(e.detail.index === 2));
-    updateHand(currentPageIndex === 2);
+    window.addEventListener('pagechange', e => updateHand(e.detail.index === 3));
+    updateHand(currentPageIndex === 3);
   })();
 } catch (e) {
   console.error('initHandOnPage6 error', e);
@@ -618,8 +618,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pole  = document.getElementById('poleImg');
   if (!pole) return;
   const toggle = active => pole.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 2));
-  toggle(currentPageIndex === 2);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 3));
+  toggle(currentPageIndex === 3);
 })();
 
 /* 第7页：pol1 显隐（按页） */
