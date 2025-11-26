@@ -393,6 +393,7 @@ initMovingAnimOnce('transporterAnim', 7);
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
   let firstRun = true;
   let flipSign = 1; // 1 不翻，-1 反转，之后每次出屏切换
+  let leaving = false; // 离开本页时继续开到出屏再隐藏
 
   function bounds() {
     const w = window.innerWidth;
@@ -428,17 +429,33 @@ initMovingAnimOnce('transporterAnim', 7);
     } else {
       applyTransform();
     }
+
+    // 离场逻辑：若正在离开，出了屏幕后隐藏
+    if (leaving) {
+      if ((dir === -1 && x <= left) || (dir === 1 && x >= right)) {
+        running = false;
+        digger.style.display = 'none';
+        leaving = false;
+        return;
+      }
+    }
     requestAnimationFrame(step);
   }
 
   function onPageChange(idx) {
-    const active = idx === 5; // page8
-    running = active;
-    digger.style.display = active ? 'block' : 'none';
+    const active = idx === 4; // 提前一页显示（page7）
     if (active) {
+      leaving = false;
+      running = true;
+      digger.style.display = 'block';
       firstRun = true;
       flipSign = 1;
       resetSide(-1); // 进入时从右往左
+      requestAnimationFrame(step);
+    } else if (running) {
+      // 正在本页，开始离场：保持当前方向开出屏幕后隐藏
+      leaving = true;
+      digger.style.display = 'block';
       requestAnimationFrame(step);
     }
   }
@@ -471,8 +488,8 @@ initMovingAnimOnce('transporterAnim', 7);
         }
       }
 
-      window.addEventListener('pagechange', e => activate(e.detail.index === 6));
-      activate(currentPageIndex === 6);
+      window.addEventListener('pagechange', e => activate(e.detail.index === 5));
+      activate(currentPageIndex === 5);
     })();
   } catch (e) {
     console.error('initKinderAndDialogOnPage8 error', e);
@@ -499,18 +516,18 @@ initMovingAnimOnce('transporterAnim', 7);
 /* 第1页 handhandy 草出现/消失 */
 
 try {
-  (function initHandOnPage6() {
-    const page6  = document.getElementById('page6');
-    const handImg = document.getElementById('handImg4');
-    if (!page6 || !handImg) return;
+(function initHandOnPage6() {
+  const page6  = document.getElementById('page6');
+  const handImg = document.getElementById('handImg4');
+  if (!page6 || !handImg) return;
 
-    function updateHand(active) {
-      handImg.classList.toggle('visible', active);
-    }
+  function updateHand(active) {
+    handImg.classList.toggle('visible', active);
+  }
 
-    window.addEventListener('pagechange', e => updateHand(e.detail.index === 3));
-    updateHand(currentPageIndex === 3);
-  })();
+  window.addEventListener('pagechange', e => updateHand(e.detail.index === 2));
+  updateHand(currentPageIndex === 2);
+})();
 } catch (e) {
   console.error('initHandOnPage6 error', e);
 }
@@ -654,8 +671,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pole  = document.getElementById('poleImg');
   if (!pole) return;
   const toggle = active => pole.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 3));
-  toggle(currentPageIndex === 3);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 2));
+  toggle(currentPageIndex === 2);
 })();
 
 /* 第7页：pol1 显隐（按页） */
@@ -670,14 +687,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.addEventListener('pagechange', e => {
-    toggle(e.detail.index >= 4); // 到达或经过本页保持出现，回到更上方收回
+    toggle(e.detail.index >= 3); // 到达或经过本页保持出现，回到更上方收回
   });
 
   window.addEventListener('scroll', () => {
-    toggle(currentPageIndex >= 4);
+    toggle(currentPageIndex >= 3);
   }, { passive: true });
 
-  toggle(currentPageIndex >= 4);
+  toggle(currentPageIndex >= 3);
 })();
 
 /* Page11 handflower 显隐（按页） */
@@ -685,8 +702,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const img = document.getElementById('lastHandflowerImg');
   if (!img) return;
   const toggle = active => img.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 7));
-  toggle(currentPageIndex === 7);
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 6));
+  toggle(currentPageIndex === 6);
 })();
 
 // 统一第2/11页 click 手位置
