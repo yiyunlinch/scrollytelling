@@ -707,10 +707,10 @@ body {
   opacity: 1;
 }
 
-/* === 第7页 pol1（右下，从右侧滑入）=== */
+/* === 第7页 pol1（左下侧滑入）=== */
 #page7 .pol1-wrap {
   position: absolute;
-  right: 0;
+  right: 12%;               /* 终点向左移，调大数值则更靠左 */
   bottom: -20%;
   z-index: 1000;
   overflow: visible;
@@ -718,13 +718,13 @@ body {
 #page7 .pol1-img {
   width: 340px;             /* 你可调 */
   height: auto;
-  transform-origin: bottom right;
-   transform: translateX(20%) scale(2.4);  /* ✅ 起点在右边 */;
+  transform-origin: bottom left;
+  transform: translateX(-140%) scaleX(-1) scale(2.4);  /* 更靠左起点，往右滑入 */
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
 #page7 .pol1-img.visible {
-   transform: translateX(0) scale(2.4);
+  transform: translateX(-55%) scaleX(-1) scale(2.4); /* 终点左移，可微调数值 */
   opacity: 1;
 }
 
