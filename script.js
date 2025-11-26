@@ -517,7 +517,7 @@ initMovingAnimOnce('transporterAnim', 7);
 
 try {
 (function initHandOnPage6() {
-  const page6  = document.getElementById('page6');
+  const page6  = document.getElementById('page3');
   const handImg = document.getElementById('handImg4');
   if (!page6 || !handImg) return;
 
@@ -540,7 +540,7 @@ try {
 //* ===== HERO SHEEP：按页离散位置 ===== */
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
-  const page8 = document.getElementById('page8');
+  const page8 = document.getElementById('page5');
   if (!hero) return;
 
   let running = false;

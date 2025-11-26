@@ -15,7 +15,7 @@ body {
 }
 
 
-#page1 {
+#page2 {
   position: relative;
   height: 100vh;
   overflow: hidden;
@@ -49,7 +49,7 @@ body {
 }
 
 /* ===== 羊群只在 Page1 ===== */
-#page1 {
+#page2 {
   position: relative;
 }
 
@@ -164,8 +164,8 @@ body {
 
 
 /* 向下箭头（第1页显示） */
-.page1 .down-arrow { display: block; }
-.page:not(.page1) .down-arrow { display: none !important; }
+.page2 .down-arrow { display: block; }
+.page:not(.page2) .down-arrow { display: none !important; }
 .down-arrow {
   position: fixed;
   right: 24px;
@@ -240,12 +240,12 @@ body {
   pointer-events: none;
   z-index: 10;
 }
-#page3 .text-group-right {
+#page1 .text-group-right {
   opacity: 0;
   transition: opacity 0.6s ease 0.1s;
   pointer-events: none;
 }
-#page3 .text-group-right.show {
+#page1 .text-group-right.show {
   opacity: 1;
   pointer-events: auto;
 }
@@ -280,7 +280,7 @@ body {
 }
 
 /* 第6页 */
-#page6 { position: relative; }
+#page3 { position: relative; }
 .backgroundbottom {
   position: absolute;
   inset: 0;
@@ -336,7 +336,7 @@ body {
 }
 
 
-#page3 {
+#page1 {
   position: relative;
 }
 .eye-interaction-container {
@@ -429,13 +429,13 @@ body {
 }
 
 /* 第6/7页：autumn 上下半 */
-#page6 .backgroundtop {
+#page3 .backgroundtop {
   background-image: url('../images/autumn.jpg') !important;
   background-size: 100% 200% !important;
   background-position: center 0% !important;
   background-repeat: no-repeat !important;
 }
-#page7 .backgroundbottom {
+#page4 .backgroundbottom {
   background-image: url('../images/autumn.jpg') !important;
   background-size: 100% 200% !important;
   background-position: center 100% !important;
@@ -444,19 +444,19 @@ body {
 
 
 /* 第8/9页 */
-#page8, #page9 {
+#page5, #page6 {
   position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
 }
-#page8 .backgroundtop {
+#page5 .backgroundtop {
   background-image: url('../images/baustelle.jpg') !important;
   background-size: 100% 200% !important;      /* 拉伸高度到2倍，仅显示上半部 */
   background-position: center 0% !important;  /* 贴顶取上半 */
   background-repeat: no-repeat !important;
 }
-#page9 .backgroundbottom {
+#page6 .backgroundbottom {
   background-image: url('../images/baustelle.jpg') !important;
   background-size: 100% 200% !important;       /* 拉伸高度到2倍，仅显示下半部 */
   background-position: center 100% !important; /* 贴底取下半 */
@@ -464,8 +464,8 @@ body {
 }
 
 /* fallback 防止没inline style时塌掉 */
-#page8 .backgroundtop,
-#page9 .backgroundbottom {
+#page5 .backgroundtop,
+#page6 .backgroundbottom {
   position: absolute;
   inset: 0;
   background-size: cover;
@@ -494,7 +494,7 @@ body {
 }
 
 /* 最后一页货车层级 */
-#page11 #transporterAnim {
+#page7 #transporterAnim {
   z-index: 30 !important;
 }
 
@@ -505,7 +505,7 @@ body {
 }
 
 /* === Kinder 图出现动画相关 === */
-#page9 {
+#page6 {
   position: relative;
   z-index: 5;  
 }
@@ -563,7 +563,7 @@ body {
 }
 
 /* === 第1页 handhandy（草地手） === */
-#page1 .handhandy-wrap {
+#page2 .handhandy-wrap {
   position: absolute;
   bottom: 70%;
   left: 100%;
@@ -571,7 +571,7 @@ body {
   z-index: 1000;
   overflow: visible;
 }
-#page1 .handhandy-img {
+#page2 .handhandy-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -580,13 +580,13 @@ body {
   opacity: 0;
   transition-delay: 2s;
 }
-#page1 .handhandy-img.visible {
+#page2 .handhandy-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }
 
 /* 手臂草动画（第6页） */
-#page6 .hand-wrap {
+#page3 .hand-wrap {
   position: absolute;
   bottom: 90%;
   left: 100%;
@@ -595,7 +595,7 @@ body {
   overflow: visible;
 }
 
-#page6 .hand-img {
+#page3 .hand-img {
   width: 200px;
   height: auto;
   transform-origin: bottom right;
@@ -605,7 +605,7 @@ body {
   
 }
 
-#page6 .hand-img.visible {
+#page3 .hand-img.visible {
   transform: translateX(-100%) scale(2);
   opacity: 1;
 }
@@ -613,7 +613,7 @@ body {
 
 
 /* ===== 最后一页 ===== */
-#page11 {
+#page7 {
   background: #000;
   position: relative;
   height: 100vh;
@@ -661,14 +661,14 @@ body {
 
 
 /* === 第6页 pole（右下，从右侧滑入）=== */
-#page6 .pole-wrap {
+#page3 .pole-wrap {
   position: absolute;
   right: 0;
   bottom:-40%;
   z-index: 1000;
   overflow: visible;
 }
-#page6 .pole-img {
+#page3 .pole-img {
   width: 240px;             /* 你可调 */
   height: auto;
   transform-origin: bottom right;
@@ -676,20 +676,20 @@ body {
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
-#page6 .pole-img.visible {
+#page3 .pole-img.visible {
   transform: translateX(0%) scale(2); /* 向内滑入 */
   opacity: 1;
 }
 
 /* === 第7页 pol1（左下侧滑入）=== */
-#page7 .pol1-wrap {
+#page4 .pol1-wrap {
   position: absolute;
   right: 12%;               /* 终点向左移，调大数值则更靠左 */
   bottom: -60%;
   z-index: 1000;
   overflow: visible;
 }
-#page7 .pol1-img {
+#page4 .pol1-img {
   width: 340px;             /* 你可调 */
   height: auto;
   transform-origin: bottom left;
@@ -697,7 +697,7 @@ body {
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
-#page7 .pol1-img.visible {
+#page4 .pol1-img.visible {
   transform: translateX(-55%) scaleX(-1) scale(2.4); /* 终点左移，可微调数值 */
   opacity: 1;
 }
@@ -706,7 +706,7 @@ body {
 
 
 /* 最后一页 handflower 位置 */
-#page11 .handflower-wrap {
+#page7 .handflower-wrap {
   position: absolute;
   right: 0;
   bottom: 15%;
@@ -715,7 +715,7 @@ body {
 }
 
 /* 初始：藏在右边（正方向 = 容器外） */
-#page11 .last-handflower {
+#page7 .last-handflower {
   width: 200px;
   transform-origin: bottom right;
   transform: translateX(35%) scale(2); /* ✅ 从右外开始 */
@@ -724,7 +724,7 @@ body {
 }
 
 /* 出现：滑回到画面 */
-#page11 .last-handflower.visible {
+#page7 .last-handflower.visible {
   transform: translateX(35%) scale(2); /* ✅ 回到原位 */
   opacity: 1;
 }
