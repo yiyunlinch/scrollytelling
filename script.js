@@ -96,28 +96,64 @@ window.addEventListener('DOMContentLoaded', () => {
   /* Page6 掉落 privat */
   const privatDrop = (() => {
     const el = document.getElementById('privatDrop');
-    if (!el) return { drop: () => {}, reset: () => {} };
-    function drop() {
+    const page6 = document.getElementById('page6');
+    if (!el || !page6) return { drop: () => {}, reset: () => {} };
+
+    function lockAtCurrentPosition() {
+      // 动画结束后，将元素锁定到 page6 内的绝对定位，跟随页面滚动
+      const rect = el.getBoundingClientRect();
+      const pageRect = page6.getBoundingClientRect();
+      const topRelativeToPage = rect.top - pageRect.top;
+      el.style.position = 'absolute';
+      el.style.top = `${topRelativeToPage}px`;
+      el.style.left = '50%';
+      el.style.transform = 'translate(-50%, 0) scale(1)';
+      el.style.animation = 'none';
+      el.style.opacity = '1'; // 保持可见
+      el.style.zIndex = '2000';
+      el.classList.add('landed');
       el.classList.remove('show');
+    }
+
+    // 动画结束时锁定
+    el.addEventListener('animationend', lockAtCurrentPosition);
+
+    function drop() {
+      el.classList.remove('show', 'landed');
+      el.style.position = 'fixed';
+      el.style.top = '0';
+      el.style.left = '50%';
+      el.style.transform = 'translate(-50%, -200vh) scale(1)';
+      el.style.animation = '';
+      el.style.zIndex = '2000';
       // 强制重排以重播动画
       void el.offsetWidth;
       el.classList.add('show');
     }
     function reset() {
-      el.classList.remove('show');
+      el.classList.remove('show', 'landed');
+      el.style.position = '';
+      el.style.top = '';
+      el.style.left = '';
+      el.style.transform = '';
+      el.style.animation = '';
+      el.style.opacity = '';
+      el.style.zIndex = '';
     }
     reset();
     return { drop, reset };
   })();
 
   window.addEventListener('pagechange', e => {
-    if (e.detail.index === 5) {
+    const idx = e.detail.index;
+    if (idx === 5) {
       privatStage = 0; // 进入第6页时重置掉落
       privatDrop.reset();
-    } else {
-      privatStage = 0; // 离开时也清零，保证可重复
+    } else if (idx <= 3) {
+      privatStage = 0; // 上拉到第4页及以上时清零并收起
       privatDrop.reset();
     }
+    // 其他页保持当前状态
   });
 
   // Wheel 导航 + 首屏分阶段
