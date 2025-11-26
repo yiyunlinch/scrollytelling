@@ -388,12 +388,15 @@ initMovingAnimOnce('transporterAnim', 7);
   let running = false;
   let dir = -1; // -1: right -> left, 1: left -> right
   let x = 0;
-  const SPEED = 9.5;
-  const MARGIN = 80;
+  const SPEED = 11.5;
+  const MARGIN = 40;
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
   let firstRun = true;
   let flipSign = 1; // 1 不翻，-1 反转，之后每次出屏切换
   let leaving = false; // 离开本页时继续开到出屏再隐藏
+  let activePage = false;
+  let leaveStart = 0;
+  const EXIT_TIMEOUT = 1600; // ms，离开后最多运行多久再强制隐藏
 
   function bounds() {
     const w = window.innerWidth;
@@ -432,7 +435,9 @@ initMovingAnimOnce('transporterAnim', 7);
 
     // 离场逻辑：若正在离开，出了屏幕后隐藏
     if (leaving) {
-      if ((dir === -1 && x <= left) || (dir === 1 && x >= right)) {
+      const out = (dir === -1 && x <= left) || (dir === 1 && x >= right);
+      const expired = performance.now() - leaveStart > EXIT_TIMEOUT;
+      if (out || expired) {
         running = false;
         digger.style.display = 'none';
         leaving = false;
@@ -443,8 +448,9 @@ initMovingAnimOnce('transporterAnim', 7);
   }
 
   function onPageChange(idx) {
-    const active = idx === 4; // 提前一页显示（page7）
-    if (active) {
+    const shouldBeActive = idx === 4; // page5
+    if (shouldBeActive && !activePage) {
+      activePage = true;
       leaving = false;
       running = true;
       digger.style.display = 'block';
@@ -452,10 +458,13 @@ initMovingAnimOnce('transporterAnim', 7);
       flipSign = 1;
       resetSide(-1); // 进入时从右往左
       requestAnimationFrame(step);
-    } else if (running) {
-      // 正在本页，开始离场：保持当前方向开出屏幕后隐藏
+    } else if (!shouldBeActive && activePage) {
+      // 离开时保持当前方向跑出屏幕后再隐藏
+      activePage = false;
       leaving = true;
+      running = true;
       digger.style.display = 'block';
+      leaveStart = performance.now();
       requestAnimationFrame(step);
     }
   }
