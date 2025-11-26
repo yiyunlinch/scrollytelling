@@ -8,6 +8,7 @@ let eyeStage = 0;      // 0 初始, 1 去轮廓露出眼睛, 2 溶解眼层+hero
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 let privatStage = 0;   // page6 过渡：0 未触发，1 已掉落，2 可翻页
 let privatLockUntil = 0;
+let kinderVanish = () => {}; // 第6页孩童下落隐藏
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -236,12 +237,23 @@ window.addEventListener('DOMContentLoaded', () => {
           setPrivatCooldown(600); // 掉落后稍作停顿
           return;
         } else if (privatStage === 2) {
+          // 第三次滚动：让孩童快速下落消失，仍留在第6页
+          if (stillCooling) {
+            e.preventDefault();
+            return;
+          }
+          e.preventDefault();
+          privatStage = 3;
+          kinderVanish();
+          setPrivatCooldown(600);
+          return;
+        } else if (privatStage === 3) {
           if (stillCooling) {
             e.preventDefault();
             return;
           }
           // 释放到下一页，标记完成
-          privatStage = 3;
+          privatStage = 4;
         }
       }
       return; // 后面正常竖向滚动
@@ -491,12 +503,13 @@ initMovingAnimOnce('transporterAnim', 7);
   const SPEED = 7.5;  // 适度加速
   const MARGIN = 80;  // 保持原外侧缓冲
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
+  const Y_POS = 50;   // vh，固定在一条水平线上
   let firstRun = true;
   let flipSign = 1; // 1 不翻，-1 反转，之后每次出屏切换
-  let leaving = false; // 离开本页时继续开到出屏再隐藏
   let activePage = false;
+  let leaving = false; // 离开第5页时继续跑到出屏后隐藏
   let leaveStart = 0;
-  const EXIT_TIMEOUT = 1600; // ms，离开后最多运行多久再强制隐藏
+  const EXIT_TIMEOUT = 2000; // 最长离场时间
 
   function bounds() {
     const w = window.innerWidth;
@@ -506,7 +519,8 @@ initMovingAnimOnce('transporterAnim', 7);
 
   function applyTransform() {
     digger.style.left = `${x}px`;
-    digger.style.transform = `scale(${BASE_SCALE}) scaleX(${flipSign})`;
+    digger.style.top = `${Y_POS}vh`;
+    digger.style.transform = `translateY(-50%) scale(${BASE_SCALE}) scaleX(${flipSign})`;
   }
 
   function resetSide(nextDir) {
@@ -559,7 +573,7 @@ initMovingAnimOnce('transporterAnim', 7);
       resetSide(-1); // 进入时从右往左
       requestAnimationFrame(step);
     } else if (!shouldBeActive && activePage) {
-      // 离开时保持当前方向跑出屏幕后再隐藏
+      // 离开时保持当前方向跑到出屏再隐藏
       activePage = false;
       leaving = true;
       running = true;
@@ -576,7 +590,7 @@ initMovingAnimOnce('transporterAnim', 7);
 
  
  
-  /* ====== 第9页 Kinder 上浮 + 对白图（按页激活） ====== */
+  /* ====== 第9页 Kinder 上浮 + 对白图（按页激活，支持快速下落消失） ====== */
   try {
     (function initKinderAndDialogOnPage8() {
       const kinderImg  = document.getElementById('kinderImg');
@@ -587,15 +601,26 @@ initMovingAnimOnce('transporterAnim', 7);
 
       function activate(active) {
         if (active) {
+          kinderImg.style.transition = 'transform 0.7s ease';
           kinderImg.style.transform = 'translateY(0%)';
           schauLeft.style.opacity = '1';
           schauRight.style.opacity = '1';
         } else {
+          kinderImg.style.transition = 'transform 0.7s ease';
           kinderImg.style.transform = 'translateY(100%)';
           schauLeft.style.opacity = '0';
           schauRight.style.opacity = '0';
         }
       }
+
+      function vanishDown() {
+        kinderImg.style.transition = 'transform 0.35s ease-in';
+        kinderImg.style.transform = 'translateY(180%)';
+        schauLeft.style.opacity = '0';
+        schauRight.style.opacity = '0';
+      }
+
+      kinderVanish = vanishDown;
 
       window.addEventListener('pagechange', e => activate(e.detail.index === 5));
       activate(currentPageIndex === 5);
