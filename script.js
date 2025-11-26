@@ -626,9 +626,35 @@ document.addEventListener('DOMContentLoaded', () => {
 (function initPol1OnPage7() {
   const pol1  = document.getElementById('pol1Img');
   if (!pol1) return;
+  let lastY = window.scrollY;
   const toggle = active => pol1.classList.toggle('visible', active);
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 3));
-  toggle(currentPageIndex === 3);
+
+  function handleScroll() {
+    const y = window.scrollY;
+    const dy = y - lastY;
+    lastY = y;
+    if (currentPageIndex !== 4) {
+      toggle(false);
+      return;
+    }
+    if (dy > 0.5) {       // 向下滚动：保持停在终点
+      toggle(true);
+    } else if (dy < -0.5) { // 向上滚动：按原轨迹收回
+      toggle(false);
+    }
+  }
+
+  window.addEventListener('pagechange', e => {
+    if (e.detail.index === 4) {
+      lastY = window.scrollY;
+      toggle(true); // 进入页面时先到终点
+    } else {
+      toggle(false);
+    }
+  });
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll();
 })();
 
 /* Page11 handflower 显隐（按页） */

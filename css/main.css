@@ -711,7 +711,7 @@ body {
 #page7 .pol1-wrap {
   position: absolute;
   right: 12%;               /* 终点向左移，调大数值则更靠左 */
-  bottom: -20%;
+  bottom: -60%;
   z-index: 1000;
   overflow: visible;
 }
