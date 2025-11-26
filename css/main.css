@@ -473,6 +473,30 @@ body {
   background-repeat: no-repeat;
 }
 
+/* Page6 privat 掉落 */
+.privat-drop {
+  position: absolute;
+  left: 50%;
+  top: -40%;
+  transform: translate(-50%, -100%) scale(1);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+.privat-drop .privat-img {
+  width: 280px;
+  height: auto;
+  display: block;
+}
+.privat-drop.show {
+  animation: privatFall 0.9s ease-out forwards;
+}
+@keyframes privatFall {
+  0%   { transform: translate(-50%, -120%) scale(1); opacity: 0; }
+  60%  { transform: translate(-50%, 10%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, 5%) scale(1); opacity: 1; }
+}
+
 /* block67 两半式背景（可复用） */
 .block67-top .backgroundtop {
   position: absolute;

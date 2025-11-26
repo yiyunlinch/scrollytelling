@@ -6,6 +6,8 @@ let allPages = [];
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
 let eyeStage = 0;      // 0 初始, 1 去轮廓露出眼睛, 2 溶解眼层+hero, 3 可翻页
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
+let privatStage = 0;   // page6 过渡：0 未触发，1 已掉落，2 可翻页
+let privatLockUntil = 0;
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -91,10 +93,39 @@ window.addEventListener('DOMContentLoaded', () => {
     return { showMid, dissolveMid, showText, reset };
   })();
 
+  /* Page6 掉落 privat */
+  const privatDrop = (() => {
+    const el = document.getElementById('privatDrop');
+    if (!el) return { drop: () => {}, reset: () => {} };
+    function drop() {
+      el.classList.remove('show');
+      // 强制重排以重播动画
+      void el.offsetWidth;
+      el.classList.add('show');
+    }
+    function reset() {
+      el.classList.remove('show');
+    }
+    reset();
+    return { drop, reset };
+  })();
+
+  window.addEventListener('pagechange', e => {
+    if (e.detail.index === 5) {
+      privatStage = 0; // 进入第6页时重置掉落
+      privatDrop.reset();
+    } else {
+      privatStage = 0; // 离开时也清零，保证可重复
+      privatDrop.reset();
+    }
+  });
+
   // Wheel 导航 + 首屏分阶段
   const EYE_COOLDOWN = 650;
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
+  const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
+  const PRIVAT_RELEASE_COOLDOWN = 800; // page6 掉落后停顿一小会再允许翻页
 
   function setEyeCooldown(extra = 0) {
     const now = performance.now();
@@ -103,12 +134,18 @@ window.addEventListener('DOMContentLoaded', () => {
     globalScrollLockUntil = Math.max(globalScrollLockUntil, lock);
   }
 
+  function setPrivatCooldown(extra = 0) {
+    const now = performance.now();
+    privatLockUntil = now + PRIVAT_COOLDOWN + extra;
+    globalScrollLockUntil = Math.max(globalScrollLockUntil, privatLockUntil);
+  }
+
   window.addEventListener('wheel', e => {
     const dir = e.deltaY > 0 ? 1 : -1;
     if (dir === 0) return;
 
     const now = performance.now();
-    const stillCooling = now < Math.max(eyeLockUntil, globalScrollLockUntil);
+    const stillCooling = now < Math.max(eyeLockUntil, privatLockUntil, globalScrollLockUntil);
     const inTrack = currentPageIndex < TRACK_COUNT;
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
@@ -144,6 +181,33 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!inTrack) {
+      // page6 -> page7 过渡：先掉落 privat，再下一次滚动才允许翻页
+      if (currentPageIndex === 5 && dir > 0) {
+        if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
+          e.preventDefault();
+          return;
+        }
+        if (privatStage === 0) {
+          e.preventDefault();
+          privatStage = 1;
+          privatDrop.drop();
+          setPrivatCooldown();
+          return;
+        } else if (privatStage === 1) {
+          // 再滚一次也先拦住，加一段停顿
+          e.preventDefault();
+          privatStage = 2;
+          setPrivatCooldown(PRIVAT_RELEASE_COOLDOWN);
+          return;
+        } else if (privatStage === 2) {
+          if (stillCooling) {
+            e.preventDefault();
+            return;
+          }
+          // 释放到下一页，标记完成
+          privatStage = 3;
+        }
+      }
       return; // 后面正常竖向滚动
     }
 
