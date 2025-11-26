@@ -4,7 +4,7 @@ let currentPageIndex = 0;
 let trackPages = [];
 let allPages = [];
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
-let eyeStage = 0;      // 0 初始, 1 显示 sheepeye, 2 溶解, 3 可翻页
+let eyeStage = 0;      // 0 初始, 1 显示 sheepeye, 2 溶解+hero, 3 可翻页
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 
 function easeInOutQuad(t) {
@@ -93,12 +93,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Wheel 导航 + 首屏分阶段
   const EYE_COOLDOWN = 650;
+  const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后的额外冷冻，避免直接翻页
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
 
-  function setEyeCooldown() {
+  function setEyeCooldown(extra = 0) {
     const now = performance.now();
-    eyeLockUntil = now + EYE_COOLDOWN;
-    globalScrollLockUntil = Math.max(globalScrollLockUntil, now + EYE_COOLDOWN);
+    const lock = now + EYE_COOLDOWN + extra;
+    eyeLockUntil = lock;
+    globalScrollLockUntil = Math.max(globalScrollLockUntil, lock);
   }
 
   window.addEventListener('wheel', e => {
@@ -127,13 +129,13 @@ window.addEventListener('DOMContentLoaded', () => {
         eyeStage = 2;
         eyeLayers.dissolveMid();
         eyeLayers.showText();
-        setEyeCooldown();
+        window.dispatchEvent(new Event('hero-start'));
+        setEyeCooldown(HERO_REVEAL_COOLDOWN);
         return;
       }
       if (eyeStage === 2) {
         e.preventDefault();
         eyeStage = 3;
-        window.dispatchEvent(new Event('hero-start'));
         setEyeCooldown();
         globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
         goToPage(1);
