@@ -388,8 +388,8 @@ initMovingAnimOnce('transporterAnim', 7);
   let running = false;
   let dir = -1; // -1: right -> left, 1: left -> right
   let x = 0;
-  const SPEED = 11.5;
-  const MARGIN = 40;
+  const SPEED = 7.5;  // 适度加速
+  const MARGIN = 80;  // 保持原外侧缓冲
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
   let firstRun = true;
   let flipSign = 1; // 1 不翻，-1 反转，之后每次出屏切换
