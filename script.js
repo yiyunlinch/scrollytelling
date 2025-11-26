@@ -485,6 +485,7 @@ try {
 //* ===== HERO SHEEP：按页离散位置 ===== */
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
+  const page8 = document.getElementById('page8');
   if (!hero) return;
 
   let running = false;
@@ -494,6 +495,10 @@ try {
   let targetX = 50;
   let targetY = 20;
   let lastTs = performance.now();
+  let frozen = false; // 到达工地页 20% 后冻结
+
+  const FREEZE_PROGRESS = 0.2;
+  const clamp01 = v => Math.max(0, Math.min(1, v));
 
   const SPEED_CENTER = 15; // vw per second toward center (slower)
   const SPEED_WANDER = 6;  // vw per second when wandering (slower)
@@ -507,26 +512,29 @@ try {
     if (!running) return;
     const dt = Math.min((ts - lastTs) / 1000, 0.05);
     lastTs = ts;
+    updateFreeze(); // 每帧更新冻结判定
 
-    if (phase === 'toCenter') {
-      const dx = targetX - x;
-      const stepX = Math.sign(dx) * Math.min(Math.abs(dx), SPEED_CENTER * dt);
-      x += stepX;
-      if (Math.abs(dx) < 0.2) {
-        phase = 'wander';
-        pickWanderTarget();
-      }
-    } else if (phase === 'wander') {
-      const dx = targetX - x;
-      const dy = targetY - y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 0.3) {
-        pickWanderTarget();
-      } else {
-        const stepDist = SPEED_WANDER * dt;
-        const t = Math.min(stepDist / dist, 1);
-        x += dx * t;
-        y += dy * t;
+    if (!frozen) {
+      if (phase === 'toCenter') {
+        const dx = targetX - x;
+        const stepX = Math.sign(dx) * Math.min(Math.abs(dx), SPEED_CENTER * dt);
+        x += stepX;
+        if (Math.abs(dx) < 0.2) {
+          phase = 'wander';
+          pickWanderTarget();
+        }
+      } else if (phase === 'wander') {
+        const dx = targetX - x;
+        const dy = targetY - y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 0.3) {
+          pickWanderTarget();
+        } else {
+          const stepDist = SPEED_WANDER * dt;
+          const t = Math.min(stepDist / dist, 1);
+          x += dx * t;
+          y += dy * t;
+        }
       }
     }
 
@@ -534,6 +542,20 @@ try {
     hero.style.top  = `${y}%`;
     hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
     requestAnimationFrame(step);
+  }
+
+  function updateFreeze() {
+    if (!page8) return;
+    const rect = page8.getBoundingClientRect();
+    const h = rect.height || page8.offsetHeight || window.innerHeight || 1;
+    const top = rect.top || 0;
+    const progress = clamp01((-top) / h); // 0 顶刚出现, 1 顶经过一屏高
+    const shouldFreeze = progress >= FREEZE_PROGRESS;
+    if (shouldFreeze === frozen) return;
+    frozen = shouldFreeze;
+    if (!frozen) {
+      lastTs = performance.now(); // 解冻时避免时间跳变
+    }
   }
 
   function activate() {
@@ -546,6 +568,7 @@ try {
     targetY = 20;
     lastTs = performance.now();
     hero.style.opacity = '1';
+    updateFreeze();
     requestAnimationFrame(step);
   }
 
@@ -556,6 +579,17 @@ try {
   }
 
   window.addEventListener('hero-start', () => activate());
+  window.addEventListener('scroll', updateFreeze, { passive: true });
+  window.addEventListener('resize', updateFreeze, { passive: true });
+})();
+
+/* 羊群只在第1页显示（容器改为 fixed 后手动控制） */
+(function controlFlockVisibility() {
+  const flock = document.getElementById('flock-page1');
+  if (!flock) return;
+  const toggle = active => { flock.style.display = active ? 'block' : 'none'; };
+  window.addEventListener('pagechange', e => toggle(e.detail.index === 1));
+  toggle(currentPageIndex === 1);
 })();
 
 /* === 通用：点击切换显隐（支持来回切换） === */

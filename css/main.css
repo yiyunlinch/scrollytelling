@@ -55,16 +55,17 @@ body {
 
 /* 羊群容器（不要 fixed）*/
 #flock-page1 {
-  position: absolute;
+  position: fixed;  /* 保持在视口上方，不被后续页面覆盖 */
   inset: 0;
   pointer-events: none;
-  z-index: 999; /* 在草地前面，低于标题 */
+  z-index: 2000; /* 确保在背景图之上 */
 }
 
 /* 小羊样式 */
 #flock-page1 .sheep {
   position: absolute;
   display: block;
+  z-index: 1;
   width: clamp(180px, 28vw, 400px); /* ✅ 尺寸 */
   aspect-ratio: 1 / 1;
   background-size: contain;
@@ -427,6 +428,20 @@ body {
   50% { transform: translateY(-50%) translateY(-8px); }
 }
 
+/* 第6/7页：autumn 上下半 */
+#page6 .backgroundtop {
+  background-image: url('../images/autumn.jpg') !important;
+  background-size: 100% 200% !important;
+  background-position: center 0% !important;
+  background-repeat: no-repeat !important;
+}
+#page7 .backgroundbottom {
+  background-image: url('../images/autumn.jpg') !important;
+  background-size: 100% 200% !important;
+  background-position: center 100% !important;
+  background-repeat: no-repeat !important;
+}
+
 
 /* 第8/9页 */
 #page8, #page9 {
@@ -435,15 +450,27 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+#page8 .backgroundtop {
+  background-image: url('../images/baustelle.jpg') !important;
+  background-size: 100% 200% !important;      /* 拉伸高度到2倍，仅显示上半部 */
+  background-position: center 0% !important;  /* 贴顶取上半 */
+  background-repeat: no-repeat !important;
+}
+#page9 .backgroundbottom {
+  background-image: url('../images/baustelle.jpg') !important;
+  background-size: 100% 200% !important;       /* 拉伸高度到2倍，仅显示下半部 */
+  background-position: center 100% !important; /* 贴底取下半 */
+  background-repeat: no-repeat !important;
+}
 
 /* fallback 防止没inline style时塌掉 */
 #page8 .backgroundtop,
 #page9 .backgroundbottom {
   position: absolute;
   inset: 0;
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 /* block67 两半式背景（可复用） */
