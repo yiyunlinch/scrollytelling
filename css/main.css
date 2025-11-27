@@ -115,7 +115,7 @@ body {
   width: 180px;
   height: 100px;
   pointer-events: none;
-  z-index: 500;             /* 背景(0-20) < digger(500) < 羊(9999) < sheephero(100000) */
+  z-index: 200000;          /* 置于最上层 */
   transform: translate(-50%, -50%) scale(5);
   display: none;         
 }
@@ -144,15 +144,15 @@ body {
 }
 .cover-h-track {
   display: flex;
-  flex-direction: row;
-  width: calc(100vw * 2); /* 2页（前两页横滑） */
-  height: 100%;
+  flex-direction: column;        /* 改为竖向堆叠 */
+  width: 100%;
+  height: calc(100vh * 2);       /* 两屏高度 */
   will-change: transform;
   transition: transform 0.45s ease;
 }
 .cover-h-track .page {
-  flex: 0 0 100vw;
-  height: 100vh;
+  flex: 0 0 100vh;               /* 每屏占满视口高度 */
+  width: 100vw;
   position: relative;
   transform: translateZ(0);
 }

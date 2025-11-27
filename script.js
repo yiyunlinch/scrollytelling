@@ -43,7 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const globalIdx = allPages.indexOf(target);
     if (track) {
       track.style.transition = animate ? 'transform 0.45s ease' : 'none';
-      track.style.transform = `translateX(${-idx * 100}vw)`;
+      track.style.transform = `translateY(${-idx * 100}vh)`; // 竖向滑动
     }
     if (globalIdx >= 0) {
       dispatchPageChange(globalIdx);
@@ -501,7 +501,7 @@ initMovingAnimOnce('transporterAnim', 7);
   let running = false;
   let dir = -1; // -1: right -> left, 1: left -> right
   let x = 0;
-  const SPEED = 7.5;  // 水平移动速度
+  const SPEED = 3.75;  // 水平移动速度（减半）
   const MARGIN = 80;  // 保持原外侧缓冲
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
   let firstRun = true;
