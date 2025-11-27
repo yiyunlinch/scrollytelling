@@ -693,7 +693,6 @@ try {
   let locked = false; // 到达工地页锁定
   let lockLeftPx = null;
   let lockTopPx = null;
-  const LOCK_TOP_VH = 2; // 锁定时固定在视窗 2vh
   let lastPageTop = 0; // 记录 page5 顶部位置，用于判断滚动方向
 
   const LOCK_PROGRESS = 0.2;
@@ -766,10 +765,10 @@ try {
   }
 
   function lockHero() {
-    // 锁定时直接固定到视窗 2vh，高度不再变化
+    // 锁定时直接固定在当前屏幕位置，避免跳变
     const heroRect = hero.getBoundingClientRect();
     lockLeftPx = heroRect.left + heroRect.width / 2;
-    lockTopPx = (window.innerHeight * LOCK_TOP_VH) / 100;
+    lockTopPx = heroRect.top;
     locked = true;
     hero.style.position = 'fixed';
     hero.style.left = `${lockLeftPx}px`;

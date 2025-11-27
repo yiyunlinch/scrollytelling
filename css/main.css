@@ -358,15 +358,26 @@ body {
   align-items: center;
   justify-content: center;
 }
+
 .eye-layer {
   position: absolute;
-  width: min(95vw, 1547px);
-  max-height: 95vh;
-  height: auto;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   pointer-events: none;
 }
-.eye-layer-base { z-index: 1; opacity: 1; }
+.eye-layer-base {
+  z-index: 1;
+  opacity: 1;
+  width: 100vw;
+  height: auto;
+  max-height: none;
+  object-fit: cover;
+  object-position: center top;    /* 对齐顶部 */
+  clip-path: inset(0 0 50% 0);    /* 仅显示上半张 */
+}
+
 .eye-layer-middle {
   z-index: 2;
   opacity: 0;
