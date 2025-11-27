@@ -55,6 +55,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // 初始定位第一页
   goToPage(0, false);
 
+  // 进入第2页时再触发 hero 羊出现
+  window.addEventListener('pagechange', e => {
+    if (e.detail.index === 1) {
+      window.dispatchEvent(new Event('hero-start'));
+    }
+  });
+
   /* ====== 第1页：三张图分三次下拉 ====== */
   const eyeLayers = (() => {
     const topLayer = document.querySelector('.eye-layer-top');       // sheepblack.jpg
@@ -202,7 +209,6 @@ window.addEventListener('DOMContentLoaded', () => {
         eyeStage = 2;
         eyeLayers.dissolveMid();
         eyeLayers.showText();
-        window.dispatchEvent(new Event('hero-start'));
         setEyeCooldown(HERO_REVEAL_COOLDOWN);
         return;
       }
@@ -687,7 +693,7 @@ try {
   let locked = false; // 到达工地页锁定
   let lockLeftPx = null;
   let lockTopPx = null;
-  const LOCK_TOP_VH = 22; // 锁定后固定到视窗 2% 高度
+  const LOCK_TOP_VH = 2; // 锁定时固定在视窗 2vh
   let lastPageTop = 0; // 记录 page5 顶部位置，用于判断滚动方向
 
   const LOCK_PROGRESS = 0.2;
@@ -760,14 +766,15 @@ try {
   }
 
   function lockHero() {
-    // 锁定时直接放在视窗中线，顶部更高的位置
-    lockLeftPx = window.innerWidth / 2;
+    // 锁定时直接固定到视窗 2vh，高度不再变化
+    const heroRect = hero.getBoundingClientRect();
+    lockLeftPx = heroRect.left + heroRect.width / 2;
     lockTopPx = (window.innerHeight * LOCK_TOP_VH) / 100;
     locked = true;
     hero.style.position = 'fixed';
     hero.style.left = `${lockLeftPx}px`;
     hero.style.top = `${lockTopPx}px`;
-    hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
+    hero.style.transform = 'translateX(-50%) scale(0.5)';
   }
 
   function unlockHero() {
