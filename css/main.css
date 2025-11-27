@@ -44,8 +44,10 @@ body {
   transform: scale(1);
 }
 .grass {
-  background-image: url('../images/sommer.jpg');
-  background-position: center center;
+  background-image: url('../images/Maxi/Maxi5.jpg'); /* 改为 Maxi5 放大后下半张 */
+  background-size: 100% 200%;    /* 放大一倍高度 */
+  background-position: center 100%; /* 贴底取下半 */
+  background-repeat: no-repeat;
 }
 
 /* ===== 羊群只在 Page1 ===== */
