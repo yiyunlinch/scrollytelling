@@ -497,6 +497,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
+
   /* ====== 小货车 (第10页) 往左循环，按页激活 ====== */
   try {
     function initMovingAnimOnce(elemId, pageIdx) {
@@ -847,15 +848,6 @@ try {
   window.addEventListener('resize', () => {
     updateLock();
   }, { passive: true });
-})();
-
-/* 羊群只在第1页显示（容器改为 fixed 后手动控制） */
-(function controlFlockVisibility() {
-  const flock = document.getElementById('flock-page1');
-  if (!flock) return;
-  const toggle = active => { flock.style.display = active ? 'block' : 'none'; };
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 1));
-  toggle(currentPageIndex === 1);
 })();
 
 /* === 通用：点击切换显隐（支持来回切换） === */
