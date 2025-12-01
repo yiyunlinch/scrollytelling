@@ -441,18 +441,14 @@ body {
 /* 第6/7页：autumn 上下半 */
 #page3 .backgroundtop {
   background-image: url('../images/autumn.jpg') !important;
-<<<<<<< ours
-  background-size: 80% auto !important; /* 缩小约5% */
-=======
-  background-size: cover !important;
->>>>>>> theirs
-  background-position: center center !important;
+  background-size: cover !important;           /* 等比放大铺满，避免左右留黑边 */
+  background-position: center top !important;  /* 对齐上半区 */
   background-repeat: no-repeat !important;
 }
 #page4 .backgroundbottom {
-  background-image: url('../images/autumnleaf.jpg') !important;
-  background-size: cover !important;
-  background-position: center center !important;
+  background-image: url('../images/autumn.jpg') !important;
+  background-size: cover !important;             /* 同步放大，铺满宽度 */
+  background-position: center bottom !important; /* 取下半区，与上页拼接 */
   background-repeat: no-repeat !important;
 }
 
