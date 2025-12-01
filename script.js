@@ -5,10 +5,18 @@ let trackPages = [];
 let allPages = [];
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
 let eyeStage = 0;      // 0 初始, 1 去轮廓露出眼睛, 2 溶解眼层+hero, 3 可翻页
+let heroStarted = false; // 防止重复启动 hero
+let maxiFullyShown = false; // Maxi 背景完全露出后置为 true
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 let privatStage = 0;   // page6 过渡：0 未触发，1 已掉落，2 可翻页
 let privatLockUntil = 0;
 let kinderVanish = () => {}; // 第6页孩童下落隐藏
+
+function startHeroOnce() {
+  if (heroStarted || !maxiFullyShown) return;
+  heroStarted = true;
+  window.dispatchEvent(new Event('hero-start'));
+}
 
 function easeInOutQuad(t) {
   return t < 0.5
@@ -55,10 +63,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // 初始定位第一页
   goToPage(0, false);
 
-  // 进入第2页时再触发 hero 羊出现
+  // 进入第2页时再尝试触发 hero 羊出现（仅当 Maxi 已露出）
   window.addEventListener('pagechange', e => {
     if (e.detail.index === 1) {
-      window.dispatchEvent(new Event('hero-start'));
+      startHeroOnce();
     }
   });
 
@@ -95,6 +103,15 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       if (baseLayer) baseLayer.style.opacity = '1';
       if (visitsText) visitsText.classList.remove('show');
+    }
+
+    if (midLayer) {
+      midLayer.addEventListener('animationend', () => {
+        maxiFullyShown = true;
+        startHeroOnce();
+      }, { once: true });
+    } else {
+      maxiFullyShown = true;
     }
 
     reset();
@@ -720,9 +737,9 @@ try {
   let running = false;
   let phase = 'idle'; // idle | toCenter | wander
   let x = -30;
-  let y = 20;
+  let y = 85; // 底部再稍高
   let targetX = 50;
-  let targetY = 20;
+  let targetY = 85;
   let lastTs = performance.now();
   let locked = false; // 到达工地页锁定
   let lockLeftPx = null;
@@ -732,12 +749,12 @@ try {
   const LOCK_PROGRESS = 0.2;
   const clamp01 = v => Math.max(0, Math.min(1, v));
 
-  const SPEED_CENTER = 15; // vw per second toward center (slower)
-  const SPEED_WANDER = 6;  // vw per second when wandering (slower)
+  const SPEED_CENTER = 10; // 更慢的入场速度
+  const SPEED_WANDER = 4;  // 更慢的游走速度
 
   function pickWanderTarget() {
     targetX = 50 + (Math.random() * 24 - 12); // +/-12%
-    targetY = 20 + (Math.random() * 12 - 6);  // +/-6%
+    targetY = 85 + (Math.random() * 6 - 3);   // 底部附近小范围游走
   }
 
   function step(ts) {
@@ -826,9 +843,9 @@ try {
     running = true;
     phase = 'toCenter';
     x = -30; // start off-screen to the left
-    y = 20;
+    y = 85;
     targetX = 50;
-    targetY = 20;
+    targetY = 85;
     lastTs = performance.now();
     hero.style.opacity = '1';
     updateLock();
