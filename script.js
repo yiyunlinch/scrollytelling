@@ -319,30 +319,43 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!sheeps.length) return;
 
   // ------- 可调参数 -------
-  const MAX_SPEED      = 26;     // 最高速度（px/s）
-  const BASE_SPEED     = 18;     // 基础速度（px/s）
-  const SAFE_RADIUS    = 220;    // 分离感知半径（越大越不容易靠太近）
-  const SEP_WEIGHT     = 1.10;   // 分离力权重（再挤一点就加大）
-  const WANDER_JITTER  = 9;      // 微扰随机游走强度（越大越飘）
-  const TARGET_BIAS    = 0.04;   // 向目标点的“慢慢靠近”权重
+  const MAX_SPEED      = 22;     // 最高速度（px/s）
+  const BASE_SPEED     = 14;     // 基础速度（px/s）
+  const SAFE_RADIUS    = 520;    // 很大的分离半径，保持远距离
+  const MIN_SPAWN_DIST = SAFE_RADIUS * 0.9; // 生成时的最小间距
+  const SEP_WEIGHT     = 1.8;    // 分离力权重，加大推开
+  const WANDER_JITTER  = 6;      // 微扰随机游走强度
+  const TARGET_BIAS    = 0.08;   // 向目标点的慢慢靠近
 
-  // 垂直活动带：放开到全屏高度
-  const TOP_BAND = 0.00;
-  const Y_MAX_FRAC = 1.00;
+  // 内场边距（避免贴边）：左右 22%，上 35%，下 35%
+  const PAD_X_FRAC      = 0.22;
+  const PAD_Y_TOP_FRAC  = 0.35;
+  const PAD_Y_BOT_FRAC  = 0.35;
 
   const rand  = (a, b) => a + Math.random() * (b - a);
 
   function getBounds() {
-    return { w: flock.clientWidth, h: flock.clientHeight };
+    const w = flock.clientWidth;
+    const h = flock.clientHeight;
+    const minX = w * PAD_X_FRAC;
+    const maxX = w * (1 - PAD_X_FRAC);
+    const minY = h * PAD_Y_TOP_FRAC;
+    const maxY = h * (1 - PAD_Y_BOT_FRAC);
+    return { w, h, minX, maxX, minY, maxY };
   }
-  function yMin(h){ return h * TOP_BAND; }
-  function yMax(h){ return h * Y_MAX_FRAC; }
 
   // 初始化每只羊：位置、速度、目标点
-  function spawnSheep(s) {
-    const { w, h } = getBounds();
-    s.x = rand(w * 0.08, w * 0.92);
-    s.y = rand(yMin(h),  yMax(h));
+  function spawnSheep(s, existing) {
+    const { minX, maxX, minY, maxY } = getBounds();
+    let tries = 0;
+    do {
+      s.x = rand(minX, maxX);
+      s.y = rand(minY, maxY);
+      tries++;
+    } while (
+      existing.some(o => Math.hypot(s.x - o.x, s.y - o.y) < MIN_SPAWN_DIST) &&
+      tries < 40
+    );
     s.vx = rand(-BASE_SPEED, BASE_SPEED);
     s.vy = rand(-BASE_SPEED, BASE_SPEED);
     pickTarget(s);
@@ -350,9 +363,9 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function pickTarget(s) {
-    const { w, h } = getBounds();
-    s.tx = rand(w * 0.08, w * 0.92);
-    s.ty = rand(yMin(h),  yMax(h));
+    const { minX, maxX, minY, maxY } = getBounds();
+    s.tx = rand(minX, maxX);
+    s.ty = rand(minY, maxY);
   }
 
   function place(s) {
@@ -360,7 +373,7 @@ window.addEventListener('DOMContentLoaded', () => {
     s.el.style.top  = s.y + 'px';
   }
 
-  sheeps.forEach(spawnSheep);
+  sheeps.forEach((s, idx) => spawnSheep(s, sheeps.slice(0, idx)));
 
   // 主循环
   let last = performance.now();
@@ -432,6 +445,26 @@ window.addEventListener('DOMContentLoaded', () => {
       // 到达目标附近则换一个新目标
       if (Math.hypot(s.tx - s.x, s.ty - s.y) < 24) {
         pickTarget(s);
+      }
+
+      // 软性边界：保持在内场矩形内
+      const { minX, maxX, minY, maxY } = getBounds();
+      if (s.x < minX) { s.x = minX; s.vx = Math.abs(s.vx); }
+      if (s.x > maxX) { s.x = maxX; s.vx = -Math.abs(s.vx); }
+      if (s.y < minY) { s.y = minY; s.vy = Math.abs(s.vy); }
+      if (s.y > maxY) { s.y = maxY; s.vy = -Math.abs(s.vy); }
+
+      // 硬性推开：若仍然过近，直接位移开
+      for (const o of sheeps) {
+        if (o === s) continue;
+        const dx = s.x - o.x;
+        const dy = s.y - o.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < SAFE_RADIUS * 0.7) {
+          const push = (SAFE_RADIUS * 0.7 - dist) * 0.6;
+          s.x += (dx / dist) * push;
+          s.y += (dy / dist) * push;
+        }
       }
 
       place(s);

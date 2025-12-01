@@ -55,9 +55,9 @@ body {
   position: relative;
 }
 
-/* 羊群容器（不要 fixed）*/
+/* 羊群容器（跟随第2页滚动）*/
 #flock-page1 {
-  position: fixed;  /* 保持在视口上方，不被后续页面覆盖 */
+  position: absolute;  /* 相对第2页，随页面移动 */
   inset: 0;
   pointer-events: none;
   z-index: 2000; /* 确保在背景图之上 */
