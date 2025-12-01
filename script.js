@@ -339,25 +339,27 @@ window.addEventListener('DOMContentLoaded', () => {
   const MAX_SPEED      = 22;     // 最高速度（px/s）
   const BASE_SPEED     = 14;     // 基础速度（px/s）
   const SAFE_RADIUS    = 520;    // 很大的分离半径，保持远距离
-  const MIN_SPAWN_DIST = SAFE_RADIUS * 0.9; // 生成时的最小间距
+  const MIN_SPAWN_DIST = SAFE_RADIUS * 1.2; // 更现实的生成间距，避免无法安置
   const SEP_WEIGHT     = 1.8;    // 分离力权重，加大推开
   const WANDER_JITTER  = 6;      // 微扰随机游走强度
   const TARGET_BIAS    = 0.08;   // 向目标点的慢慢靠近
 
-  // 内场边距（避免贴边）：左右 22%，上 35%，下 35%
+  // 内场边距（避免贴边）：左右 22%，上 5%，下 40%
   const PAD_X_FRAC      = 0.22;
-  const PAD_Y_TOP_FRAC  = 0.35;
-  const PAD_Y_BOT_FRAC  = 0.35;
+  const PAD_Y_TOP_FRAC  = 0.05;
+  const PAD_Y_BOT_FRAC  = 0.40;
 
   const rand  = (a, b) => a + Math.random() * (b - a);
 
   function getBounds() {
     const w = flock.clientWidth;
     const h = flock.clientHeight;
+    const maxSheepSize = Math.max(...sheeps.map(s => s.el.offsetWidth || 0), 0);
     const minX = w * PAD_X_FRAC;
     const maxX = w * (1 - PAD_X_FRAC);
     const minY = h * PAD_Y_TOP_FRAC;
-    const maxY = h * (1 - PAD_Y_BOT_FRAC);
+    // 确保整只羊在可视区域内：从可用高度中减去羊尺寸的一半，避免高度耗尽
+    const maxY = Math.max(minY + 10, h * (1 - PAD_Y_BOT_FRAC) - maxSheepSize * 0.5);
     return { w, h, minX, maxX, minY, maxY };
   }
 
@@ -737,9 +739,9 @@ try {
   let running = false;
   let phase = 'idle'; // idle | toCenter | wander
   let x = -30;
-  let y = 85; // 底部再稍高
+  let y = 60; // 位于下方 40% 区域
   let targetX = 50;
-  let targetY = 85;
+  let targetY = 60;
   let lastTs = performance.now();
   let locked = false; // 到达工地页锁定
   let lockLeftPx = null;
@@ -754,7 +756,7 @@ try {
 
   function pickWanderTarget() {
     targetX = 50 + (Math.random() * 24 - 12); // +/-12%
-    targetY = 85 + (Math.random() * 6 - 3);   // 底部附近小范围游走
+    targetY = 60 + (Math.random() * 8 - 4);   // 下方 40% 附近小范围游走
   }
 
   function step(ts) {
@@ -792,7 +794,7 @@ try {
 
     hero.style.left = `${x}%`;
     hero.style.top  = `${y}%`;
-    hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
+    hero.style.transform = 'translate(-50%, -50%) scale(1)';
     requestAnimationFrame(step);
   }
 
@@ -824,7 +826,7 @@ try {
     hero.style.position = 'fixed';
     hero.style.left = `${lockLeftPx}px`;
     hero.style.top = `${lockTopPx}px`;
-    hero.style.transform = 'translateX(-50%) scale(0.5)';
+    hero.style.transform = 'translateX(-50%) scale(1)';
   }
 
   function unlockHero() {
@@ -834,7 +836,7 @@ try {
     hero.style.left = `${x}%`;
     hero.style.top  = `${y}%`;
     hero.style.position = 'fixed';
-    hero.style.transform = 'translate(-50%, -50%) scale(0.5)';
+    hero.style.transform = 'translate(-50%, -50%) scale(1)';
     lastTs = performance.now();
   }
 
@@ -843,9 +845,9 @@ try {
     running = true;
     phase = 'toCenter';
     x = -30; // start off-screen to the left
-    y = 85;
+    y = 60;
     targetX = 50;
-    targetY = 85;
+    targetY = 60;
     lastTs = performance.now();
     hero.style.opacity = '1';
     updateLock();

@@ -68,7 +68,7 @@ body {
   position: absolute;
   display: block;
   z-index: 1;
-  width: clamp(180px, 28vw, 400px); /* ✅ 尺寸 */
+  width: clamp(360px, 56vw, 800px); /* 放大一倍 */
   aspect-ratio: 1 / 1;
   background-size: contain;
   background-repeat: no-repeat;
