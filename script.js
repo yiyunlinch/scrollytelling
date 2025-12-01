@@ -1,32 +1,27 @@
 const $ = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 let currentPageIndex = 0;
 let trackPages = [];
 let allPages = [];
 let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
 let eyeStage = 0;      // 0 初始, 1 去轮廓露出眼睛, 2 溶解眼层+hero, 3 可翻页
 let heroStarted = false; // 防止重复启动 hero
-let maxiFullyShown = false; // Maxi 背景完全露出后置为 true
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
+let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已通过
+let hold34LockUntil = 0;
 let privatStage = 0;   // page6 过渡：0 未触发，1 已掉落，2 可翻页
 let privatLockUntil = 0;
 let kinderVanish = () => {}; // 第6页孩童下落隐藏
 
 function startHeroOnce() {
-  if (heroStarted || !maxiFullyShown) return;
+  if (heroStarted) return;
   heroStarted = true;
   window.dispatchEvent(new Event('hero-start'));
-}
-
-function easeInOutQuad(t) {
-  return t < 0.5
-    ? 2 * t * t
-    : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
   allPages   = Array.from(document.querySelectorAll('.page'));
+  const page3Elem = document.getElementById('page3');
   const track = document.querySelector('.cover-h-track');
   const TRACK_COUNT = trackPages.length;
 
@@ -107,11 +102,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (midLayer) {
       midLayer.addEventListener('animationend', () => {
-        maxiFullyShown = true;
         startHeroOnce();
       }, { once: true });
-    } else {
-      maxiFullyShown = true;
     }
 
     reset();
@@ -178,6 +170,10 @@ window.addEventListener('DOMContentLoaded', () => {
       privatStage = 0; // 上拉到第4页及以上时清零并收起
       privatDrop.reset();
     }
+    if (idx <= 2) {
+      hold34Stage = 0; // 回到第3页或更上方时重置停顿
+      hold34LockUntil = 0;
+    }
     // 其他页保持当前状态
   });
 
@@ -200,6 +196,17 @@ window.addEventListener('DOMContentLoaded', () => {
     globalScrollLockUntil = Math.max(globalScrollLockUntil, privatLockUntil);
   }
 
+  function isPage3GateActive() {
+    if (!page3Elem) return false;
+    const rect = page3Elem.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const visible = rect.top < vh && rect.bottom > 0;
+    if (!visible) return false;
+    // 当第3页底部接近视口底部时触发停顿窗口
+    const bottomNearBottom = rect.bottom < vh * 1.05 && rect.bottom > vh * 0.35;
+    return bottomNearBottom;
+  }
+
   window.addEventListener('wheel', e => {
     const dir = e.deltaY > 0 ? 1 : -1;
     if (dir === 0) return;
@@ -207,6 +214,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const now = performance.now();
     const stillCooling = now < Math.max(eyeLockUntil, privatLockUntil, globalScrollLockUntil);
     const inTrack = currentPageIndex < TRACK_COUNT;
+    const onPage34 = currentPageIndex >= 2 && currentPageIndex <= 3;
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
       if (stillCooling) {
@@ -240,6 +248,26 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!inTrack) {
+      // Page3 -> Page4：第一次下滑先停顿，第二次才继续（当前在第3/第4页都拦一次）
+      const needHold34 = dir > 0 && hold34Stage < 2 && onPage34 && isPage3GateActive();
+      if (needHold34) {
+        const nowTs = performance.now();
+        if (hold34Stage === 0) {
+          e.preventDefault();
+          hold34Stage = 1;
+          hold34LockUntil = nowTs + 600; // 稍作停顿
+          globalScrollLockUntil = Math.max(globalScrollLockUntil, hold34LockUntil);
+          return;
+        }
+        if (hold34Stage === 1) {
+          if (nowTs < hold34LockUntil) {
+            e.preventDefault();
+            return;
+          }
+          // 第二次下滑，放行并标记完成
+          hold34Stage = 2;
+        }
+      }
       // page6 -> page7 过渡：先冷却，再掉落 privat，再下一次滚动才允许翻页
       if (currentPageIndex === 5 && dir > 0) {
         if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
@@ -730,142 +758,82 @@ try {
 
   
 
-//* ===== HERO SHEEP：按页离散位置 ===== */
+//* ===== HERO SHEEP：第4页中段向右离场，向上反向返回 ===== */
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
-  const page8 = document.getElementById('page5');
+  const page4 = document.getElementById('page4');
   if (!hero) return;
 
   let running = false;
-  let phase = 'idle'; // idle | toCenter | wander
-  let x = -30;
-  let y = 60; // 位于下方 40% 区域
-  let targetX = 50;
-  let targetY = 60;
-  let lastTs = performance.now();
-  let locked = false; // 到达工地页锁定
-  let lockLeftPx = null;
-  let lockTopPx = null;
-  let lastPageTop = 0; // 记录 page5 顶部位置，用于判断滚动方向
+  const baseX = 50;     // 正常位置
+  const exitX = 170;    // 向右离场的位置（超出视口）
+  const baseY = 60;
+  const EXIT_START = 0.0; // 刚进入第4页就开始离场
+  const EXIT_END   = 1.00; // 离场区间再拉长，离场更慢
+  const ENTRY_FROM = -30;  // 初次出现时从左侧进入
+  const ENTRY_DURATION = 2200; // ms，更慢的入场
 
-  const LOCK_PROGRESS = 0.2;
   const clamp01 = v => Math.max(0, Math.min(1, v));
 
-  const SPEED_CENTER = 10; // 更慢的入场速度
-  const SPEED_WANDER = 4;  // 更慢的游走速度
-
-  function pickWanderTarget() {
-    targetX = 50 + (Math.random() * 24 - 12); // +/-12%
-    targetY = 60 + (Math.random() * 8 - 4);   // 下方 40% 附近小范围游走
+  function page4Progress() {
+    if (!page4) return 0;
+    const rect = page4.getBoundingClientRect();
+    const h = rect.height || window.innerHeight || 1;
+    // 当 page4 顶部在视口顶时 progress=0；滚过半屏 progress≈0.5
+    const progress = 1 - (rect.bottom / h);
+    return clamp01(progress);
   }
 
-  function step(ts) {
+  function applyPose(progress) {
+    // t=0: 正常位置；t=1: 离开屏幕右侧
+    const t = clamp01((progress - EXIT_START) / (EXIT_END - EXIT_START));
+    const x = baseX + (exitX - baseX) * t;
+    hero.style.left = `${x}%`;
+    hero.style.top  = `${baseY}%`;
+    hero.style.opacity = '1';
+    hero.style.transform = 'translate(-50%, -50%) scale(1)';
+  }
+
+  let entryStart = 0;
+  let entryDone = false;
+
+  function step() {
     if (!running) return;
-    const dt = Math.min((ts - lastTs) / 1000, 0.05);
-    lastTs = ts;
-    updateLock(); // 每帧更新锁定判定
-
-    if (locked) {
-      requestAnimationFrame(step);
-      return;
+    const now = performance.now();
+    if (!entryDone) {
+      const t = clamp01((now - entryStart) / ENTRY_DURATION);
+      const x = ENTRY_FROM + (baseX - ENTRY_FROM) * t;
+      hero.style.left = `${x}%`;
+      hero.style.top  = `${baseY}%`;
+      hero.style.opacity = '1';
+      hero.style.transform = 'translate(-50%, -50%) scale(1)';
+      if (t >= 1) entryDone = true;
+    } else {
+      const p = page4Progress();
+      applyPose(p);
     }
-
-    if (phase === 'toCenter') {
-      const dx = targetX - x;
-      const stepX = Math.sign(dx) * Math.min(Math.abs(dx), SPEED_CENTER * dt);
-      x += stepX;
-      if (Math.abs(dx) < 0.2) {
-        phase = 'wander';
-        pickWanderTarget();
-      }
-    } else if (phase === 'wander') {
-      const dx = targetX - x;
-      const dy = targetY - y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 0.3) {
-        pickWanderTarget();
-      } else {
-        const stepDist = SPEED_WANDER * dt;
-        const t = Math.min(stepDist / dist, 1);
-        x += dx * t;
-        y += dy * t;
-      }
-    }
-
-    hero.style.left = `${x}%`;
-    hero.style.top  = `${y}%`;
-    hero.style.transform = 'translate(-50%, -50%) scale(1)';
     requestAnimationFrame(step);
-  }
-
-  function updateLock() {
-    if (!page8) return;
-    const rect = page8.getBoundingClientRect();
-    const h = rect.height || page8.offsetHeight || window.innerHeight || 1;
-    const top = rect.top || 0;
-    const progress = clamp01((-top) / h); // 0 顶刚出现, 1 顶经过一屏高
-    const shouldLock = progress >= LOCK_PROGRESS;
-    const scrollingUp = top > lastPageTop; // page 顶部向下移动是下滚，向上移动是上滚
-
-    if (shouldLock && !locked) {
-      lockHero();
-    } else if (locked && scrollingUp) {
-      // 只有上滚时才解锁恢复原轨迹
-      unlockHero();
-    }
-
-    lastPageTop = top;
-  }
-
-  function lockHero() {
-    // 锁定时直接固定在当前屏幕位置，避免跳变
-    const heroRect = hero.getBoundingClientRect();
-    lockLeftPx = heroRect.left + heroRect.width / 2;
-    lockTopPx = heroRect.top;
-    locked = true;
-    hero.style.position = 'fixed';
-    hero.style.left = `${lockLeftPx}px`;
-    hero.style.top = `${lockTopPx}px`;
-    hero.style.transform = 'translateX(-50%) scale(1)';
-  }
-
-  function unlockHero() {
-    locked = false;
-    lockLeftPx = null;
-    lockTopPx = null;
-    hero.style.left = `${x}%`;
-    hero.style.top  = `${y}%`;
-    hero.style.position = 'fixed';
-    hero.style.transform = 'translate(-50%, -50%) scale(1)';
-    lastTs = performance.now();
   }
 
   function activate() {
     if (running) return;
     running = true;
-    phase = 'toCenter';
-    x = -30; // start off-screen to the left
-    y = 60;
-    targetX = 50;
-    targetY = 60;
-    lastTs = performance.now();
+    entryStart = performance.now();
+    entryDone = false;
+    applyPose(page4Progress());
     hero.style.opacity = '1';
-    updateLock();
     requestAnimationFrame(step);
   }
 
   function deactivate() {
     running = false;
-    phase = 'idle';
     hero.style.opacity = '0';
   }
 
   window.addEventListener('hero-start', () => activate());
-  window.addEventListener('scroll', () => {
-    updateLock();
-  }, { passive: true });
   window.addEventListener('resize', () => {
-    updateLock();
+    if (!running) return;
+    applyPose(page4Progress());
   }, { passive: true });
 })();
 
@@ -930,8 +898,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 统一第2/11页 click 手位置
 (function unifyClickIcons() {
-  ['clickIcon5', 'clickIconFinal'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('click-pos-bottom-center');
-  });
+  const el = document.getElementById('clickIconFinal');
+  if (el) el.classList.add('click-pos-bottom-center');
 })();
