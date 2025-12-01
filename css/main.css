@@ -45,8 +45,8 @@ body {
 }
 .grass {
   background-image: url('../images/Maxi/Maxi5.jpg'); /* 改为 Maxi5 放大后下半张 */
-  background-size: 100% 200%;    /* 放大一倍高度 */
-  background-position: center 100%; /* 贴底取下半 */
+  background-size: cover;         /* 保持比例 */
+  background-position: center bottom; /* 底部区域 */
   background-repeat: no-repeat;
 }
 
@@ -346,12 +346,16 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
-  background-position: center;
+  background-image: url('../images/Maxi/Maxi5.jpg');
+  background-size: cover;       /* 保持比例，不再拉伸 */
+  background-position: center top; /* 取上半区域 */
   background-repeat: no-repeat;
 }
 .eye-interaction-container.show-maxi {
   background-image: url('../images/Maxi/Maxi5.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
 }
 .eye-layer-stack {
   position: absolute;
@@ -370,14 +374,7 @@ body {
   pointer-events: none;
 }
 .eye-layer-base {
-  z-index: 1;
-  opacity: 1;
-  width: 100vw;
-  height: auto;
-  max-height: none;
-  object-fit: cover;
-  object-position: center top;    /* 对齐顶部 */
-  clip-path: inset(0 0 50% 0);    /* 仅显示上半张 */
+  display: none;
 }
 
 .eye-layer-middle {
@@ -444,14 +441,18 @@ body {
 /* 第6/7页：autumn 上下半 */
 #page3 .backgroundtop {
   background-image: url('../images/autumn.jpg') !important;
-  background-size: 100% 200% !important;
-  background-position: center 0% !important;
+<<<<<<< ours
+  background-size: 80% auto !important; /* 缩小约5% */
+=======
+  background-size: cover !important;
+>>>>>>> theirs
+  background-position: center center !important;
   background-repeat: no-repeat !important;
 }
 #page4 .backgroundbottom {
-  background-image: url('../images/autumn.jpg') !important;
-  background-size: 100% 200% !important;
-  background-position: center 100% !important;
+  background-image: url('../images/autumnleaf.jpg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
   background-repeat: no-repeat !important;
 }
 
