@@ -14,6 +14,7 @@ let kinderVanish = () => {}; // 第6页孩童下落隐藏
 let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
 let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
 let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
+let page2DownGuardUntil = 0; // 第2页向下滑动后，短暂阻止回弹回 Maxi
 
 // Page5 文字/对白显隐
 let setPage5ContentVisibility = () => {};
@@ -51,7 +52,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const target = trackPages[idx];
     const globalIdx = allPages.indexOf(target);
     if (track) {
-      track.style.transition = animate ? 'transform 0.45s ease' : 'none';
+      track.style.transition = animate ? 'transform 0.8s ease' : 'none';
       track.style.transform = `translateY(${-idx * 100}vh)`; // 竖向滑动
     }
     if (globalIdx >= 0) {
@@ -63,6 +64,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 初始定位第一页
   goToPage(0, false);
+
+  // 如果刷新时停在第2页或更下方（例如第3页），直接触发 hero，避免刷新后消失
+  function maybeStartHeroFromScroll() {
+    const visibleEnough = el => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      return rect.top < vh * 0.65 && rect.bottom > vh * 0.35;
+    };
+    if (visibleEnough(document.getElementById('page2')) ||
+        visibleEnough(document.getElementById('page3')) ||
+        visibleEnough(document.getElementById('page4'))) {
+      startHeroOnce();
+    }
+  }
+  requestAnimationFrame(maybeStartHeroFromScroll);
 
   // 进入第2页时再尝试触发 hero 羊出现（仅当 Maxi 已露出）
   window.addEventListener('pagechange', e => {
@@ -256,6 +273,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('pagechange', e => {
     const idx = e.detail.index;
+    document.body.classList.toggle('page6-plus', idx >= 5);
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
       privatDrop.reset();
@@ -290,7 +308,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
   const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
-  const BUILD_COOLDOWN = 650; // 盖楼切换冷却
+  const BUILD_COOLDOWN = 360; // 盖楼切换冷却（略放慢）
 
   function setEyeCooldown(extra = 0) {
     const now = performance.now();
@@ -330,6 +348,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const stillCooling = now < Math.max(eyeLockUntil, privatLockUntil, globalScrollLockUntil);
     const inTrack = currentPageIndex < TRACK_COUNT;
     const onPage34 = currentPageIndex >= 2 && currentPageIndex <= 3;
+    const onLastTrackPage = inTrack && currentPageIndex === TRACK_COUNT - 1;
+
+    // 从第2页向下滑时会设置一个短暂的“反弹保护”，避免惯性小幅上滑把视图送回 Maxi5
+    if (onLastTrackPage) {
+      if (dir > 0) {
+        page2DownGuardUntil = Math.max(page2DownGuardUntil, now + 750);
+      } else if (dir < 0 && now < page2DownGuardUntil) {
+        e.preventDefault();
+        return;
+      }
+    }
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
       if (stillCooling) {
@@ -420,20 +449,19 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           e.preventDefault();
           privatStage = 3;
-          setBuildCooldown(350);
+          setBuildCooldown(280);
           return;
         } else if (privatStage === 3) {
           // 盖楼：每次向下滚增加一层，直到最顶层
           if (buildingIndex < buildingAnim.max) {
             e.preventDefault();
             buildingAnim.step(1);
-            setBuildCooldown(350);
+            setBuildCooldown(280);
             return;
           } else {
             // 已经到最高层，进入下一阶段
             e.preventDefault();
             privatStage = 4;
-            setPrivatCooldown(400);
             return;
           }
         } else if (privatStage === 4) {
@@ -447,7 +475,7 @@ window.addEventListener('DOMContentLoaded', () => {
           kinderForceVisible = false;
           kinderLockedHidden = true;
           kinderVanish();
-          setPrivatCooldown(600);
+          setPrivatCooldown(320); // 顶层后仅一次短冷却
           return;
         } else if (privatStage === 5) {
           // 盖楼完成 & 孩童消失后，下一次滚动才能放行
@@ -464,7 +492,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (buildingIndex >= 0) {
           e.preventDefault();
           buildingAnim.step(-1);
-          setBuildCooldown(300);
+          setBuildCooldown(240);
           // 回退到无楼层时，重置阶段
           if (buildingIndex < 0) {
             privatStage = 2;
@@ -742,7 +770,6 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('pagechange', e => onPageChange(e.detail.index));
   onPageChange(currentPageIndex);
 }
-initMovingAnimOnce('transporterAnim', 7);
   } catch (e) { console.error('initMovingAnimOnce error', e); }
 
 /* ====== 挖土机：第8页内循环，按页激活 ====== */

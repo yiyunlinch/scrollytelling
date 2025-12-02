@@ -165,20 +165,21 @@ body {
 
 
 
-/* 向下箭头（第1页显示） */
-.page2 .down-arrow { display: block; }
-.page:not(.page2) .down-arrow { display: none !important; }
+/* 向下箭头（第1页显示，底部居中，层级最高） */
+.page1 .down-arrow { display: block; }
+.page:not(.page1) .down-arrow { display: none !important; }
 .down-arrow {
   position: fixed;
-  right: 24px;
-  top: 24px;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
   width: 72px;
   height: 72px;
   border: none;
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  z-index: 1000;
+  z-index: 9999;
   outline: none;
 }
 .down-arrow .arrow-stem {
@@ -501,6 +502,14 @@ body {
   background-repeat: no-repeat !important;
 }
 
+/* 进入第6页及以后强制隐藏第5页的 Kinder/对白/文本 */
+body.page6-plus #page5 .kinder-wrap,
+body.page6-plus #page5 #dialogOverlay,
+body.page6-plus #page5 .text-group-left {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* fallback 防止没inline style时塌掉 */
 #page5 .backgroundtop,
 #page6 .backgroundbottom {
@@ -553,17 +562,6 @@ body {
   background-repeat: no-repeat;
   filter: saturate(1.05);
   z-index: 0;
-}
-
-/* 最后一页货车层级 */
-#page7 #transporterAnim {
-  z-index: 30 !important;
-}
-
-
-/* 货车（第9页）缩放 */
-#transporterAnim {
-  transform: scale(8);
 }
 
 /* 这个容器是整张图的运动空间（参考底边） */
@@ -646,6 +644,27 @@ body {
   opacity: 0;
   transition: opacity 0.35s ease;
   pointer-events: none;
+}
+
+/* 第6页底部车辆（往返左右行驶） */
+.car-wrap {
+  position: absolute;
+  left: 0;
+  bottom: -10%;
+  width: 960px;
+  height: auto;
+  z-index: 1700; /* 高于 privat，低于 Kinder/文本 */
+  pointer-events: none;
+  animation: carDrive 14s linear infinite; /* 右->左，循环后重置到右侧再出现 */
+}
+.car-video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+@keyframes carDrive {
+  0%   { transform: translateX(120vw); }
+  100% { transform: translateX(-120vw); }
 }
 
 /* === 第1页 handhandy（草地手） === */

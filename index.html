@@ -29,10 +29,14 @@
                 <img class="eye-layer eye-layer-middle" src="./images/sheepeye.png" alt="Sheep eye">
                 <img class="eye-layer eye-layer-top" src="./images/sheepblack.jpg" alt="Sheep black silhouette">
               </div>
-              <div class="text-group-right" id="visitsText" style="color:#ffffff;">
-                <p class="text">Ich habe viele Besuche.</p>
-              </div>
+            <div class="text-group-right" id="visitsText" style="color:#ffffff;">
+              <p class="text">Ich habe viele Besuche.</p>
             </div>
+            <button class="down-arrow" id="toPage2" aria-label="滑到下一页">
+              <span class="arrow-stem"></span>
+              <span class="arrow-head"></span>
+            </button>
+          </div>
           </section>
 
           <!-- 第2页：草地 -->
@@ -58,11 +62,6 @@
                    id="handhandyImg"
                    class="handhandy-img">
             </div>
-
-            <button class="down-arrow" id="toPage2" aria-label="滑到下一页">
-              <span class="arrow-stem"></span>
-              <span class="arrow-head"></span>
-            </button>
           </section>
         </div>
       </div>
@@ -91,7 +90,7 @@
       <img src="./images/hand/handflower.webp" alt="handflower" id="handflowerImg" class="handflower-img">
     </div>
     <div class="pole-wrap">
-      <img src="./images/hand/pole.webp" alt="pole" id="poleImg" class="pole-img">
+      <img src="./images/hand/pole.png" alt="pole" id="poleImg" class="pole-img">
     </div>
     <div class="hand-wrap">
       <img src="./images/hand/hand.webp" alt="hand" id="handImg4" class="hand-img">
@@ -106,7 +105,7 @@
 
     <div class="fade-to-black" aria-hidden="true"></div>
     <div class="pol1-wrap">
-      <img src="./images/hand/pole1.webp" alt="pol1" id="pol1Img" class="pol1-img">
+      <img src="./images/hand/pole1.png" alt="pol1" id="pol1Img" class="pol1-img">
     </div>
   </section>
 
@@ -153,9 +152,15 @@
            background-image: url('./images/baustelle.jpg');
            background-size: 100% 200%;
            background-position: center bottom;
-          background-repeat: no-repeat;
-        "
+         background-repeat: no-repeat;
+       "
          aria-hidden="true"></div>
+
+    <div class="car-wrap" aria-hidden="true">
+      <video class="car-video" autoplay muted loop playsinline preload="auto">
+        <source src="./images/car.webm" type="video/webm">
+      </video>
+    </div>
 
     <div class="house-video-wrap" id="houseVideoWrap" aria-hidden="true">
       <img src="./images/building/1.png" alt="building layer 1" class="building-layer">
@@ -184,12 +189,12 @@
       <p>— Yiyunlin</p>
     </div>
 
-    <div class="handflower-wrap">
-      <img src="./images/hand/handflower.webp"
-           alt="handflower"
-           id="lastHandflowerImg"
-           class="last-handflower">
-    </div>
+            <div class="handflower-wrap">
+              <img src="./images/hand/handflower.webp"
+                   alt="handflower"
+                   id="lastHandflowerImg"
+                   class="last-handflower">
+            </div>
 
     <aside class="global-scrollbar">
       <div class="scrollbar-track">
