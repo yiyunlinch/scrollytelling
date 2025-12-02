@@ -895,17 +895,22 @@ initMovingAnimOnce('transporterAnim', 7);
         if (!kinderLockedHidden) {
           kinderForceVisible = onPage5 || (privatStage >= 2 && privatStage < 5);
         }
-        activate(onPage5);
+        // 进入第5页先收起，等可视度达标再出现
+        if (onPage5 && !kinderLockedHidden && buildingIndex < 0) {
+          activate(false);
+        } else {
+          activate(onPage5);
+        }
       });
 
       try {
         const obs = new IntersectionObserver(entries => {
           for (const entry of entries) {
             if (entry.target !== page5) continue;
-            const visible = entry.isIntersecting && entry.intersectionRatio > 0.12;
+            const visible = entry.isIntersecting && entry.intersectionRatio > 0.35;
             activate(visible);
           }
-        }, { threshold: [0.12, 0.25, 0.35, 0.5] });
+        }, { threshold: [0.25, 0.35, 0.5, 0.7] });
         obs.observe(page5);
       } catch (err) {
         console.error('kinder observer error', err);

@@ -771,7 +771,7 @@ body {
 #page4 .pol1-wrap {
   position: absolute;
   right: 12%;               /* 终点向左移，调大数值则更靠左 */
-  bottom: -60%;
+  bottom: -20%;             /* 上移 */
   z-index: 2600;            /* 高于第5页背景层 */
   overflow: visible;
 }
