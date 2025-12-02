@@ -15,6 +15,9 @@ let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主�
 let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
 let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
 
+// Page5 文字/对白显隐
+let setPage5ContentVisibility = () => {};
+
 function startHeroOnce() {
   if (heroStarted) return;
   heroStarted = true;
@@ -205,12 +208,14 @@ window.addEventListener('DOMContentLoaded', () => {
       if (idx < 0) {
         wrap.classList.remove('visible');
         layers.forEach(l => l.style.opacity = '0');
+        setPage5ContentVisibility(true);
         return;
       }
       wrap.classList.add('visible');
       layers.forEach((l, i) => {
         l.style.opacity = i <= idx ? '1' : '0';
       });
+      setPage5ContentVisibility(false); // 盖楼开始后隐藏 Kinder/文本
     }
 
     function setIndex(idx) {
@@ -231,6 +236,22 @@ window.addEventListener('DOMContentLoaded', () => {
       max: layers.length - 1,
       index: () => buildingIndex,
     };
+  })();
+
+  // Page5 Kinder+文本显隐控制（盖楼开始即隐藏）
+  (function initPage5ContentVisibility() {
+    const kinderImg  = document.getElementById('kinderImg');
+    const dialog     = document.getElementById('dialogOverlay');
+    const textGroup  = document.querySelector('#page5 .text-group-left');
+    const targets = [kinderImg, dialog, textGroup].filter(Boolean);
+    const update = show => {
+      targets.forEach(el => {
+        el.style.transition = 'opacity 0.4s ease';
+        el.style.opacity = show ? '1' : '0';
+      });
+    };
+    setPage5ContentVisibility = update;
+    update(true);
   })();
 
   window.addEventListener('pagechange', e => {
@@ -822,9 +843,9 @@ initMovingAnimOnce('transporterAnim', 7);
       const kinderImg  = document.getElementById('kinderImg');
       const schauLeft  = document.getElementById('schauLeft');
       const schauRight = document.getElementById('schauRight');
-      const page6      = document.getElementById('page6');
+      const page5      = document.getElementById('page5');
 
-      if (!kinderImg || !schauLeft || !schauRight || !page6) return;
+      if (!kinderImg || !schauLeft || !schauRight || !page5) return;
 
       let activeState = false;
 
@@ -864,28 +885,28 @@ initMovingAnimOnce('transporterAnim', 7);
 
       // 由 pagechange 和额外的 IntersectionObserver 双重保障，避免偶发不触发
       window.addEventListener('pagechange', e => {
-        const onPage6 = e.detail.index === 5;
+        const onPage5 = e.detail.index === 4;
         if (!kinderLockedHidden) {
-          kinderForceVisible = onPage6 || (privatStage >= 2 && privatStage < 5);
+          kinderForceVisible = onPage5 || (privatStage >= 2 && privatStage < 5);
         }
-        activate(onPage6);
+        activate(onPage5);
       });
 
       try {
         const obs = new IntersectionObserver(entries => {
           for (const entry of entries) {
-            if (entry.target !== page6) continue;
-            const visible = entry.isIntersecting && entry.intersectionRatio > 0.35;
+            if (entry.target !== page5) continue;
+            const visible = entry.isIntersecting && entry.intersectionRatio > 0.12;
             activate(visible);
           }
-        }, { threshold: [0.25, 0.35, 0.5, 0.7] });
-        obs.observe(page6);
+        }, { threshold: [0.12, 0.25, 0.35, 0.5] });
+        obs.observe(page5);
       } catch (err) {
         console.error('kinder observer error', err);
       }
 
-      kinderForceVisible = !kinderLockedHidden && currentPageIndex === 5;
-      activate(currentPageIndex === 5);
+      kinderForceVisible = !kinderLockedHidden && currentPageIndex === 4;
+      activate(currentPageIndex === 4);
     })();
   } catch (e) {
     console.error('initKinderAndDialogOnPage8 error', e);

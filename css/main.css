@@ -477,6 +477,13 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+#page5 {
+  overflow: visible; /* 允许 Kinder/文本和盖楼上移不被截断 */
+  z-index: 2500;
+}
+#page6 {
+  overflow: visible;
+}
 #page5 .backgroundtop {
   background-image: url('../images/baustelle.jpg') !important;
   background-size: 100% 200% !important;      /* 拉伸高度到2倍，仅显示上半部 */
@@ -553,12 +560,6 @@ body {
 /* 货车（第9页）缩放 */
 #transporterAnim {
   transform: scale(8);
-}
-
-/* === Kinder 图出现动画相关 === */
-#page6 {
-  position: relative;
-  z-index: 2500;  /* 提高层级，确保 house 视频可盖住 privat */
 }
 
 /* 这个容器是整张图的运动空间（参考底边） */
