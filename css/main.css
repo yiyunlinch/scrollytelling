@@ -117,7 +117,7 @@ body {
   width: 180px;
   height: 100px;
   pointer-events: none;
-  z-index: 200000;          /* 置于最上层 */
+  z-index: 2000;          /* 高于 privat，低于 Kinder/文本 */
   transform: translate(-50%, -50%) scale(5);
   display: none;         
 }
@@ -274,6 +274,10 @@ body {
   line-height: 1.5;
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
   transition: transform 1.2s cubic-bezier(.7,0,.3,1);
+}
+/* 第5页文本层级提升 */
+#page5 .text-group-left {
+  z-index: 3100; /* 高于 digger/privat */
 }
 .text {
   margin-top: 1em;
@@ -515,7 +519,7 @@ body {
   transform: translate(-50%, -200vh) scale(1); /* 从视窗上方远处开始 */
   opacity: 0;
   pointer-events: none;
-  z-index: 1800; /* 仍高于背景，但低于 house 视频 */
+  z-index: 1400; /* 低于 digger/Kinder 文本 */
 }
 .privat-drop .privat-img {
   width: 560px; /* 放大一倍 */
@@ -569,6 +573,7 @@ body {
   bottom: 0%;               /* 7页的底部*/
   transform: translateX(-50%);
   pointer-events: none;
+  z-index: 3200; /* 高于 digger */
 
 }
 
@@ -591,7 +596,7 @@ body {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index:999999;
+  z-index: 4000; /* 高于 Kinder/文本 */
 }
 
 .dialog-img {
@@ -623,7 +628,7 @@ body {
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  z-index: 5000; /* 高于背景与 privat，低于对话层 */
+  z-index: 2500; /* 高于背景与 privat，低于 Kinder/对白 */
 }
 .house-video-wrap.visible {
   opacity: 1;
@@ -767,7 +772,7 @@ body {
   position: absolute;
   right: 12%;               /* 终点向左移，调大数值则更靠左 */
   bottom: -60%;
-  z-index: 1000;
+  z-index: 2600;            /* 高于第5页背景层 */
   overflow: visible;
 }
 #page4 .pol1-img {

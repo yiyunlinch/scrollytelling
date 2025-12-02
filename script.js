@@ -269,8 +269,14 @@ window.addEventListener('DOMContentLoaded', () => {
       privatStage = Math.max(privatStage, 2);
       kinderForceVisible = true;
       buildingAnim.setIndex(0); // 默认显示第一层
+      setPage5ContentVisibility(false); // 进入第6页隐藏 page5 内容
     } else {
       buildingAnim.reset();
+      if (idx >= 5) {
+        setPage5ContentVisibility(false);
+      } else if (idx === 4 && buildingIndex < 0 && !kinderLockedHidden) {
+        setPage5ContentVisibility(true);
+      }
     }
     if (idx <= 2) {
       hold34Stage = 0; // 回到第3页或更上方时重置停顿
