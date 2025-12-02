@@ -195,6 +195,16 @@ window.addEventListener('DOMContentLoaded', () => {
         s.setProperty('padding', '0', 'important');
         s.setProperty('pointer-events', 'none', 'important');
         s.setProperty('z-index', '99999', 'important');
+        // 确保子图层同样固定在视口中心
+        layers.forEach(l => {
+          l.style.setProperty('position', 'fixed', 'important');
+          l.style.setProperty('top', '50%', 'important');
+          l.style.setProperty('left', '50%', 'important');
+          l.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
+          l.style.setProperty('margin', '0', 'important');
+          l.style.setProperty('padding', '0', 'important');
+          l.style.setProperty('pointer-events', 'none', 'important');
+        });
       } catch (e) {
         console.error('building wrap lock error', e);
       }
