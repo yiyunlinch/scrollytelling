@@ -258,7 +258,7 @@ body {
   width: 30vw;
   text-align: right;
   z-index: 20;
-  font-size: 2rem;
+  font-size: 8rem; /* 放大至原来的4倍 */
   line-height: 1.5;
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
   transition: transform 1.2s cubic-bezier(.7,0,.3,1);
@@ -270,7 +270,7 @@ body {
   width: 30vw;
   text-align: left;
   z-index: 20;
-  font-size: 2rem;
+  font-size: 8rem; /* 放大至原来的4倍 */
   line-height: 1.5;
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
   transition: transform 1.2s cubic-bezier(.7,0,.3,1);
@@ -278,7 +278,12 @@ body {
 .text {
   margin-top: 1em;
   margin-bottom: 1em;
+  color: #ff9800 !important; /* 橘色 */
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+
+#page2 .title-fixed .title {
+  color: #ff9800; /* 橘色 */
 }
 
 /* 第6页 */
@@ -370,7 +375,8 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: 42% 50%; /* 整体略向左移 */
   pointer-events: none;
 }
 .eye-layer-base {
@@ -397,7 +403,12 @@ body {
 .eye-layer-middle.dissolve {
   animation: eyeMiddleDissolve 1s ease-in forwards;
 }
-.eye-layer-top { z-index: 3; opacity: 1; }
+.eye-layer-top {
+  z-index: 3;
+  opacity: 1;
+  object-fit: cover;          /* 与眼层保持一致，避免跳变 */
+  object-position: 42% 50%;
+}
 
 @keyframes eyeMiddleDissolve {
   from {
@@ -491,7 +502,7 @@ body {
   transform: translate(-50%, -200vh) scale(1); /* 从视窗上方远处开始 */
   opacity: 0;
   pointer-events: none;
-  z-index: 2000; /* 高于第4/5页所有元素 */
+  z-index: 1800; /* 仍高于背景，但低于 house 视频 */
 }
 .privat-drop .privat-img {
   width: 560px; /* 放大一倍 */
@@ -541,7 +552,7 @@ body {
 /* === Kinder 图出现动画相关 === */
 #page6 {
   position: relative;
-  z-index: 5;  
+  z-index: 2500;  /* 提高层级，确保 house 视频可盖住 privat */
 }
 
 /* 这个容器是整张图的运动空间（参考底边） */
@@ -594,6 +605,28 @@ body {
   top: 0%;
 
   
+}
+
+.house-video-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 4000; /* 高于 privat */
+}
+.house-video-wrap.visible {
+  opacity: 1;
+}
+#houseVideo {
+  width: 90vw;
+  max-width: 1280px;
+  height: auto;
+  border: none;
+  display: block;
 }
 
 /* === 第1页 handhandy（草地手） === */

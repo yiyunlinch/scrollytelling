@@ -10,6 +10,8 @@ let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已�
 let hold34LockUntil = 0;
 let privatStage = 0;   // page6 过渡：0 未触发，1 已掉落，2 可翻页
 let privatLockUntil = 0;
+let housePlayed = false;
+let housePlaying = false;
 let kinderVanish = () => {}; // 第6页孩童下落隐藏
 
 function startHeroOnce() {
@@ -161,14 +163,66 @@ window.addEventListener('DOMContentLoaded', () => {
     return { drop, reset };
   })();
 
+  /* Page6 house 视频 */
+  const houseAnim = (() => {
+    const wrap = document.getElementById('houseVideoWrap');
+    const video = document.getElementById('houseVideo');
+    if (!wrap || !video) return {
+      play: () => {},
+      reset: () => {}
+    };
+
+    const DURATION_MS = 6000;
+
+    function show() {
+      wrap.classList.add('visible');
+    }
+    function hide() {
+      wrap.classList.remove('visible');
+    }
+    function reset() {
+      housePlayed = false;
+      housePlaying = false;
+      hide();
+      video.pause();
+      video.currentTime = 0;
+    }
+    function freezeAtEnd() {
+      housePlaying = false;
+      housePlayed = true;
+      try {
+        const target = Math.min(video.duration || 6, 6);
+        video.currentTime = target;
+      } catch (e) {}
+      video.pause();
+      show();
+    }
+    function playOnce() {
+      if (housePlaying || housePlayed) return;
+      housePlaying = true;
+      show();
+      video.currentTime = 0;
+      const p = video.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+      // 保险：到6s时强制冻结在末帧
+      setTimeout(freezeAtEnd, DURATION_MS + 100);
+    }
+
+    video.addEventListener('ended', freezeAtEnd);
+
+    return { play: playOnce, reset };
+  })();
+
   window.addEventListener('pagechange', e => {
     const idx = e.detail.index;
     if (idx === 5) {
       privatStage = 0; // 进入第6页时重置掉落
       privatDrop.reset();
+      houseAnim.reset();
     } else if (idx <= 3) {
       privatStage = 0; // 上拉到第4页及以上时清零并收起
       privatDrop.reset();
+      houseAnim.reset();
     }
     if (idx <= 2) {
       hold34Stage = 0; // 回到第3页或更上方时重置停顿
@@ -182,6 +236,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
   const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
+  const HOUSE_COOLDOWN = 7000; // house 动画播放完成前的冷却
 
   function setEyeCooldown(extra = 0) {
     const now = performance.now();
@@ -299,12 +354,29 @@ window.addEventListener('DOMContentLoaded', () => {
           setPrivatCooldown(600);
           return;
         } else if (privatStage === 3) {
+          // 第四次滚动：播放 house 视频，仍留在第6页
+          if (housePlaying) {
+            e.preventDefault();
+            return;
+          }
+          if (housePlayed) {
+            // 如果已经播过，直接进入下一阶段
+            privatStage = 4;
+          } else {
+            e.preventDefault();
+            houseAnim.play();
+            privatStage = 4;
+            globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + HOUSE_COOLDOWN);
+            return;
+          }
+        } else if (privatStage === 4) {
+          // house 播放后，下一次滚动才能放行
           if (stillCooling) {
             e.preventDefault();
             return;
           }
           // 释放到下一页，标记完成
-          privatStage = 4;
+          privatStage = 5;
         }
       }
       return; // 后面正常竖向滚动
