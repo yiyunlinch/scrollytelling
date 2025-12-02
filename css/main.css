@@ -622,16 +622,16 @@ body {
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  z-index: 4000; /* 高于背景与 privat，低于对话层 */
+  z-index: 5000; /* 高于背景与 privat，低于对话层 */
 }
 .house-video-wrap.visible {
   opacity: 1;
 }
 .house-video-wrap .building-layer {
   position: absolute;
-  top: 50%;
+  top: -10%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 10%); /* 对应新的 top 位置 */
   max-width: 45vw;
   width: 45vw;
   max-height: 70vh;

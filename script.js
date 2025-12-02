@@ -120,10 +120,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!el || !page5) return { drop: () => {}, reset: () => {} };
 
     function lockAtCurrentPosition() {
-      // 动画结束后，将元素锁定到 page5 内的绝对定位，跟随页面滚动
-      const rect = el.getBoundingClientRect();
-      const pageRect = page5.getBoundingClientRect();
-      const topRelativeToPage = rect.top - pageRect.top;
+      // 动画结束后，锁定到 page5 中线位置（底边落在页面高度的 50%）
+      const box = el.getBoundingClientRect();
+      const h = box.height || 0;
+      const targetBottom = page5.clientHeight * 0.5;
+      const topRelativeToPage = Math.max(0, targetBottom - h);
       el.style.position = 'absolute';
       el.style.top = `${topRelativeToPage}px`;
       el.style.left = '50%';
@@ -135,20 +136,44 @@ window.addEventListener('DOMContentLoaded', () => {
       el.classList.remove('show');
     }
 
-    // 动画结束时锁定
-    el.addEventListener('animationend', lockAtCurrentPosition);
+    let dropTimer = null;
 
     function drop() {
+      // 清理旧定时
+      if (dropTimer) {
+        clearTimeout(dropTimer);
+        dropTimer = null;
+      }
+
+      // 计算目标位置：底边落在 page5 高度的 50%
+      const box = el.getBoundingClientRect();
+      const h = box.height || 0;
+      const targetBottom = page5.clientHeight * 0.5;
+      const targetTop = Math.max(0, targetBottom - h);
+
       el.classList.remove('show', 'landed');
-      el.style.position = 'fixed';
-      el.style.top = '0';
+      el.style.position = 'absolute';
       el.style.left = '50%';
-      el.style.transform = 'translate(-50%, -200vh) scale(1)';
+      el.style.top = `${-Math.max(window.innerHeight, page5.clientHeight)}px`; // 从页面上方开始
+      el.style.transform = 'translate(-50%, 0) scale(1)';
       el.style.animation = '';
       el.style.zIndex = '2000';
-      // 强制重排以重播动画
+      el.style.opacity = '0';
+      el.style.transition = 'none';
+
+      // 强制重排以应用起点
       void el.offsetWidth;
-      el.classList.add('show');
+
+      // 设置落点并启动过渡
+      el.style.transition = 'top 0.9s ease-out, opacity 0.45s ease-out';
+      el.style.top = `${targetTop}px`;
+      el.style.opacity = '1';
+
+      // 过渡结束后锁定最终状态
+      dropTimer = setTimeout(() => {
+        lockAtCurrentPosition();
+        dropTimer = null;
+      }, 950);
     }
     function reset() {
       el.classList.remove('show', 'landed');
