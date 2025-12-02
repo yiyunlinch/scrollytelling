@@ -176,41 +176,6 @@ window.addEventListener('DOMContentLoaded', () => {
       index: () => -1,
     };
 
-    // 将容器挂到 body，固定视口
-    function lockWrapFixed() {
-      try {
-        if (wrap.parentElement !== document.body) {
-          document.body.appendChild(wrap);
-        }
-        const s = wrap.style;
-        s.setProperty('position', 'fixed', 'important');
-        s.setProperty('top', '0', 'important');
-        s.setProperty('left', '0', 'important');
-        s.setProperty('right', '0', 'important');
-        s.setProperty('bottom', '0', 'important');
-        s.setProperty('width', '100vw', 'important');
-        s.setProperty('height', '100vh', 'important');
-        s.setProperty('transform', 'none', 'important');
-        s.setProperty('margin', '0', 'important');
-        s.setProperty('padding', '0', 'important');
-        s.setProperty('pointer-events', 'none', 'important');
-        s.setProperty('z-index', '99999', 'important');
-        // 确保子图层同样固定在视口中心
-        layers.forEach(l => {
-          l.style.setProperty('position', 'fixed', 'important');
-          l.style.setProperty('top', '50%', 'important');
-          l.style.setProperty('left', '50%', 'important');
-          l.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
-          l.style.setProperty('margin', '0', 'important');
-          l.style.setProperty('padding', '0', 'important');
-          l.style.setProperty('pointer-events', 'none', 'important');
-        });
-      } catch (e) {
-        console.error('building wrap lock error', e);
-      }
-    }
-    lockWrapFixed();
-
     function apply(idx) {
       if (idx < 0) {
         wrap.classList.remove('visible');
@@ -240,7 +205,6 @@ window.addEventListener('DOMContentLoaded', () => {
       step: delta => setIndex(buildingIndex + delta),
       max: layers.length - 1,
       index: () => buildingIndex,
-      lockWrapFixed,
     };
   })();
 
@@ -258,7 +222,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (idx === 5) {
       privatStage = Math.max(privatStage, 2);
       kinderForceVisible = true;
-      buildingAnim.lockWrapFixed();
       buildingAnim.setIndex(0); // 默认显示第一层
     } else {
       buildingAnim.reset();
@@ -440,7 +403,7 @@ window.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             return;
           }
-          // 释放到下一页，标记完成
+          // 释放到下一页，标记完成（楼层保持在第6页）
           privatStage = 6;
         }
       }

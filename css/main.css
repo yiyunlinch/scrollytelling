@@ -614,24 +614,21 @@ body {
 }
 
 .house-video-wrap {
-  position: fixed !important; /* 锁定在视口，不随页面滚动 */
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  display: flex !important;
+  position: absolute;
+  inset: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: none !important;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.3s ease;
   pointer-events: none;
-  z-index: 9999; /* 高于上一页背景与 privat */
+  z-index: 4000; /* 高于背景与 privat，低于对话层 */
 }
 .house-video-wrap.visible {
   opacity: 1;
 }
 .house-video-wrap .building-layer {
-  position: fixed;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
