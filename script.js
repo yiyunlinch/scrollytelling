@@ -8,13 +8,12 @@ let heroStarted = false; // 防止重复启动 hero
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已通过
 let hold34LockUntil = 0;
-let privatStage = 0;   // page5-6 过渡：0 未触发，1 预冷却，2 已掉落，3 抵达6页停顿，4 house 播放/结束，5 孩童消失，6 放行
+let privatStage = 0;   // page5-6 过渡：0 未触发，1 预冷却，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行
 let privatLockUntil = 0;
-let housePlayed = false;
-let housePlaying = false;
 let kinderVanish = () => {}; // 第6页孩童下落隐藏
 let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
 let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
+let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
 
 function startHeroOnce() {
   if (heroStarted) return;
@@ -166,15 +165,18 @@ window.addEventListener('DOMContentLoaded', () => {
   })();
 
   /* Page6 house 视频 */
-  const houseAnim = (() => {
+  const buildingAnim = (() => {
     const wrap = document.getElementById('houseVideoWrap');
-    const video = document.getElementById('houseVideo');
-    if (!wrap || !video) return {
-      play: () => {},
-      reset: () => {}
+    const layers = wrap ? Array.from(wrap.querySelectorAll('.building-layer')) : [];
+    if (!wrap || !layers.length) return {
+      reset: () => {},
+      setIndex: () => {},
+      step: () => {},
+      max: 0,
+      index: () => -1,
     };
 
-    // 确保脱离 page6，直接挂到 body，并强制固定在视口
+    // 将容器挂到 body，固定视口
     function lockWrapFixed() {
       try {
         if (wrap.parentElement !== document.body) {
@@ -194,51 +196,42 @@ window.addEventListener('DOMContentLoaded', () => {
         s.setProperty('pointer-events', 'none', 'important');
         s.setProperty('z-index', '99999', 'important');
       } catch (e) {
-        console.error('house wrap lock error', e);
+        console.error('building wrap lock error', e);
       }
     }
     lockWrapFixed();
 
-    const DURATION_MS = 6000;
-
-    function show() {
-      lockWrapFixed(); // 再次确保位置与父节点正确
+    function apply(idx) {
+      if (idx < 0) {
+        wrap.classList.remove('visible');
+        layers.forEach(l => l.style.opacity = '0');
+        return;
+      }
       wrap.classList.add('visible');
+      layers.forEach((l, i) => {
+        l.style.opacity = i <= idx ? '1' : '0';
+      });
     }
-    function hide() {
-      wrap.classList.remove('visible');
+
+    function setIndex(idx) {
+      const clamped = Math.max(-1, Math.min(layers.length - 1, idx));
+      buildingIndex = clamped;
+      apply(buildingIndex);
     }
+
     function reset() {
-      housePlayed = false;
-      housePlaying = false;
-      hide();
-      video.pause();
-      video.currentTime = 0;
-    }
-    function freezeAtEnd() {
-      housePlaying = false;
-      housePlayed = true;
-      try {
-        const target = Math.min(video.duration || 6, 6);
-        video.currentTime = target;
-      } catch (e) {}
-      video.pause();
-      show();
-    }
-    function playOnce() {
-      if (housePlaying || housePlayed) return;
-      housePlaying = true;
-      show();
-      video.currentTime = 0;
-      const p = video.play();
-      if (p && typeof p.catch === 'function') p.catch(() => {});
-      // 保险：到6s时强制冻结在末帧
-      setTimeout(freezeAtEnd, DURATION_MS + 100);
+      buildingIndex = -1;
+      apply(buildingIndex);
     }
 
-    video.addEventListener('ended', freezeAtEnd);
-
-    return { play: playOnce, reset };
+    return {
+      reset,
+      setIndex,
+      step: delta => setIndex(buildingIndex + delta),
+      max: layers.length - 1,
+      index: () => buildingIndex,
+      lockWrapFixed,
+    };
   })();
 
   window.addEventListener('pagechange', e => {
@@ -246,11 +239,19 @@ window.addEventListener('DOMContentLoaded', () => {
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
       privatDrop.reset();
-      houseAnim.reset();
+      buildingAnim.reset();
     } else if (idx <= 3) {
       privatStage = 0; // 上拉到第4页及以上时清零并收起
       privatDrop.reset();
-      houseAnim.reset();
+      buildingAnim.reset();
+    }
+    if (idx === 5) {
+      privatStage = Math.max(privatStage, 2);
+      kinderForceVisible = true;
+      buildingAnim.lockWrapFixed();
+      buildingAnim.setIndex(0); // 默认显示第一层
+    } else {
+      buildingAnim.reset();
     }
     if (idx <= 2) {
       hold34Stage = 0; // 回到第3页或更上方时重置停顿
@@ -264,7 +265,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
   const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
-  const HOUSE_COOLDOWN = 7000; // house 动画播放完成前的冷却
+  const BUILD_COOLDOWN = 650; // 盖楼切换冷却
 
   function setEyeCooldown(extra = 0) {
     const now = performance.now();
@@ -277,6 +278,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const now = performance.now();
     privatLockUntil = now + PRIVAT_COOLDOWN + extra;
     globalScrollLockUntil = Math.max(globalScrollLockUntil, privatLockUntil);
+  }
+  function setBuildCooldown(extra = 0) {
+    const now = performance.now();
+    const lock = now + BUILD_COOLDOWN + extra;
+    privatLockUntil = Math.max(privatLockUntil, lock);
+    globalScrollLockUntil = Math.max(globalScrollLockUntil, lock);
   }
 
   function isPage3GateActive() {
@@ -370,7 +377,7 @@ window.addEventListener('DOMContentLoaded', () => {
           return;
         }
       }
-      // page6 -> page7 过渡：掉落完成后才继续 Kinder/house 等步骤
+      // page6 -> page7 过渡：掉落完成后盖楼、再消失 Kinder，最后才放行
       if (currentPageIndex === 5 && dir > 0) {
         if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
           e.preventDefault();
@@ -381,30 +388,27 @@ window.addEventListener('DOMContentLoaded', () => {
           privatStage = 2;
         }
         if (privatStage === 2) {
-          // 抵达第6页后先停顿，让 Kinder/对白保持可见
+          // 初到第6页，开始盖楼第一层已显示，滚一次才进入盖楼节奏
           if (stillCooling) {
             e.preventDefault();
             return;
           }
           e.preventDefault();
           privatStage = 3;
-          setPrivatCooldown(500);
+          setBuildCooldown(350);
           return;
         } else if (privatStage === 3) {
-          // 播放 house 视频，Kinder/对白保持可见
-          if (housePlaying) {
+          // 盖楼：每次向下滚增加一层，直到最顶层
+          if (buildingIndex < buildingAnim.max) {
             e.preventDefault();
+            buildingAnim.step(1);
+            setBuildCooldown(350);
             return;
-          }
-          kinderForceVisible = true;
-          if (housePlayed) {
-            // 如果已经播过，直接进入下一阶段
-            privatStage = 4;
           } else {
+            // 已经到最高层，进入下一阶段
             e.preventDefault();
-            houseAnim.play();
             privatStage = 4;
-            globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + HOUSE_COOLDOWN);
+            setPrivatCooldown(400);
             return;
           }
         } else if (privatStage === 4) {
@@ -416,11 +420,12 @@ window.addEventListener('DOMContentLoaded', () => {
           e.preventDefault();
           privatStage = 5;
           kinderForceVisible = false;
+          kinderLockedHidden = true;
           kinderVanish();
           setPrivatCooldown(600);
           return;
         } else if (privatStage === 5) {
-          // house 播放 & 孩童消失后，下一次滚动才能放行
+          // 盖楼完成 & 孩童消失后，下一次滚动才能放行
           if (stillCooling) {
             e.preventDefault();
             return;
@@ -428,6 +433,20 @@ window.addEventListener('DOMContentLoaded', () => {
           // 释放到下一页，标记完成
           privatStage = 6;
         }
+      }
+      // page6 向上滚动：一层层拆楼，回到顶部才允许离开
+      if (currentPageIndex === 5 && dir < 0) {
+        if (buildingIndex >= 0) {
+          e.preventDefault();
+          buildingAnim.step(-1);
+          setBuildCooldown(300);
+          // 回退到无楼层时，重置阶段
+          if (buildingIndex < 0) {
+            privatStage = 2;
+          }
+          return;
+        }
+        // 没有楼层显示时，允许继续往上回到上一页
       }
       return; // 后面正常竖向滚动
     }

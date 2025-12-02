@@ -630,16 +630,18 @@ body {
 .house-video-wrap.visible {
   opacity: 1;
 }
-#houseVideo {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
+.house-video-wrap .building-layer {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  max-width: 45vw;
   width: 45vw;
-  max-width: 640px;
+  max-height: 70vh;
   height: auto;
-  border: none;
-  display: block;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
 }
 
 /* === 第1页 handhandy（草地手） === */
