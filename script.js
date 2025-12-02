@@ -174,9 +174,35 @@ window.addEventListener('DOMContentLoaded', () => {
       reset: () => {}
     };
 
+    // 确保脱离 page6，直接挂到 body，并强制固定在视口
+    function lockWrapFixed() {
+      try {
+        if (wrap.parentElement !== document.body) {
+          document.body.appendChild(wrap);
+        }
+        const s = wrap.style;
+        s.setProperty('position', 'fixed', 'important');
+        s.setProperty('top', '0', 'important');
+        s.setProperty('left', '0', 'important');
+        s.setProperty('right', '0', 'important');
+        s.setProperty('bottom', '0', 'important');
+        s.setProperty('width', '100vw', 'important');
+        s.setProperty('height', '100vh', 'important');
+        s.setProperty('transform', 'none', 'important');
+        s.setProperty('margin', '0', 'important');
+        s.setProperty('padding', '0', 'important');
+        s.setProperty('pointer-events', 'none', 'important');
+        s.setProperty('z-index', '99999', 'important');
+      } catch (e) {
+        console.error('house wrap lock error', e);
+      }
+    }
+    lockWrapFixed();
+
     const DURATION_MS = 6000;
 
     function show() {
+      lockWrapFixed(); // 再次确保位置与父节点正确
       wrap.classList.add('visible');
     }
     function hide() {
@@ -992,7 +1018,24 @@ document.addEventListener('DOMContentLoaded', () => {
 (function initPoleOnPage6() {
   const pole  = document.getElementById('poleImg');
   if (!pole) return;
-  const toggle = active => pole.classList.toggle('visible', active);
+  let timer = null;
+  const clearTimer = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  const toggle = active => {
+    clearTimer();
+    if (active) {
+      // 延迟触发出现
+      timer = setTimeout(() => {
+        pole.classList.add('visible');
+      }, 600);
+    } else {
+      pole.classList.remove('visible');
+    }
+  };
   window.addEventListener('pagechange', e => toggle(e.detail.index === 2));
   toggle(currentPageIndex === 2);
 })();
