@@ -8,11 +8,13 @@ let heroStarted = false; // 防止重复启动 hero
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已通过
 let hold34LockUntil = 0;
-let privatStage = 0;   // page6 过渡：0 未触发，1 已掉落，2 可翻页
+let privatStage = 0;   // page5-6 过渡：0 未触发，1 预冷却，2 已掉落，3 抵达6页停顿，4 house 播放/结束，5 孩童消失，6 放行
 let privatLockUntil = 0;
 let housePlayed = false;
 let housePlaying = false;
 let kinderVanish = () => {}; // 第6页孩童下落隐藏
+let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
+let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
 
 function startHeroOnce() {
   if (heroStarted) return;
@@ -112,16 +114,16 @@ window.addEventListener('DOMContentLoaded', () => {
     return { showMid, dissolveMid, showText, reset };
   })();
 
-  /* Page6 掉落 privat */
+  /* Page5 掉落 privat */
   const privatDrop = (() => {
     const el = document.getElementById('privatDrop');
-    const page6 = document.getElementById('page6');
-    if (!el || !page6) return { drop: () => {}, reset: () => {} };
+    const page5 = document.getElementById('page5');
+    if (!el || !page5) return { drop: () => {}, reset: () => {} };
 
     function lockAtCurrentPosition() {
-      // 动画结束后，将元素锁定到 page6 内的绝对定位，跟随页面滚动
+      // 动画结束后，将元素锁定到 page5 内的绝对定位，跟随页面滚动
       const rect = el.getBoundingClientRect();
-      const pageRect = page6.getBoundingClientRect();
+      const pageRect = page5.getBoundingClientRect();
       const topRelativeToPage = rect.top - pageRect.top;
       el.style.position = 'absolute';
       el.style.top = `${topRelativeToPage}px`;
@@ -215,8 +217,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('pagechange', e => {
     const idx = e.detail.index;
-    if (idx === 5) {
-      privatStage = 0; // 进入第6页时重置掉落
+    if (idx === 4) {
+      privatStage = 0; // 进入第5页时重置掉落
       privatDrop.reset();
       houseAnim.reset();
     } else if (idx <= 3) {
@@ -323,42 +325,52 @@ window.addEventListener('DOMContentLoaded', () => {
           hold34Stage = 2;
         }
       }
-      // page6 -> page7 过渡：先冷却，再掉落 privat，再下一次滚动才允许翻页
-      if (currentPageIndex === 5 && dir > 0) {
+      // page5 掉落 privat：先冷却，再掉落，中段停下
+      if (currentPageIndex === 4 && dir > 0) {
         if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
           e.preventDefault();
           return;
         }
         if (privatStage === 0) {
-          // 第一次滚动：只进入冷却，仍停留在第6页
           e.preventDefault();
           privatStage = 1;
           setPrivatCooldown(500);
           return;
         } else if (privatStage === 1) {
-          // 第二次滚动：触发掉落动画，仍停留在第6页
           e.preventDefault();
           privatStage = 2;
           privatDrop.drop();
           setPrivatCooldown(600); // 掉落后稍作停顿
           return;
-        } else if (privatStage === 2) {
-          // 第三次滚动：让孩童快速下落消失，仍留在第6页
+        }
+      }
+      // page6 -> page7 过渡：掉落完成后才继续 Kinder/house 等步骤
+      if (currentPageIndex === 5 && dir > 0) {
+        if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
+          e.preventDefault();
+          return;
+        }
+        if (privatStage < 2) {
+          // 如果跳过了 page5，强制视为已掉落
+          privatStage = 2;
+        }
+        if (privatStage === 2) {
+          // 抵达第6页后先停顿，让 Kinder/对白保持可见
           if (stillCooling) {
             e.preventDefault();
             return;
           }
           e.preventDefault();
           privatStage = 3;
-          kinderVanish();
-          setPrivatCooldown(600);
+          setPrivatCooldown(500);
           return;
         } else if (privatStage === 3) {
-          // 第四次滚动：播放 house 视频，仍留在第6页
+          // 播放 house 视频，Kinder/对白保持可见
           if (housePlaying) {
             e.preventDefault();
             return;
           }
+          kinderForceVisible = true;
           if (housePlayed) {
             // 如果已经播过，直接进入下一阶段
             privatStage = 4;
@@ -370,13 +382,25 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
           }
         } else if (privatStage === 4) {
-          // house 播放后，下一次滚动才能放行
+          // 让孩童快速下落消失，仍留在第6页
+          if (stillCooling) {
+            e.preventDefault();
+            return;
+          }
+          e.preventDefault();
+          privatStage = 5;
+          kinderForceVisible = false;
+          kinderVanish();
+          setPrivatCooldown(600);
+          return;
+        } else if (privatStage === 5) {
+          // house 播放 & 孩童消失后，下一次滚动才能放行
           if (stillCooling) {
             e.preventDefault();
             return;
           }
           // 释放到下一页，标记完成
-          privatStage = 5;
+          privatStage = 6;
         }
       }
       return; // 后面正常竖向滚动
@@ -755,11 +779,18 @@ initMovingAnimOnce('transporterAnim', 7);
       const kinderImg  = document.getElementById('kinderImg');
       const schauLeft  = document.getElementById('schauLeft');
       const schauRight = document.getElementById('schauRight');
+      const page6      = document.getElementById('page6');
 
-      if (!kinderImg || !schauLeft || !schauRight) return;
+      if (!kinderImg || !schauLeft || !schauRight || !page6) return;
 
-      function activate(active) {
-        if (active) {
+      let activeState = false;
+
+      function sync(show) {
+        if (kinderLockedHidden) {
+          show = false;
+        }
+        const shouldShow = show || kinderForceVisible;
+        if (shouldShow) {
           kinderImg.style.transition = 'transform 0.7s ease';
           kinderImg.style.transform = 'translateY(0%)';
           schauLeft.style.opacity = '1';
@@ -772,7 +803,14 @@ initMovingAnimOnce('transporterAnim', 7);
         }
       }
 
+      function activate(active) {
+        activeState = active;
+        sync(activeState);
+      }
+
       function vanishDown() {
+        kinderForceVisible = false;
+        kinderLockedHidden = true;
         kinderImg.style.transition = 'transform 0.35s ease-in';
         kinderImg.style.transform = 'translateY(180%)';
         schauLeft.style.opacity = '0';
@@ -781,7 +819,29 @@ initMovingAnimOnce('transporterAnim', 7);
 
       kinderVanish = vanishDown;
 
-      window.addEventListener('pagechange', e => activate(e.detail.index === 5));
+      // 由 pagechange 和额外的 IntersectionObserver 双重保障，避免偶发不触发
+      window.addEventListener('pagechange', e => {
+        const onPage6 = e.detail.index === 5;
+        if (!kinderLockedHidden) {
+          kinderForceVisible = onPage6 || (privatStage >= 2 && privatStage < 5);
+        }
+        activate(onPage6);
+      });
+
+      try {
+        const obs = new IntersectionObserver(entries => {
+          for (const entry of entries) {
+            if (entry.target !== page6) continue;
+            const visible = entry.isIntersecting && entry.intersectionRatio > 0.35;
+            activate(visible);
+          }
+        }, { threshold: [0.25, 0.35, 0.5, 0.7] });
+        obs.observe(page6);
+      } catch (err) {
+        console.error('kinder observer error', err);
+      }
+
+      kinderForceVisible = !kinderLockedHidden && currentPageIndex === 5;
       activate(currentPageIndex === 5);
     })();
   } catch (e) {
