@@ -117,7 +117,7 @@ body {
   width: 180px;
   height: 100px;
   pointer-events: none;
-  z-index: 2000;          /* 高于 privat，低于 Kinder/文本 */
+  z-index: 3600;          /* 高于 privat 掉落，低于 Kinder/文本 */
   transform: translate(-50%, -50%) scale(5);
   display: none;         
 }
@@ -136,6 +136,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  z-index: 4000; /* 确保第1/2页层级高于后续页背景 */
 }
 .cover-h-row,
 .cover-h-sticky {
@@ -571,7 +572,7 @@ body.page6-plus #page5 .text-group-left {
   bottom: 0%;               /* 7页的底部*/
   transform: translateX(-50%);
   pointer-events: none;
-  z-index: 3200; /* 高于 digger */
+  z-index: 3800; /* 高于 digger，低于对白层 */
 
 }
 
@@ -799,12 +800,11 @@ body.page6-plus #page5 .text-group-left {
   height: auto;
   transform-origin: bottom left;
   transform: translateX(-140%) scaleX(-1) scale(2.4);  /* 更靠左起点，往右滑入 */
-  transition: transform 1s ease-out, opacity 0.5s ease-out;
-  opacity: 0;
+  transition: transform 1s ease-out;
+  opacity: 1; /* 不再通过透明度控制，避免向左离开时闪隐 */
 }
 #page4 .pol1-img.visible {
   transform: translateX(-55%) scaleX(-1) scale(2.4); /* 终点左移，可微调数值 */
-  opacity: 1;
 }
 
 

@@ -567,7 +567,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const TARGET_BIAS    = 0.08;   // 向目标点的慢慢靠近
 
   // 内场边距（避免贴边）：左右 22%，上 5%，下 40%
-  const PAD_X_FRAC      = 0.22;
+  const PAD_X_FRAC      = 0.30;  // 左右各 30%
   const PAD_Y_TOP_FRAC  = 0.05;
   const PAD_Y_BOT_FRAC  = 0.40;
 
@@ -729,6 +729,28 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!btn) return;
       btn.addEventListener('click', e => {
         e.preventDefault();
+        // 点击箭头模拟首屏三次下拉：1) 露出眼睛 2) Maxi 全图 3) 才进入第2页
+        if (currentPageIndex !== 0) {
+          goToPage(1);
+          return;
+        }
+        if (eyeStage === 0) {
+          eyeStage = 1;
+          eyeLayers.showMid();
+          setEyeCooldown();
+          return;
+        }
+        if (eyeStage === 1) {
+          eyeStage = 2;
+          eyeLayers.dissolveMid();
+          eyeLayers.showText();
+          setEyeCooldown(HERO_REVEAL_COOLDOWN);
+          return;
+        }
+        // 第三次点击放行到第2页
+        eyeStage = 3;
+        setEyeCooldown();
+        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
         goToPage(1);
       });
     })();
@@ -781,7 +803,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let running = false;
   let dir = -1; // -1: right -> left, 1: left -> right
   let x = 0;
-  const SPEED = 3.75;  // 水平移动速度（减半）
+  const SPEED = 7.5;  // 水平移动速度（恢复原来的节奏）
   const MARGIN = 80;  // 保持原外侧缓冲
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
   let firstRun = true;
@@ -1093,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* 第6页：pole 显隐（按页） */
 (function initPoleOnPage6() {
   const pole  = document.getElementById('poleImg');
+  const wrap  = pole ? pole.closest('.pole-wrap') : null;
   if (!pole) return;
   let timer = null;
   const clearTimer = () => {
@@ -1104,16 +1127,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = active => {
     clearTimer();
     if (active) {
-      // 延迟触发出现
+      // 延迟触发出现，sticky 保持在视口
       timer = setTimeout(() => {
         pole.classList.add('visible');
+        if (wrap) wrap.classList.add('sticky');
       }, 600);
     } else {
       pole.classList.remove('visible');
+      if (wrap) wrap.classList.remove('sticky');
     }
   };
-  window.addEventListener('pagechange', e => toggle(e.detail.index === 2));
-  toggle(currentPageIndex === 2);
+  window.addEventListener('pagechange', e => {
+    const idx = e.detail.index;
+    // 第3/4页以及向下进入第5页开头都保持显示，hero 下拉时不消失
+    const shouldShow = idx >= 2 && idx <= 4;
+    toggle(shouldShow);
+  });
+  toggle(currentPageIndex >= 2 && currentPageIndex <= 4);
 })();
 
 /* 第7页：pol1 显隐（按页） */
