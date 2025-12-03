@@ -1018,9 +1018,18 @@ try {
 (function initHeroSheep() {
   const hero  = document.getElementById('sheephero');
   const page4 = document.getElementById('page4');
+  const page3 = document.getElementById('page3');
+  const page2 = document.getElementById('page2');
+  const heroText = document.getElementById('heroText');
+  const heroTextImg = document.getElementById('heroTextImg');
   if (!hero) return;
 
   let running = false;
+  let textUnlocked = false;  // 解锁后才能走时间轴
+  let textReady = false;     // 触发 hero 5 秒后允许首帧
+  let heroTextTimer = null;
+  let manualOverride = false; // 第2/3页由滚动控制文案
+  let manualLoop = null;
   const baseX = 50;     // 正常位置
   const exitX = 170;    // 向右离场的位置（超出视口）
   const baseY = 60;
@@ -1028,6 +1037,14 @@ try {
   const EXIT_END   = 1.00; // 离场区间再拉长，离场更慢
   const ENTRY_FROM = -30;  // 初次出现时从左侧进入
   const ENTRY_DURATION = 2200; // ms，更慢的入场
+  const textFrames = [
+    { from: 0.0,  src: './images/text/herosheep/besuche.png', alt: 'Besuche' },
+    { from: 0.22, src: './images/text/herosheep/jeder.png',   alt: 'Jeder' },
+    { from: 0.44, src: './images/text/herosheep/niemand.png', alt: 'Niemand' },
+    { from: 0.65, src: './images/text/herosheep/nur.png',     alt: 'Nur selten' },
+    { from: 0.82, src: './images/text/herosheep/wir.png',     alt: 'Wir alle' },
+  ];
+  let currentTextFrame = -1;
 
   const clamp01 = v => Math.max(0, Math.min(1, v));
 
@@ -1048,10 +1065,96 @@ try {
     hero.style.top  = `${baseY}%`;
     hero.style.opacity = '1';
     hero.style.transform = 'translate(-50%, -50%) scale(1)';
+    syncTextPosition(x, baseY);
+    updateTextFrame(progress);
   }
 
   let entryStart = 0;
   let entryDone = false;
+
+  function syncTextPosition(xPercent, yPercent) {
+    if (!heroText) return;
+    heroText.style.left = `${xPercent}%`;
+    heroText.style.top  = `${yPercent}%`;
+  }
+
+  function setFrame(idx) {
+    if (!heroText || !heroTextImg) return;
+    if (idx < 0) {
+      heroText.style.opacity = '0';
+      currentTextFrame = -1;
+      return;
+    }
+    const frame = textFrames[idx];
+    if (!frame) return;
+    heroTextImg.src = frame.src;
+    heroTextImg.alt = frame.alt || 'hero text';
+    heroText.style.opacity = '1';
+    currentTextFrame = idx;
+  }
+
+  function updateTextFrame(progress) {
+    if (!heroText || !heroTextImg) return;
+    if (manualOverride) return; // 交给第2/3页逻辑控制
+    if (!textUnlocked) {
+      heroText.style.opacity = '0';
+      return;
+    }
+    let idx = -1;
+    for (let i = 0; i < textFrames.length; i++) {
+      if (progress >= textFrames[i].from) idx = i;
+    }
+    if (currentTextFrame > idx) {
+      idx = currentTextFrame; // 不回退，保持已出现的帧
+    }
+    if (idx === currentTextFrame) return;
+    setFrame(idx);
+  }
+
+  function page3Progress() {
+    if (!page3) return 0;
+    const rect = page3.getBoundingClientRect();
+    const h = rect.height || window.innerHeight || 1;
+    return clamp01(1 - (rect.bottom / h));
+  }
+
+  function page2Progress() {
+    if (!page2) return 0;
+    const rect = page2.getBoundingClientRect();
+    const h = rect.height || window.innerHeight || 1;
+    return clamp01((0 - rect.top) / h); // 顶部到达视口顶为0，离开一屏为1
+  }
+
+  function stopManualLoop() {
+    if (manualLoop) {
+      cancelAnimationFrame(manualLoop);
+      manualLoop = null;
+    }
+  }
+
+  function tickManualText() {
+    if (!manualOverride) {
+      stopManualLoop();
+      return;
+    }
+    if (currentPageIndex === 1) {
+      const p = page2Progress();
+      const canShow = textReady && p < 0.5; // 第二页进入 50% 后消失
+      setFrame(canShow ? 0 : -1);
+    } else if (currentPageIndex === 2) {
+      const p = page3Progress();
+      if (!textReady) {
+        setFrame(-1);
+      } else if (p >= 0.01) {
+        setFrame(1); // 第3页 1% 出现 jeder
+      } else {
+        setFrame(-1); // 进入第3页立刻隐藏 besuche
+      }
+    } else {
+      setFrame(-1);
+    }
+    manualLoop = requestAnimationFrame(tickManualText);
+  }
 
   function step() {
     if (!running) return;
@@ -1063,6 +1166,8 @@ try {
       hero.style.top  = `${baseY}%`;
       hero.style.opacity = '1';
       hero.style.transform = 'translate(-50%, -50%) scale(1)';
+      syncTextPosition(x, baseY);
+      updateTextFrame(0);
       if (t >= 1) entryDone = true;
     } else {
       const p = page4Progress();
@@ -1078,15 +1183,57 @@ try {
     entryDone = false;
     applyPose(page4Progress());
     hero.style.opacity = '1';
+    if (heroText) {
+      heroText.style.opacity = '0';
+    }
+    currentTextFrame = -1;
     requestAnimationFrame(step);
   }
 
   function deactivate() {
     running = false;
     hero.style.opacity = '0';
+    if (heroText) heroText.style.opacity = '0';
+    currentTextFrame = -1;
+    manualOverride = false;
+    stopManualLoop();
   }
 
-  window.addEventListener('hero-start', () => activate());
+  window.addEventListener('hero-start', () => {
+    activate();
+    if (heroTextTimer) {
+      clearTimeout(heroTextTimer);
+      heroTextTimer = null;
+    }
+    textReady = false;
+    textUnlocked = false;
+    heroTextTimer = setTimeout(() => {
+      textReady = true;
+      textUnlocked = true;
+      if (manualOverride && !manualLoop) {
+        tickManualText();
+      }
+    }, 3000); // 触发 hero 3 秒后才允许 besuche
+  });
+  window.addEventListener('pagechange', e => {
+    if (e.detail.index === 1) {
+      manualOverride = true;
+      stopManualLoop();
+      tickManualText();
+    } else if (e.detail.index === 2) {
+      manualOverride = true;
+      stopManualLoop();
+      tickManualText(); // 在第3页滚动中切换 besuche -> jeder
+    } else if (e.detail.index === 3) {
+      manualOverride = false; // 第4页进入正常时间轴
+      stopManualLoop();
+      updateTextFrame(page4Progress());
+    } else {
+      manualOverride = false;
+      stopManualLoop();
+      setFrame(-1);
+    }
+  });
   window.addEventListener('resize', () => {
     if (!running) return;
     applyPose(page4Progress());

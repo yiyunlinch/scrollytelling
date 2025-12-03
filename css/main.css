@@ -108,6 +108,24 @@ body {
   transition: opacity 0.4s ease;  /* 进入时柔和 */
 }
 
+.hero-text {
+  position: fixed;
+  left: 50%;
+  top: 20%;
+  transform: translate(-20%, -125%); /* 往右偏移一些 */
+  width: clamp(180px, 26vw, 320px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 100000; /* 紧跟 hero */
+}
+
+.hero-text img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 
 /* 挖土机（固定层） */
 #digger-fixed {
