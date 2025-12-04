@@ -9,7 +9,7 @@
   <link href="./css/variables.css?v=7" rel="stylesheet" />
   <link href="./css/fonts.css?v=7" rel="stylesheet" />
   <link href="./css/animations.css?v=7" rel="stylesheet" />
-  <link href="./css/main.css?v=15" rel="stylesheet" />
+  <link href="./css/main.css?v=18" rel="stylesheet" />
 </head>
 
 <body>
@@ -43,6 +43,10 @@
           <section class="page page2" id="page2" aria-label="第2页：草地">
             <main class="scene" id="scene1">
               <div class="season grass active" aria-hidden="true"></div>
+                 <div class="page3-title-overlay" aria-hidden="true">
+      <img src="./images/title.png" alt="title" loading="lazy">
+    </div>
+  
 
             
 
@@ -68,8 +72,13 @@
 
   <!-- hero 羊（固定层） -->
   <div id="sheephero-wrapper" aria-hidden="true">
-    <div class="sheep sheephero" id="sheephero"
-         style="background-image:url('./images/sheep/sheephero.webp')"></div>
+    <video class="sheep sheephero"
+           id="sheephero"
+           src="./images/sheep/herosheep.webm"
+           autoplay
+           muted
+           loop
+           playsinline></video>
     <div class="hero-text" id="heroText">
       <img id="heroTextImg" alt="hero text" loading="lazy">
     </div>
@@ -81,8 +90,7 @@
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
 
-  
-
+ 
  
   
     <div class="handflower-wrap">

@@ -97,9 +97,9 @@ body {
 
   width: clamp(360px, 48vw, 800px);  /* 响应式大小（你可调） */
   aspect-ratio: 1/1;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center bottom;
+  height: auto;
+  object-fit: contain;
+  display: block;
 
   z-index: 99999;
   pointer-events: none;
@@ -318,6 +318,20 @@ body {
 
 /* 第6页 */
 #page3 { position: relative; }
+.page3-title-overlay {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  z-index: 120000; /* 高于 hero 羊等前景，保证可见 */
+  pointer-events: none;
+}
+.page3-title-overlay img {
+  display: block;
+  width: min(90vw, 1040px);
+  height: auto;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.3));
+}
 .backgroundbottom {
   position: absolute;
   inset: 0;
