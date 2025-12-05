@@ -126,6 +126,24 @@ body {
   height: auto;
 }
 
+.hero-text {
+  position: fixed;
+}
+
+.hero-text .hero-text-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.hero-text .hero-text-overlay.show {
+  opacity: 1;
+}
+
 
 /* 挖土机（固定层） */
 #digger-fixed {

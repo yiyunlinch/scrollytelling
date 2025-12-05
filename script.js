@@ -1041,10 +1041,10 @@ try {
     { from: 0.0,  src: './images/text/herosheep/besuche.png', alt: 'Besuche' },
     { from: 0.22, src: './images/text/herosheep/jeder.png',   alt: 'Jeder' },
     { from: 0.44, src: './images/text/herosheep/niemand.png', alt: 'Niemand' },
-    { from: 0.65, src: './images/text/herosheep/nur.png',     alt: 'Nur selten' },
-    { from: 0.82, src: './images/text/herosheep/wir.png',     alt: 'Wir alle' },
+    { from: 0.60, src: './images/text/herosheep/wir.png',     alt: 'Wir' },
   ];
   let currentTextFrame = -1;
+  let autoAdvanceTimer = null;
 
   const clamp01 = v => Math.max(0, Math.min(1, v));
 
@@ -1080,6 +1080,11 @@ try {
 
   function setFrame(idx) {
     if (!heroText || !heroTextImg) return;
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = null;
+    }
+    heroText.classList.remove('hero-text-niemand');
     if (idx < 0) {
       heroText.style.opacity = '0';
       currentTextFrame = -1;
@@ -1091,6 +1096,17 @@ try {
     heroTextImg.alt = frame.alt || 'hero text';
     heroText.style.opacity = '1';
     currentTextFrame = idx;
+    if (idx === 2) {
+      heroText.classList.add('hero-text-niemand'); // Niemand 独立位置
+    }
+    // 仅在非手动阶段启动自动切换
+    if (!manualOverride && idx === 1 && textFrames[2]) {
+      autoAdvanceTimer = setTimeout(() => {
+        if (currentTextFrame === 1) {
+          setFrame(2);
+        }
+      }, 2000);
+    }
   }
 
   function updateTextFrame(progress) {
@@ -1104,8 +1120,9 @@ try {
     for (let i = 0; i < textFrames.length; i++) {
       if (progress >= textFrames[i].from) idx = i;
     }
-    if (currentTextFrame > idx) {
-      idx = currentTextFrame; // 不回退，保持已出现的帧
+    // 自动阶段不回退，避免从后面帧跳回 besuche/jeder 造成重复
+    if (!manualOverride && idx < currentTextFrame) {
+      idx = currentTextFrame;
     }
     if (idx === currentTextFrame) return;
     setFrame(idx);
@@ -1141,21 +1158,21 @@ try {
       const p = page2Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p < 0.25) {
-        setFrame(0); // 前 25% 显示 besuche
-      } else if (p >= 0.5) {
-        setFrame(1); // 第二页滚到 50% 立刻出现 jeder
+      } else if (p < 0.01) {
+        setFrame(0); // 仅在前 1% 显示 besuche
+      } else if (p >= 0.90) {
+        setFrame(2); // 90% 起出现 niemand（无空窗）
       } else {
-        setFrame(-1); // 中间区间留空
+        setFrame(1); // 1%-90% 显示 jeder
       }
     } else if (currentPageIndex === 2) {
       const p = page3Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p >= 0) {
-        setFrame(1); // 进入第3页立刻出现 jeder
+      } else if (p >= 0.01) {
+        setFrame(3); // 第3页显示 Wir
       } else {
-        setFrame(-1); // 进入第3页立刻隐藏 besuche
+        setFrame(-1); // 其他区间空
       }
     } else {
       setFrame(-1);
