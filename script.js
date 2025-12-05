@@ -1022,7 +1022,21 @@ try {
   const page2 = document.getElementById('page2');
   const heroText = document.getElementById('heroText');
   const heroTextImg = document.getElementById('heroTextImg');
+  let heroTextOverlay = null;
   if (!hero) return;
+
+  // 叠加层：在显示 "Wir" 时同时呈现 "Niemand"
+  if (heroText && !document.getElementById('heroTextOverlay')) {
+    heroTextOverlay = document.createElement('img');
+    heroTextOverlay.id = 'heroTextOverlay';
+    heroTextOverlay.className = 'hero-text-overlay';
+    heroTextOverlay.src = './images/text/herosheep/niemand.png';
+    heroTextOverlay.alt = 'Niemand';
+    heroTextOverlay.style.opacity = '0';
+    heroText.appendChild(heroTextOverlay);
+  } else {
+    heroTextOverlay = document.getElementById('heroTextOverlay');
+  }
 
   let running = false;
   let textUnlocked = false;  // 解锁后才能走时间轴
@@ -1080,14 +1094,24 @@ try {
 
   function setFrame(idx) {
     if (!heroText || !heroTextImg) return;
+    // 确保 overlay 存在（容错）
+    if (!heroTextOverlay && heroText) {
+      heroTextOverlay = document.createElement('img');
+      heroTextOverlay.id = 'heroTextOverlay';
+      heroTextOverlay.className = 'hero-text-overlay';
+      heroTextOverlay.src = './images/text/herosheep/niemand.png';
+      heroTextOverlay.alt = 'Niemand';
+      heroTextOverlay.style.opacity = '0';
+      heroText.appendChild(heroTextOverlay);
+    }
     if (autoAdvanceTimer) {
       clearTimeout(autoAdvanceTimer);
       autoAdvanceTimer = null;
     }
-    heroText.classList.remove('hero-text-niemand');
     if (idx < 0) {
       heroText.style.opacity = '0';
       currentTextFrame = -1;
+      if (heroTextOverlay) heroTextOverlay.style.opacity = '0';
       return;
     }
     const frame = textFrames[idx];
@@ -1096,17 +1120,15 @@ try {
     heroTextImg.alt = frame.alt || 'hero text';
     heroText.style.opacity = '1';
     currentTextFrame = idx;
-    if (idx === 2) {
-      heroText.classList.add('hero-text-niemand'); // Niemand 独立位置
+    if (heroTextOverlay) {
+      const showOverlay = idx === 3; // Wir 时叠加 Niemand
+      heroTextOverlay.classList.toggle('show', showOverlay);
+      heroTextOverlay.style.opacity = showOverlay ? '1' : '0';
     }
-    // 仅在非手动阶段启动自动切换
-    if (!manualOverride && idx === 1 && textFrames[2]) {
-      autoAdvanceTimer = setTimeout(() => {
-        if (currentTextFrame === 1) {
-          setFrame(2);
-        }
-      }, 2000);
+    if (heroText) {
+      heroText.classList.toggle('hero-text-wir', idx === 3); // Wir 单独位置
     }
+    // 自动切换关闭：防止和滚动阈值/手动阶段冲突导致重复
   }
 
   function updateTextFrame(progress) {

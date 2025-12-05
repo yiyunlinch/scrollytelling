@@ -126,6 +126,10 @@ body {
   height: auto;
 }
 
+.hero-text.hero-text-wir {
+  transform: translate(-120%, -125%); /* Wir 单独左移 */
+}
+
 .hero-text {
   position: fixed;
 }
@@ -134,10 +138,14 @@ body {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
+  transform: translate(0, 0); /* 与主气泡对齐，不偏移 */
+  display: block;
+  z-index: 2; /* 覆盖主图 */
 }
 
 .hero-text .hero-text-overlay.show {
