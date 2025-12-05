@@ -1213,7 +1213,7 @@ try {
       if (manualOverride && !manualLoop) {
         tickManualText();
       }
-    }, 3000); // 触发 hero 3 秒后才允许 besuche
+    }, 2000); // 触发 hero 2 秒后才允许 besuche
   });
   window.addEventListener('pagechange', e => {
     if (e.detail.index === 1) {
