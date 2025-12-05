@@ -1139,14 +1139,21 @@ try {
     }
     if (currentPageIndex === 1) {
       const p = page2Progress();
-      const canShow = textReady && p < 0.5; // 第二页进入 50% 后消失
-      setFrame(canShow ? 0 : -1);
+      if (!textReady) {
+        setFrame(-1);
+      } else if (p < 0.25) {
+        setFrame(0); // 前 25% 显示 besuche
+      } else if (p >= 0.5) {
+        setFrame(1); // 第二页滚到 50% 立刻出现 jeder
+      } else {
+        setFrame(-1); // 中间区间留空
+      }
     } else if (currentPageIndex === 2) {
       const p = page3Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p >= 0.01) {
-        setFrame(1); // 第3页 1% 出现 jeder
+      } else if (p >= 0) {
+        setFrame(1); // 进入第3页立刻出现 jeder
       } else {
         setFrame(-1); // 进入第3页立刻隐藏 besuche
       }
@@ -1213,7 +1220,7 @@ try {
       if (manualOverride && !manualLoop) {
         tickManualText();
       }
-    }, 2000); // 触发 hero 2 秒后才允许 besuche
+    }, 1200); // 触发 hero 1.2 秒后才允许 besuche
   });
   window.addEventListener('pagechange', e => {
     if (e.detail.index === 1) {
