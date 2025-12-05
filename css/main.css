@@ -666,12 +666,12 @@ body.page6-plus #page5 .text-group-left {
 
 #schauLeft {
   left: 2%;
-  top: 1%;
+  top: 35%; /* 下移 */
 }
 
 #schauRight {
-  right: 1%;
-  top: 0%;
+  right: 20%; /* 向右回一些 */
+  top: 35%; /* 下移 */
 
   
 }
