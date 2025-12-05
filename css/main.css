@@ -321,6 +321,20 @@ body {
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
   transition: transform 1.2s cubic-bezier(.7,0,.3,1);
 }
+
+#page7 .text-group-right {
+  bottom: 70%;
+  right: 12%;
+  width: clamp(180px, 32vw, 420px);
+  font-size: inherit;
+}
+
+#page7 .page7-yiyun-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* 第5页文本层级提升 */
 #page5 .text-group-left {
   z-index: 3100; /* 高于 digger/privat */
@@ -676,6 +690,51 @@ body.page6-plus #page5 .text-group-left {
   
 }
 
+#page6 .schild-wrap {
+  position: absolute;
+  top: 4%;
+  right: 4%;
+  width: clamp(120px, 24vw, 270px); /* 放大 1.5 倍 */
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  z-index: 3600; /* 高于建筑层 */
+}
+
+#page6 .schild-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+body.page6-plus #page6 .schild-wrap {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#page6 .nur-overlay {
+  position: absolute;
+  top: 38%;
+  left: 35%;
+  transform: translate(-50%, -50%); /* 向左平移 */
+  width: clamp(140px, 28vw, 260px);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 3700; /* 高于建筑层 */
+}
+
+#page6 .nur-overlay img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#page6 .nur-overlay.show {
+  opacity: 1;
+}
+
 .house-video-wrap {
   position: absolute;
   inset: 0;
@@ -819,6 +878,28 @@ body.page6-plus #page5 .text-group-left {
 
 /* 最后一页：点击出现文字的显隐类 */
 .final-text.show {
+  opacity: 1;
+}
+
+#page7 .eimal-overlay {
+  position: absolute;
+  top: 30%; /* 上移 */
+  left: 60%;
+  transform: translate(-50%, -50%);
+  width: clamp(140px, 28vw, 320px);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 5000; /* 高于背景线条等 */
+}
+
+#page7 .eimal-overlay img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#page7 .eimal-overlay.show {
   opacity: 1;
 }
 

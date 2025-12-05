@@ -213,6 +213,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const buildingAnim = (() => {
     const wrap = document.getElementById('houseVideoWrap');
     const layers = wrap ? Array.from(wrap.querySelectorAll('.building-layer')) : [];
+    const nurOverlay = document.getElementById('nurOverlay');
     if (!wrap || !layers.length) return {
       reset: () => {},
       setIndex: () => {},
@@ -226,12 +227,17 @@ window.addEventListener('DOMContentLoaded', () => {
         wrap.classList.remove('visible');
         layers.forEach(l => l.style.opacity = '0');
         setPage5ContentVisibility(true);
+        if (nurOverlay) nurOverlay.classList.remove('show');
         return;
       }
       wrap.classList.add('visible');
       layers.forEach((l, i) => {
         l.style.opacity = i <= idx ? '1' : '0';
       });
+      if (nurOverlay) {
+        const lastIndex = layers.length - 1;
+        nurOverlay.classList.toggle('show', idx >= lastIndex);
+      }
       setPage5ContentVisibility(false); // 盖楼开始后隐藏 Kinder/文本
     }
 
@@ -274,6 +280,10 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('pagechange', e => {
     const idx = e.detail.index;
     document.body.classList.toggle('page6-plus', idx >= 5);
+    const eimal = document.getElementById('eimalOverlay');
+    if (eimal) {
+      eimal.classList.toggle('show', idx === 6);
+    }
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
       privatDrop.reset();
