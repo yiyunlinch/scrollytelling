@@ -112,7 +112,7 @@ body {
   position: fixed;
   left: 50%;
   top: 20%;
-  transform: translate(60%, -125%); /* 往右偏移更多，让气泡靠右侧 */
+  transform: translate(60%, -125%); /* 向右偏移，保持原先大小 */
   width: clamp(180px, 26vw, 320px);
   pointer-events: none;
   opacity: 0;
