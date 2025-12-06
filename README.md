@@ -41,7 +41,7 @@ Lösung: Neudefinition des Rücksprungs, Vereinheitlichung der Zustände, damit 
 Mehrere Schriftarten störten die visuelle Kohärenz sowie die erzählerische Stimmung.
 Lösung: Umstellung auf eine einheitliche handschriftliche Typografie, passend zur Illustration und emotionalen Erzählweise.
 
-3) Fehlausrichtungen auf unterschiedlichen Bildschirmgrößen
+3) Fehlausrichtungen auf unterschiedlichen Bildschirmgrössen
 Maskenpositionen, Seitenhöhen sowie Elemente am Seitenende verschoben sich je nach Seitenverhältnis, wodurch visuelle Brüche entstanden.
 Lösung:Dynamische Viewport-Höhen,clamp() zur Begrenzung der Seitenhöhen, Media Queries zur präzisen Positionierung zentraler Elemente
 
@@ -52,6 +52,8 @@ Der Einsatz von AI Copilot beschleunigte die visuellen Arbeitsschritte. Wichtige
 
 2) Experimentelle KI-Animation (z. B. Räder, laufendes Schaf)
 Die Tests zeigten, dass KI-Animation weiterhin manuelle Feinarbeit benötigt, etwa bei Timing, Hintergründen oder Keyframes.
+![Im Bild werden gelegentlich unerwartete bzw. nicht vorgesehene Elemente angezeigt.]
+(./images/readme/car.png)
 
 3) Erstes Scroll-Narrativ mit Animation
 da dies mein erstes scrollbasiertes Erzählprojekt mit Animation war, war anfangs nicht absehbar, welche Effekte technisch möglich oder problematisch sein würden. Dies führte zu vielen explorativen Anpassungen im Layout, in der Interaktion und im Responsive-Design.
