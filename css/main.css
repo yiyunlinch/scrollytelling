@@ -327,11 +327,13 @@ body {
 
 #page7 .text-group-right {
   bottom: 42%;               /* 进一步上移 */
-  right: 65%;                /* 进一步靠左 */
+  right: 55%;                /* 向左移 */
   width: clamp(160px, 28vw, 360px);
   font-size: inherit;
   opacity: 0;
   transition: opacity 0.35s ease;
+  z-index: 5200;             /* 高于其他覆盖层 */
+  pointer-events: none;
 }
 
 #page7 .page7-yiyun-img {
@@ -342,6 +344,7 @@ body {
 
 #page7 #page7Yiyun.show {
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* 第5页文本层级提升 */
@@ -961,50 +964,63 @@ body.page6-plus #page6 .schild-wrap {
 /* 最后一页 handflower 位置 */
 #page7 .handflower-wrap {
   position: absolute;
-  right: clamp(4%, 6vw, 10%);
+  right: 0;
   bottom: clamp(10%, 14vh, 18%);
   z-index: 2000;
-  pointer-events: none;
+  pointer-events: auto;
+  width: clamp(320px, 48vw, 720px);   /* 提升可点击区域 */
+  height: clamp(320px, 42vh, 560px);  /* 提升可点击区域 */
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: clamp(16px, 2vw, 32px);
 }
 
 /* 初始：藏在右边（正方向 = 容器外） */
 #page7 .last-handflower {
   width: clamp(140px, 22vw, 240px);
   transform-origin: bottom right;
-  transform: translateX(18%) scale(1.6); /* ✅ 从右外开始 */
+  transform: translateX(32%) scale(1.6); /* 更靠右起点 */
   opacity: 0;
   transition: transform .8s ease-out, opacity .6s ease-out;
+  pointer-events: auto;
 }
 
 /* 出现：滑回到画面 */
 #page7 .last-handflower.visible {
-  transform: translateX(18%) scale(1.6); /* ✅ 回到原位 */
+  transform: translateX(32%) scale(1.6); /* ✅ 回到原位 */
   opacity: 1;
 }
 
 @media (max-width: 1100px) {
   #page7 .handflower-wrap {
-    right: clamp(2%, 5vw, 8%);
+    right: 0;
     bottom: clamp(8%, 12vh, 16%);
+    width: clamp(280px, 52vw, 640px);
+    height: clamp(280px, 46vh, 520px);
+    padding: clamp(12px, 2.5vw, 28px);
   }
   #page7 .last-handflower {
-    transform: translateX(10%) scale(1.45);
+    transform: translateX(24%) scale(1.45);
   }
   #page7 .last-handflower.visible {
-    transform: translateX(10%) scale(1.45);
+    transform: translateX(24%) scale(1.45);
   }
 }
 
 @media (max-width: 820px) {
   #page7 .handflower-wrap {
-    right: clamp(0%, 4vw, 6%);
+    right: 0;
     bottom: clamp(6%, 10vh, 14%);
+    width: clamp(240px, 56vw, 580px);
+    height: clamp(240px, 48vh, 480px);
+    padding: clamp(10px, 3vw, 24px);
   }
   #page7 .last-handflower {
-    transform: translateX(6%) scale(1.3);
+    transform: translateX(18%) scale(1.3);
   }
   #page7 .last-handflower.visible {
-    transform: translateX(6%) scale(1.3);
+    transform: translateX(18%) scale(1.3);
   }
 }
 

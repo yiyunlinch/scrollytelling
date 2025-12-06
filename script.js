@@ -23,6 +23,19 @@ let kinderShouldPlay = false;
 let kinderPlayPending = false;
 let hasLeftMaxiPage = false; // 是否曾离开过第一页（Maxi 层）
 const MAXI_SEEN_KEY = 'maxiSeen'; // session 标记：是否离开过第1页
+let heroAllowCheck = () => true; // 是否允许触发 hero（基于当前可见页）
+
+function isElementVisible(el, threshold = 0.35) {
+  if (!el) return false;
+  const rect = el.getBoundingClientRect();
+  const vh = window.innerHeight || 1;
+  const vw = window.innerWidth || 1;
+  if (rect.bottom <= 0 || rect.top >= vh) return false;
+  if (rect.right <= 0 || rect.left >= vw) return false;
+  const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+  const visibleRatio = visibleHeight / Math.max(1, rect.height);
+  return visibleRatio >= threshold;
+}
 const setViewportHeightVar = () => {
   const vh = (window.innerHeight || document.documentElement.clientHeight || 0) * 0.01;
   if (vh > 0) {
@@ -104,6 +117,7 @@ function ensureKinderPlaybackIfNeeded() {
 
 function startHeroOnce() {
   if (heroStarted) return;
+  if (!heroAllowCheck()) return;
   heroStarted = true;
   window.dispatchEvent(new Event('hero-start'));
 }
@@ -114,6 +128,10 @@ window.addEventListener('DOMContentLoaded', () => {
   kinderAudio = document.getElementById('kinderAudio');
   const page3Elem = document.getElementById('page3');
   const track = document.querySelector('.cover-h-track');
+  const page1 = document.getElementById('page1');
+  const page2 = document.getElementById('page2');
+  const page3 = document.getElementById('page3');
+  const page4 = document.getElementById('page4');
   const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
   let seenFromSession = false;
   try {
@@ -122,13 +140,30 @@ window.addEventListener('DOMContentLoaded', () => {
     seenFromSession = false;
   }
 
+  function findMostVisiblePageIndex() {
+    const vh = window.innerHeight || 1;
+    let bestIdx = 0;
+    let bestScore = 0;
+    allPages.forEach((p, idx) => {
+      const rect = p.getBoundingClientRect();
+      const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+      if (visible <= 0) return;
+      const ratio = visible / Math.max(rect.height, 1);
+      if (ratio > bestScore) {
+        bestScore = ratio;
+        bestIdx = idx;
+      }
+    });
+    return bestIdx;
+  }
+
   /* === 全局页面导航（仅前2页横滑） === */
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
   function setActive(idx) {
     allPages.forEach((p, i) => p.classList.toggle('active', i === idx));
   }
-  function dispatchPageChange(idx) {
-    if (idx === currentPageIndex) {
+  function dispatchPageChange(idx, force = false) {
+    if (idx === currentPageIndex && !force) {
       setActive(idx);
       return;
     }
@@ -136,6 +171,11 @@ window.addEventListener('DOMContentLoaded', () => {
     setActive(idx);
     window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
   }
+
+  // 刷新时先同步当前可见页，避免进入第6页时残留第5页元素闪现
+  currentPageIndex = findMostVisiblePageIndex();
+  setActive(currentPageIndex);
+  document.body.classList.toggle('page6-plus', currentPageIndex >= 5);
 
   function goToPage(idx, animate = true) {
     idx = clamp(idx, 0, allPages.length - 1);
@@ -172,6 +212,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
   requestAnimationFrame(maybeStartHeroFromScroll);
+
+  // hero 触发条件：仅当第1-4页有可见区域时才允许
+  heroAllowCheck = () => {
+    return (
+      isElementVisible(page1, 0.6) ||
+      isElementVisible(page2, 0.25) ||
+      isElementVisible(page3, 0.25) ||
+      isElementVisible(page4, 0.25)
+    );
+  };
 
   // 进入第2页时再尝试触发 hero 羊出现（仅当 Maxi 已露出）
   window.addEventListener('pagechange', e => {
@@ -434,7 +484,8 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     };
     setPage5ContentVisibility = update;
-    update(true);
+    const shouldShowInitially = currentPageIndex === 4 && buildingIndex < 0 && !kinderLockedHidden;
+    update(shouldShowInitially);
   })();
 
   window.addEventListener('pagechange', e => {
@@ -462,7 +513,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     if (idx === 5) {
       privatStage = Math.max(privatStage, 2);
-      kinderForceVisible = true;
+      kinderForceVisible = false;
       buildingAnim.setIndex(0); // 默认显示第一层
       setPage5ContentVisibility(false); // 进入第6页隐藏 page5 内容
     } else {
@@ -1114,7 +1165,7 @@ window.addEventListener('DOMContentLoaded', () => {
       window.addEventListener('pagechange', e => {
         const onPage5 = e.detail.index === 4;
         if (!kinderLockedHidden) {
-          kinderForceVisible = onPage5 || (privatStage >= 2 && privatStage < 5);
+          kinderForceVisible = onPage5;
         }
         // 进入第5页先收起，等可视度达标再出现
         if (onPage5 && !kinderLockedHidden && buildingIndex < 0) {
@@ -1144,7 +1195,10 @@ window.addEventListener('DOMContentLoaded', () => {
     console.error('initKinderAndDialogOnPage8 error', e);
   }
 
-}); // END DOMContentLoaded
+  // 初始化后强制同步当前页状态，避免直接落在第6页时第5页元素短暂可见
+  dispatchPageChange(currentPageIndex, true);
+
+  }); // END DOMContentLoaded
 
 /* ====== 第1页 hand 图片出现/消失（草地手） ====== */
 
@@ -1523,10 +1577,27 @@ function clickToggle(iconId, targetId) {
   });
 }
 
-/* === 最后一页绑定：手 ↔ 文字 === */
+/* === 最后一页：点击（手或点击图标）切换 Yiyun 文本 === */
 document.addEventListener('DOMContentLoaded', () => {
-  clickToggle('clickIconFinal', 'finalText');
-  clickToggle('clickIconFinal', 'page7Yiyun');
+  const target = document.getElementById('page7Yiyun');
+  const icon = document.getElementById('clickIconFinal');
+  const handWrap = document.querySelector('#page7 .handflower-wrap');
+  const toggle = () => {
+    if (!target) return;
+    const willShow = !target.classList.contains('show');
+    target.classList.toggle('show', willShow);
+    target.style.opacity = willShow ? '1' : '0';
+    target.style.display = 'block'; // 保持占位，避免切换失效
+  };
+  const bind = el => {
+    if (!el) return;
+    el.addEventListener('click', e => {
+      e.stopPropagation(); // 避免冒泡导致双触发
+      toggle();
+    });
+  };
+  bind(icon);      // 点击提示图标
+  bind(handWrap);  // 整个手区域（含手图）
 });
 
 /* 全局静音/开音量开关 */
