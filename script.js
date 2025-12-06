@@ -135,8 +135,40 @@ window.addEventListener('DOMContentLoaded', () => {
     globalScrollLockUntil = performance.now() + 650;
   }
 
-  // 初始定位第一页
-  goToPage(0, false);
+  function findVisiblePageIndex() {
+    const vh = window.innerHeight || 1;
+    let bestIdx = 0;
+    let bestRatio = -1;
+    allPages.forEach((p, i) => {
+      const rect = p.getBoundingClientRect();
+      const overlap = Math.max(0, Math.min(vh, rect.bottom) - Math.max(0, rect.top));
+      const ratio = overlap / vh;
+      if (ratio > bestRatio) {
+        bestRatio = ratio;
+        bestIdx = i;
+      }
+    });
+    return bestIdx;
+  }
+
+  function alignTrackTo(idx) {
+    if (!track) return;
+    track.style.transition = 'none';
+    track.style.transform = `translateY(${-idx * 100}vh)`;
+  }
+
+  // 延迟到 load/首帧后再根据可见区域定位，避免浏览器滚动恢复被覆盖
+  window.addEventListener('load', () => {
+    requestAnimationFrame(() => {
+      const initIdx = findVisiblePageIndex();
+      currentPageIndex = initIdx;
+      setActive(initIdx);
+      if (initIdx < TRACK_COUNT) {
+        alignTrackTo(initIdx);
+      }
+      window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
+    });
+  }, { once: true });
 
   // 如果刷新时停在第2页或更下方（例如第3页），直接触发 hero，避免刷新后消失
   function maybeStartHeroFromScroll() {
