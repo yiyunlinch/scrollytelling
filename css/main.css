@@ -333,7 +333,7 @@ body {
   opacity: 0;
   transition: opacity 0.35s ease;
   z-index: 5200;             /* 高于其他覆盖层 */
-  pointer-events: none;
+  pointer-events: none;       /* 始终穿透，避免挡住手区域 */
 }
 
 #page7 .page7-yiyun-img {
@@ -344,7 +344,7 @@ body {
 
 #page7 #page7Yiyun.show {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;       /* 保持穿透，点击依然交给手区域 */
 }
 
 /* 第5页文本层级提升 */
