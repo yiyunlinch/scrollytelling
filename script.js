@@ -150,8 +150,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return rect.top < vh * 0.65 && rect.bottom > vh * 0.35;
     };
     if (visibleEnough(document.getElementById('page2')) ||
-        visibleEnough(document.getElementById('page3')) ||
-        visibleEnough(document.getElementById('page4'))) {
+        visibleEnough(document.getElementById('page3'))) {
       startHeroOnce();
     }
   }
@@ -176,7 +175,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     // 进入前几页（含从下方往上回拉至第4/3页）都可触发 hero，保证刷新后上拉也能出现
-    if (idx >= 1 && idx <= 3) {
+    if (idx === 1 || idx === 2) {
       startHeroOnce();
     }
     // 从下方向上返回第一页时，直接露出 Maxi 背景，不停留在 sheepblack
@@ -196,6 +195,10 @@ window.addEventListener('DOMContentLoaded', () => {
       if (isVisibleEnough(page1, 0.4)) {
         eyeStage = 3;
         eyeLayers.revealBase();
+        const stack = page1.querySelector('.eye-interaction-container');
+        if (stack) {
+          stack.style.visibility = 'visible';
+        }
       }
     }
   }, { passive: true });
@@ -206,6 +209,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const midLayer = document.querySelector('.eye-layer-middle');    // sheepeye.png
     const baseLayer = document.querySelector('.eye-layer-base');     // Maxi5 背景
     const visitsText = document.getElementById('visitsText');
+    const page1 = document.getElementById('page1');
+    const stack = page1 ? page1.querySelector('.eye-interaction-container') : null;
+    let stackHiddenAfterSeen = false;
 
     function showMid() {
       if (topLayer) topLayer.style.opacity = '0';
@@ -237,6 +243,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function revealBase() {
       // 强制露出 Maxi5 背景（从下往上回到第一页时用）
+      if (stackHiddenAfterSeen && stack) {
+        stack.style.visibility = 'visible';
+        stackHiddenAfterSeen = false;
+      }
       if (topLayer) topLayer.style.opacity = '0';
       if (midLayer) {
         midLayer.style.opacity = '0';
@@ -260,6 +270,10 @@ window.addEventListener('DOMContentLoaded', () => {
         hasLeftMaxiPage = true;
         eyeStage = 3;
         revealBase();
+        if (stack) {
+          stack.style.visibility = 'hidden'; // 刷新停在下方页时隐藏首屏遮罩，避免闪屏
+          stackHiddenAfterSeen = true;
+        }
       } else {
         reset(); // 首次或上次停在 page1 时保留遮罩
       }
