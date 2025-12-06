@@ -21,6 +21,8 @@ let kinderTargetVolume = 0;
 let kinderPlaying = false;
 let kinderShouldPlay = false;
 let kinderPlayPending = false;
+let hasLeftMaxiPage = false; // 是否曾离开过第一页（Maxi 层）
+const MAXI_SEEN_KEY = 'maxiSeen'; // session 标记：是否离开过第1页
 
 // Page5 文字/对白显隐
 let setPage5ContentVisibility = () => {};
@@ -156,8 +158,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 进入第2页时再尝试触发 hero 羊出现（仅当 Maxi 已露出）
   window.addEventListener('pagechange', e => {
-    if (e.detail.index === 1) {
+    const idx = e.detail.index;
+    if (idx > 0) {
+      hasLeftMaxiPage = true;
+      try {
+        sessionStorage.setItem(MAXI_SEEN_KEY, '1');
+      } catch (err) {
+        console.warn('sessionStorage set failed', err);
+      }
+    }
+    // 进入前几页（含从下方往上回拉至第4/3页）都可触发 hero，保证刷新后上拉也能出现
+    if (idx >= 1 && idx <= 3) {
       startHeroOnce();
+    }
+    // 从下方向上返回第一页时，直接露出 Maxi 背景，不停留在 sheepblack
+    if (idx === 0 && hasLeftMaxiPage) {
+      eyeStage = 3;
+      eyeLayers.revealBase();
     }
   });
 
@@ -196,14 +213,37 @@ window.addEventListener('DOMContentLoaded', () => {
       if (visitsText) visitsText.classList.remove('show');
     }
 
+    function revealBase() {
+      // 强制露出 Maxi5 背景（从下往上回到第一页时用）
+      if (topLayer) topLayer.style.opacity = '0';
+      if (midLayer) {
+        midLayer.style.opacity = '0';
+        midLayer.classList.add('dissolve');
+      }
+      if (baseLayer) baseLayer.style.opacity = '1';
+      if (visitsText) visitsText.classList.add('show');
+    }
+
     if (midLayer) {
       midLayer.addEventListener('animationend', () => {
         startHeroOnce();
       }, { once: true });
     }
 
-    reset();
-    return { showMid, dissolveMid, showText, reset };
+    // 首次渲染：如果 session 中记录已离开过第1页，则直接露出 Maxi 背景
+    try {
+      const seen = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
+      if (seen) {
+        hasLeftMaxiPage = true;
+        eyeStage = 3;
+        revealBase();
+      } else {
+        reset();
+      }
+    } catch (err) {
+      reset();
+    }
+    return { showMid, dissolveMid, showText, reset, revealBase };
   })();
 
   /* Page5 掉落 privat */
