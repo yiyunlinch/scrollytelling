@@ -988,6 +988,39 @@ body.page6-plus #page6 .schild-wrap {
   z-index: 10;
 }
 
+.volume-toggle {
+  position: fixed;
+  right: 4%;
+  bottom: 6%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  z-index: 50000;
+}
+
+.volume-toggle:hover {
+  background: rgba(0,0,0,0.6);
+  transform: scale(1.05);
+}
+
+.volume-toggle:active {
+  transform: scale(0.96);
+}
+
+.volume-toggle.muted {
+  border-color: #ff8f8f;
+}
+
 /* 第1页标题 Hier war ich einmal */
 .title-fixed {
   position: absolute;

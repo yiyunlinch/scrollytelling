@@ -15,9 +15,81 @@ let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主�
 let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
 let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
 let page2DownGuardUntil = 0; // 第2页向下滑动后，短暂阻止回弹回 Maxi
+let kinderAudio = null;
+let kinderFadeRAF = null;
+let kinderTargetVolume = 0;
+let kinderPlaying = false;
+let kinderShouldPlay = false;
+let kinderPlayPending = false;
 
 // Page5 文字/对白显隐
 let setPage5ContentVisibility = () => {};
+function stopKinderFade() {
+  if (kinderFadeRAF) {
+    cancelAnimationFrame(kinderFadeRAF);
+    kinderFadeRAF = null;
+  }
+}
+
+function fadeKinder(toVolume, duration = 800, stopAfter = false) {
+  if (!kinderAudio) return;
+  stopKinderFade();
+  const from = kinderAudio.volume;
+  const to = Math.max(0, Math.min(1, toVolume));
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const v = from + (to - from) * t;
+    kinderAudio.volume = v;
+    if (t < 1) {
+      kinderFadeRAF = requestAnimationFrame(step);
+    } else {
+      kinderFadeRAF = null;
+      if (stopAfter) {
+        kinderAudio.pause();
+        kinderAudio.currentTime = 0;
+        kinderPlaying = false;
+      }
+    }
+  }
+  kinderFadeRAF = requestAnimationFrame(step);
+}
+
+function startKinderAudio() {
+  if (!kinderAudio) return;
+  kinderShouldPlay = true;
+  stopKinderFade();
+  try {
+    kinderAudio.muted = false;
+    if (!kinderPlaying) {
+      kinderAudio.currentTime = 0;
+      kinderAudio.loop = true;
+      kinderAudio.play().then(() => {
+        kinderPlaying = true;
+        kinderPlayPending = false;
+      }).catch(() => {
+        kinderPlayPending = true; // 等待用户手势再尝试
+      });
+    }
+  } catch (e) {
+    console.warn('kinder audio play failed', e);
+  }
+  kinderAudio.volume = 0;
+  fadeKinder(1, 1200);
+}
+
+function fadeOutKinder() {
+  if (!kinderAudio || !kinderPlaying) return;
+  fadeKinder(0, 1200, true);
+  kinderShouldPlay = false;
+  kinderPlayPending = false;
+}
+
+function ensureKinderPlaybackIfNeeded() {
+  if (kinderShouldPlay && (!kinderPlaying || kinderPlayPending)) {
+    startKinderAudio();
+  }
+}
 
 function startHeroOnce() {
   if (heroStarted) return;
@@ -28,6 +100,7 @@ function startHeroOnce() {
 window.addEventListener('DOMContentLoaded', () => {
   trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
   allPages   = Array.from(document.querySelectorAll('.page'));
+  kinderAudio = document.getElementById('kinderAudio');
   const page3Elem = document.getElementById('page3');
   const track = document.querySelector('.cover-h-track');
   const TRACK_COUNT = trackPages.length;
@@ -283,6 +356,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const eimal = document.getElementById('eimalOverlay');
     if (eimal) {
       eimal.classList.toggle('show', idx === 6);
+    }
+    if (idx === 1) {
+      startKinderAudio(); // 进入第2页开始淡入
+      setTimeout(ensureKinderPlaybackIfNeeded, 100); // 再尝试一次
+    }
+    if (idx >= 3 || idx < 1) {
+      fadeOutKinder(); // 离开第3页后淡出，或回到第一页前淡出
     }
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
@@ -813,7 +893,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let running = false;
   let dir = -1; // -1: right -> left, 1: left -> right
   let x = 0;
-  const SPEED = 7.5;  // 水平移动速度（恢复原来的节奏）
+  const SPEED_PPS = 450;  // px/s，时间驱动的速度
   const MARGIN = 80;  // 保持原外侧缓冲
   const BASE_SCALE = 5; // 与 CSS 初始 scale 保持一致
   let firstRun = true;
@@ -821,6 +901,7 @@ window.addEventListener('DOMContentLoaded', () => {
   let activePage = false;
   let leaving = false; // 离开第5页时继续跑到出屏后隐藏
   let leaveStart = 0;
+  let lastTime = 0;
   const EXIT_TIMEOUT = 2000; // 最长离场时间
 
   function bounds() {
@@ -847,10 +928,13 @@ window.addEventListener('DOMContentLoaded', () => {
     applyTransform();
   }
 
-  function step() {
+  function step(now) {
     if (!running) return;
+    if (!lastTime) lastTime = now;
+    const dt = (now - lastTime) / 1000; // 秒
+    lastTime = now;
     const { left, right } = bounds();
-    x += dir * SPEED;
+    x += dir * SPEED_PPS * dt;
     if (dir === -1 && x <= left) {
       resetSide(1);  // 到左侧后反转，改为左->右
     } else if (dir === 1 && x >= right) {
@@ -883,6 +967,7 @@ window.addEventListener('DOMContentLoaded', () => {
       firstRun = true;
       flipSign = 1;
       resetSide(-1); // 进入时从右往左
+      lastTime = 0;
       requestAnimationFrame(step);
     } else if (!shouldBeActive && activePage) {
       // 离开时保持当前方向跑到出屏再隐藏
@@ -891,6 +976,7 @@ window.addEventListener('DOMContentLoaded', () => {
       running = true;
       digger.style.display = 'block';
       leaveStart = performance.now();
+      lastTime = 0;
       requestAnimationFrame(step);
     }
   }
@@ -1315,6 +1401,53 @@ document.addEventListener('DOMContentLoaded', () => {
   clickToggle('clickIconFinal', 'finalText');
   clickToggle('clickIconFinal', 'page7Yiyun');
 });
+
+/* 全局静音/开音量开关 */
+(function initVolumeToggle() {
+  const btn = document.getElementById('volumeToggle');
+  if (!btn) return;
+  const audios = Array.from(document.querySelectorAll('audio'));
+  const videos = Array.from(document.querySelectorAll('video'));
+  // 确保视频保持静音，避免自动播放被拦截
+  videos.forEach(v => v.muted = true);
+  let muted = false; // 默认开启声音（仅控制音频）
+
+  function applyMuted() {
+    audios.forEach(a => {
+      a.muted = muted;
+      if (!muted && a.volume === 0) a.volume = 1;
+    });
+    // 视频始终保持静音
+    videos.forEach(v => v.muted = true);
+    btn.classList.toggle('muted', muted);
+    btn.textContent = muted ? '🔇' : '🔊';
+    btn.setAttribute('aria-label', muted ? '静音' : '开音量');
+    btn.setAttribute('aria-pressed', (!muted).toString());
+  }
+
+  btn.addEventListener('click', () => {
+    muted = !muted;
+    applyMuted();
+    if (!muted && kinderShouldPlay) {
+      startKinderAudio(); // 用户点击解锁后再尝试播放
+      tryPlayPendingKinder(); // 尝试触发因策略阻止的播放
+    } else if (muted) {
+      fadeOutKinder(); // 关音时顺便淡出 kinder
+    }
+  });
+
+  applyMuted();
+})();
+
+// 如果因浏览器策略阻止播放，等待下一次用户交互再尝试
+function tryPlayPendingKinder() {
+  if (!kinderAudio || !kinderPlayPending || !kinderShouldPlay) return;
+  startKinderAudio();
+}
+['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
+  window.addEventListener(evt, tryPlayPendingKinder, { passive: true });
+});
+window.addEventListener('wheel', tryPlayPendingKinder, { passive: true });
 
 /* 第6页：pole 显隐（按页） */
 (function initPoleOnPage6() {
