@@ -1313,6 +1313,7 @@ function clickToggle(iconId, targetId) {
 /* === 最后一页绑定：手 ↔ 文字 === */
 document.addEventListener('DOMContentLoaded', () => {
   clickToggle('clickIconFinal', 'finalText');
+  clickToggle('clickIconFinal', 'page7Yiyun');
 });
 
 /* 第6页：pole 显隐（按页） */

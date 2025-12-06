@@ -323,16 +323,22 @@ body {
 }
 
 #page7 .text-group-right {
-  bottom: 70%;
-  right: 12%;
-  width: clamp(180px, 32vw, 420px);
+  bottom: 42%;               /* 进一步上移 */
+  right: 65%;                /* 进一步靠左 */
+  width: clamp(160px, 28vw, 360px);
   font-size: inherit;
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
 #page7 .page7-yiyun-img {
   display: block;
   width: 100%;
   height: auto;
+}
+
+#page7 #page7Yiyun.show {
+  opacity: 1;
 }
 
 /* 第5页文本层级提升 */
