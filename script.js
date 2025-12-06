@@ -115,6 +115,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const page3Elem = document.getElementById('page3');
   const track = document.querySelector('.cover-h-track');
   const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
+  let seenFromSession = false;
+  try {
+    seenFromSession = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
+  } catch (err) {
+    seenFromSession = false;
+  }
 
   /* === 全局页面导航（仅前2页横滑） === */
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
@@ -147,8 +153,10 @@ window.addEventListener('DOMContentLoaded', () => {
     globalScrollLockUntil = performance.now() + 650;
   }
 
-  // 初始定位第一页
-  goToPage(0, false);
+  // 初始定位第一页（仅在未看过首屏时强制）
+  if (!seenFromSession) {
+    goToPage(0, false);
+  }
 
   // 如果刷新时停在第2页或更下方（例如第3页），直接触发 hero，避免刷新后消失
   function maybeStartHeroFromScroll() {
@@ -172,13 +180,6 @@ window.addEventListener('DOMContentLoaded', () => {
       hasLeftMaxiPage = true;
       try {
         sessionStorage.setItem(MAXI_SEEN_KEY, '1');
-        sessionStorage.setItem('lastPageIdx', String(idx));
-      } catch (err) {
-        console.warn('sessionStorage set failed', err);
-      }
-    } else {
-      try {
-        sessionStorage.setItem('lastPageIdx', '0');
       } catch (err) {
         console.warn('sessionStorage set failed', err);
       }
@@ -277,8 +278,7 @@ window.addEventListener('DOMContentLoaded', () => {
     })();
     try {
       const seen = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
-      const lastIdx = parseInt(sessionStorage.getItem('lastPageIdx') || '0', 10);
-      if (seen && lastIdx > 0 && !initialOnPage1) {
+      if (seen && !initialOnPage1) {
         hasLeftMaxiPage = true;
         eyeStage = 3;
         revealBase();
