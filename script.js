@@ -23,6 +23,15 @@ let kinderShouldPlay = false;
 let kinderPlayPending = false;
 let hasLeftMaxiPage = false; // 是否曾离开过第一页（Maxi 层）
 const MAXI_SEEN_KEY = 'maxiSeen'; // session 标记：是否离开过第1页
+const setViewportHeightVar = () => {
+  const vh = (window.innerHeight || document.documentElement.clientHeight || 0) * 0.01;
+  if (vh > 0) {
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+};
+setViewportHeightVar();
+window.addEventListener('resize', setViewportHeightVar, { passive: true });
+window.addEventListener('orientationchange', setViewportHeightVar, { passive: true });
 
 // Page5 文字/对白显隐
 let setPage5ContentVisibility = () => {};
@@ -211,7 +220,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const visitsText = document.getElementById('visitsText');
     const page1 = document.getElementById('page1');
     const stack = page1 ? page1.querySelector('.eye-interaction-container') : null;
-    let stackHiddenAfterSeen = false;
 
     function showMid() {
       if (topLayer) topLayer.style.opacity = '0';
@@ -243,10 +251,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function revealBase() {
       // 强制露出 Maxi5 背景（从下往上回到第一页时用）
-      if (stackHiddenAfterSeen && stack) {
-        stack.style.visibility = 'visible';
-        stackHiddenAfterSeen = false;
-      }
       if (topLayer) topLayer.style.opacity = '0';
       if (midLayer) {
         midLayer.style.opacity = '0';
@@ -262,23 +266,29 @@ window.addEventListener('DOMContentLoaded', () => {
       }, { once: true });
     }
 
-    // 首次渲染：根据 session 记录决定是否跳过遮罩
+    // 首次渲染：根据 session 记录决定是否跳过遮罩；若当前就在 page1，则仍保留遮罩
+    const initialOnPage1 = (() => {
+      if (!page1) return true;
+      const rect = page1.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      const mostlyVisible = rect.top <= 0 && rect.bottom >= vh * 0.8;
+      const nearTop = (window.scrollY || window.pageYOffset || 0) < 10;
+      return mostlyVisible && nearTop;
+    })();
     try {
       const seen = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
       const lastIdx = parseInt(sessionStorage.getItem('lastPageIdx') || '0', 10);
-      if (seen && lastIdx > 0) {
+      if (seen && lastIdx > 0 && !initialOnPage1) {
         hasLeftMaxiPage = true;
         eyeStage = 3;
         revealBase();
-        if (stack) {
-          stack.style.visibility = 'hidden'; // 刷新停在下方页时隐藏首屏遮罩，避免闪屏
-          stackHiddenAfterSeen = true;
-        }
       } else {
-        reset(); // 首次或上次停在 page1 时保留遮罩
+        reset(); // 首次或当前停在 page1 时保留遮罩
+        if (stack) stack.style.visibility = 'visible';
       }
     } catch (err) {
       reset();
+      if (stack) stack.style.visibility = 'visible';
     }
     return { showMid, dissolveMid, showText, reset, revealBase };
   })();
