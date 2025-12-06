@@ -52,7 +52,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const target = trackPages[idx];
     const globalIdx = allPages.indexOf(target);
     if (track) {
-      track.style.transition = animate ? 'transform 0.8s ease' : 'none';
+      track.style.transition = animate ? 'transform 1.5s ease' : 'none';
       track.style.transform = `translateY(${-idx * 100}vh)`; // 竖向滑动
     }
     if (globalIdx >= 0) {
@@ -1056,11 +1056,11 @@ try {
   let manualLoop = null;
   const baseX = 50;     // 正常位置
   const exitX = 170;    // 向右离场的位置（超出视口）
-  const baseY = 60;
+  const baseY = 80;     // 垂直位置更低一些
   const EXIT_START = 0.0; // 刚进入第4页就开始离场
   const EXIT_END   = 1.00; // 离场区间再拉长，离场更慢
   const ENTRY_FROM = -30;  // 初次出现时从左侧进入
-  const ENTRY_DURATION = 2200; // ms，更慢的入场
+  const ENTRY_DURATION = 3500; // ms，更慢的入场
   const textFrames = [
     { from: 0.0,  src: './images/text/herosheep/besuche.png', alt: 'Besuche' },
     { from: 0.22, src: './images/text/herosheep/jeder.png',   alt: 'Jeder' },
