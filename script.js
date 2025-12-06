@@ -733,9 +733,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const TARGET_BIAS    = 0.08;   // 向目标点的慢慢靠近
 
   // 内场边距（避免贴边）：左右 22%，上 5%，下 40%
-  const PAD_X_FRAC      = 0.30;  // 左右各 30%
+  const PAD_X_FRAC      = 0.18;  // 左右各 18%（扩大可用宽度，减少集中在右侧）
   const PAD_Y_TOP_FRAC  = 0.05;
-  const PAD_Y_BOT_FRAC  = 0.40;
+  const PAD_Y_BOT_FRAC  = 0.25;  // 底部预留减少，扩大垂直活动区
 
   const rand  = (a, b) => a + Math.random() * (b - a);
 
