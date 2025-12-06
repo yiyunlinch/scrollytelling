@@ -178,24 +178,25 @@ body {
 .cover-transition-wrapper {
   position: relative;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  height: auto;        /* 允许内容自然撑开 */
+  overflow: visible;   /* 正常竖向流动 */
   z-index: 4000; /* 确保第1/2页层级高于后续页背景 */
 }
 .cover-h-row,
 .cover-h-sticky {
   position: relative;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
 }
 .cover-h-track {
   display: flex;
   flex-direction: column;        /* 改为竖向堆叠 */
   width: 100%;
-  height: calc(100vh * 2);       /* 两屏高度 */
-  will-change: transform;
-  transition: transform 0.45s ease;
+  height: auto;                  /* 自然高度 */
+  will-change: auto;
+  transition: none;
+  transform: none !important;
 }
 .cover-h-track .page {
   flex: 0 0 100vh;               /* 每屏占满视口高度 */

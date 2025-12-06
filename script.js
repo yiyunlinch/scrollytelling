@@ -105,7 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
   kinderAudio = document.getElementById('kinderAudio');
   const page3Elem = document.getElementById('page3');
   const track = document.querySelector('.cover-h-track');
-  const TRACK_COUNT = trackPages.length;
+  const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
 
   /* === 全局页面导航（仅前2页横滑） === */
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
@@ -123,16 +123,17 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function goToPage(idx, animate = true) {
-    idx = clamp(idx, 0, TRACK_COUNT - 1);
-    const target = trackPages[idx];
-    const globalIdx = allPages.indexOf(target);
-    if (track) {
-      track.style.transition = animate ? 'transform 1.5s ease' : 'none';
-      track.style.transform = `translateY(${-idx * 100}vh)`; // 竖向滑动
+    idx = clamp(idx, 0, allPages.length - 1);
+    const target = allPages[idx];
+    if (!target) return;
+    try {
+      target.scrollIntoView({ behavior: animate ? 'smooth' : 'auto', block: 'start' });
+    } catch (err) {
+      // 回退：不支持平滑滚动的环境直接设置
+      const top = target.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top, behavior: animate ? 'smooth' : 'auto' });
     }
-    if (globalIdx >= 0) {
-      dispatchPageChange(globalIdx);
-    }
+    dispatchPageChange(idx);
     // 进入新页面后添加冷却，防止连续翻页
     globalScrollLockUntil = performance.now() + 650;
   }
@@ -163,6 +164,13 @@ window.addEventListener('DOMContentLoaded', () => {
       hasLeftMaxiPage = true;
       try {
         sessionStorage.setItem(MAXI_SEEN_KEY, '1');
+        sessionStorage.setItem('lastPageIdx', String(idx));
+      } catch (err) {
+        console.warn('sessionStorage set failed', err);
+      }
+    } else {
+      try {
+        sessionStorage.setItem('lastPageIdx', '0');
       } catch (err) {
         console.warn('sessionStorage set failed', err);
       }
@@ -177,6 +185,20 @@ window.addEventListener('DOMContentLoaded', () => {
       eyeLayers.revealBase();
     }
   });
+
+  // 滚动时补发文案解锁，保证上拉回到 page2/3 能看到 besuche/jeder
+  window.addEventListener('scroll', () => {
+    if (unlockOnScroll) unlockOnScroll();
+    if (ensureManualByVisibility) ensureManualByVisibility();
+    // 若已离开过首屏且当前回到 page1，可见时确保露出 Maxi5 而不是 sheepblack
+    const page1 = document.getElementById('page1');
+    if (page1 && hasLeftMaxiPage && eyeLayers && typeof eyeLayers.revealBase === 'function') {
+      if (isVisibleEnough(page1, 0.4)) {
+        eyeStage = 3;
+        eyeLayers.revealBase();
+      }
+    }
+  }, { passive: true });
 
   /* ====== 第1页：三张图分三次下拉 ====== */
   const eyeLayers = (() => {
@@ -230,15 +252,16 @@ window.addEventListener('DOMContentLoaded', () => {
       }, { once: true });
     }
 
-    // 首次渲染：如果 session 中记录已离开过第1页，则直接露出 Maxi 背景
+    // 首次渲染：根据 session 记录决定是否跳过遮罩
     try {
       const seen = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
-      if (seen) {
+      const lastIdx = parseInt(sessionStorage.getItem('lastPageIdx') || '0', 10);
+      if (seen && lastIdx > 0) {
         hasLeftMaxiPage = true;
         eyeStage = 3;
         revealBase();
       } else {
-        reset();
+        reset(); // 首次或上次停在 page1 时保留遮罩
       }
     } catch (err) {
       reset();
@@ -478,17 +501,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const stillCooling = now < Math.max(eyeLockUntil, privatLockUntil, globalScrollLockUntil);
     const inTrack = currentPageIndex < TRACK_COUNT;
     const onPage34 = currentPageIndex >= 2 && currentPageIndex <= 3;
-    const onLastTrackPage = inTrack && currentPageIndex === TRACK_COUNT - 1;
-
-    // 从第2页向下滑时会设置一个短暂的“反弹保护”，避免惯性小幅上滑把视图送回 Maxi5
-    if (onLastTrackPage) {
-      if (dir > 0) {
-        page2DownGuardUntil = Math.max(page2DownGuardUntil, now + 750);
-      } else if (dir < 0 && now < page2DownGuardUntil) {
-        e.preventDefault();
-        return;
-      }
-    }
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
       if (stillCooling) {
@@ -1180,6 +1192,7 @@ try {
   let heroTextTimer = null;
   let manualOverride = false; // 第2/3页由滚动控制文案
   let manualLoop = null;
+  let ensureManualByVisibility = () => {}; // 可视驱动的手动模式
   const baseX = 50;     // 正常位置
   const exitX = 170;    // 向右离场的位置（超出视口）
   const baseY = 80;     // 垂直位置更低一些
@@ -1195,8 +1208,22 @@ try {
   ];
   let currentTextFrame = -1;
   let autoAdvanceTimer = null;
+  let unlockOnScroll = () => {}; // 占位，scroll 时补发解锁
 
   const clamp01 = v => Math.max(0, Math.min(1, v));
+
+  // 判断元素是否可见到一定比例
+  function isVisibleEnough(el, threshold = 0.35) {
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const vw = window.innerWidth || 1;
+    if (rect.bottom <= 0 || rect.top >= vh) return false;
+    if (rect.right <= 0 || rect.left >= vw) return false;
+    const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+    const visibleRatio = visibleHeight / Math.max(1, rect.height);
+    return visibleRatio >= threshold;
+  }
 
   function page4Progress() {
     if (!page4) return 0;
@@ -1312,7 +1339,14 @@ try {
       stopManualLoop();
       return;
     }
-    if (currentPageIndex === 1) {
+    // 若 currentPageIndex 未切回 1/2，但页面可视度显示我们确实在 page2/3，上拉时也能显示气泡
+    let manualIdx = currentPageIndex;
+    if (manualIdx !== 1 && manualIdx !== 2) {
+      if (isVisibleEnough(page2, 0.28)) manualIdx = 1;
+      else if (isVisibleEnough(page3, 0.28)) manualIdx = 2;
+    }
+
+    if (manualIdx === 1) {
       const p = page2Progress();
       if (!textReady) {
         setFrame(-1);
@@ -1323,7 +1357,7 @@ try {
       } else {
         setFrame(1); // 1%-90% 显示 jeder
       }
-    } else if (currentPageIndex === 2) {
+    } else if (manualIdx === 2) {
       const p = page3Progress();
       if (!textReady) {
         setFrame(-1);
@@ -1337,6 +1371,35 @@ try {
     }
     manualLoop = requestAnimationFrame(tickManualText);
   }
+
+  // 在回到第2/3页并滚动时，如果文案尚未解锁，则直接解锁，保证 besuche/jeder 出现
+  unlockOnScroll = () => {
+    if (textUnlocked) return;
+    if (!heroStarted) return;
+    const onP2 = currentPageIndex === 1 || isVisibleEnough(page2, 0.25);
+    const onP3 = currentPageIndex === 2 || isVisibleEnough(page3, 0.25);
+    if (onP2 || onP3) {
+      textReady = true;
+      textUnlocked = true;
+      manualOverride = true;
+      if (manualOverride && !manualLoop) {
+        tickManualText();
+      }
+    }
+  };
+
+  // 根据可视度直接进入手动模式并更新文案，避免 pagechange 未触发时缺失气泡
+  ensureManualByVisibility = () => {
+    const p2Visible = isVisibleEnough(page2, 0.18);
+    const p3Visible = isVisibleEnough(page3, 0.18);
+    if (!p2Visible && !p3Visible) return;
+    manualOverride = true;
+    textReady = true;
+    textUnlocked = true;
+    if (!manualLoop) {
+      tickManualText();
+    }
+  };
 
   function step() {
     if (!running) return;
