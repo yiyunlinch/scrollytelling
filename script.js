@@ -766,6 +766,17 @@ function playPageAudio(idx) {
     // 其他页保持当前状态
   });
 
+  // 第6页：显示点击手势提示
+  (function initPage6ClickIcon() {
+    const icon = document.getElementById('clickIconPage6');
+    if (!icon) return;
+    const update = idx => {
+      icon.classList.toggle('is-hidden', idx !== 5);
+    };
+    window.addEventListener('pagechange', e => update(e.detail.index));
+    update(currentPageIndex);
+  })();
+
   // Wheel 导航 + 首屏分阶段
   const EYE_COOLDOWN = 650;
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
