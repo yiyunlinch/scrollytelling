@@ -69,7 +69,7 @@ Der gesamte Entwicklungsprozess dauerte ca. 3 Monate in Wochenend und führte sc
 ### Page 1
 - Clikcing the arrow-down button doesn't result in the page going down.  Better using finger icon than using the arrow-down if the page doesn't go down.
 - User cannot click everywhere.  
-- Cannot go back to start of page 1
+- Cannot go back to start of page 1 unless refresh
 - The second click's transition is a bit weird,  first slow then super quickly the whole page image appeared.
 - Clicking the sound button gives no sound.
 

@@ -264,20 +264,26 @@ function startHeroOnce() {
   window.dispatchEvent(new Event('hero-start'));
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
-  allPages   = Array.from(document.querySelectorAll('.page'));
-  kinderAudio = document.getElementById('kinderAudio');
-  sheepAudio  = document.getElementById('sheepAudio');
-  noiceAudio  = document.getElementById('noiceAudio');
-  birdAudio   = document.getElementById('birdAudio');
-  const page3Elem = document.getElementById('page3');
-  const track = document.querySelector('.cover-h-track');
-  const page1 = document.getElementById('page1');
-  const page2 = document.getElementById('page2');
-  const page3 = document.getElementById('page3');
-  const page4 = document.getElementById('page4');
-  const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
+  window.addEventListener('DOMContentLoaded', () => {
+    trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
+    allPages   = Array.from(document.querySelectorAll('.page'));
+    kinderAudio = document.getElementById('kinderAudio');
+    sheepAudio  = document.getElementById('sheepAudio');
+    noiceAudio  = document.getElementById('noiceAudio');
+    birdAudio   = document.getElementById('birdAudio');
+    const page3Elem = document.getElementById('page3');
+    const track = document.querySelector('.cover-h-track');
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const page3 = document.getElementById('page3');
+    const page4 = document.getElementById('page4');
+    const page1ClickIcon = document.getElementById('clickIconPage1');
+    const hidePage1ClickIcon = () => {
+      if (page1ClickIcon) {
+        page1ClickIcon.classList.add('is-hidden');
+      }
+    };
+    const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
   let seenFromSession = false;
   try {
     seenFromSession = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
@@ -752,6 +758,48 @@ function playPageAudio(idx) {
     globalScrollLockUntil = Math.max(globalScrollLockUntil, lock);
   }
 
+  // 首屏：点击（整屏或手势提示）也能按步骤睁眼
+  (function initPage1ClickToOpenEye() {
+    const page1 = document.getElementById('page1');
+    const clickIcon = document.getElementById('clickIconPage1');
+    if (!page1) return;
+
+    const tryAdvanceEye = () => {
+      if (currentPageIndex !== 0) return;
+      const now = performance.now();
+      const cooling = now < Math.max(eyeLockUntil, globalScrollLockUntil);
+      if (cooling) return;
+
+      if (eyeStage === 0) {
+        eyeStage = 1;
+        eyeLayers.showMid();
+        setEyeCooldown();
+        return;
+      }
+      if (eyeStage === 1) {
+        eyeStage = 2;
+        eyeLayers.revealBase();
+        hidePage1ClickIcon();
+        setEyeCooldown(HERO_REVEAL_COOLDOWN); // 留一点时间看 Maxi5
+        return;
+      }
+      if (eyeStage === 2) {
+        eyeStage = 3;
+        setEyeCooldown();
+        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
+        goToPage(1);
+      }
+    };
+
+    page1.addEventListener('click', tryAdvanceEye);
+    if (clickIcon) {
+      clickIcon.addEventListener('click', e => {
+        e.stopPropagation();
+        tryAdvanceEye();
+      });
+    }
+  })();
+
   function isPage3GateActive() {
     if (!page3Elem) return false;
     const rect = page3Elem.getBoundingClientRect();
@@ -788,9 +836,8 @@ function playPageAudio(idx) {
       if (eyeStage === 1) {
         e.preventDefault();
         eyeStage = 2;
-        eyeLayers.dissolveMid();
-        eyeLayers.showText();
-        setEyeCooldown(HERO_REVEAL_COOLDOWN);
+        eyeLayers.revealBase();
+        setEyeCooldown(HERO_REVEAL_COOLDOWN); // 留一点时间看 Maxi5
         return;
       }
       if (eyeStage === 2) {
@@ -1156,8 +1203,8 @@ function playPageAudio(idx) {
           }
           if (eyeStage === 1) {
             eyeStage = 2;
-            eyeLayers.dissolveMid();
-            eyeLayers.showText();
+            eyeLayers.revealBase();
+            hidePage1ClickIcon();
             setEyeCooldown(HERO_REVEAL_COOLDOWN);
             return;
           }
