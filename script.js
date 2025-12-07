@@ -8,7 +8,7 @@ let heroStarted = false; // 防止重复启动 hero
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已通过
 let hold34LockUntil = 0;
-let privatStage = 0;   // page5-6 过渡：0 未触发，1 预冷却，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行
+let privatStage = 0;   // page5-6 过渡：0 未触发，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行，6 完成
 let privatLockUntil = 0;
 let kinderVanish = () => {}; // 第6页孩童下落隐藏
 let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
@@ -734,6 +734,12 @@ function playPageAudio(idx) {
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
       privatDrop.reset();
+      // 若从第4页点击箭头直达第5页，直接触发掉落一次
+      if (privatStage < 2 && performance.now() >= Math.max(privatLockUntil, globalScrollLockUntil)) {
+        privatStage = 2;
+        privatDrop.drop();
+        setPrivatCooldown(300);
+      }
       buildingAnim.reset();
     } else if (idx <= 3) {
       privatStage = 0; // 上拉到第4页及以上时清零并收起
@@ -764,7 +770,7 @@ function playPageAudio(idx) {
   const EYE_COOLDOWN = 650;
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
-  const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
+  const PRIVAT_COOLDOWN = 300; // privat/盖楼相关冷却，更短
   const BUILD_COOLDOWN = 360; // 盖楼切换冷却（略放慢）
 
   function setEyeCooldown(extra = 0) {
@@ -913,22 +919,17 @@ function playPageAudio(idx) {
           hold34Stage = 2;
         }
       }
-      // page5 掉落 privat：先冷却，再掉落，中段停下
+      // page5 掉落 privat：一次下滚即掉落，冷却更短
       if (currentPageIndex === 4 && dir > 0) {
         if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
           e.preventDefault();
           return;
         }
-        if (privatStage === 0) {
-          e.preventDefault();
-          privatStage = 1;
-          setPrivatCooldown(500);
-          return;
-        } else if (privatStage === 1) {
+        if (privatStage < 2) {
           e.preventDefault();
           privatStage = 2;
           privatDrop.drop();
-          setPrivatCooldown(600); // 掉落后稍作停顿
+          setPrivatCooldown(300); // 短冷却防连触
           return;
         }
       }
