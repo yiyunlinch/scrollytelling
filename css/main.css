@@ -1032,8 +1032,8 @@ body.page6-plus #page6 .schild-wrap {
 
 .click-pos-bottom-center {
   position: absolute;
-  left: 40%;
-  bottom: 18%;
+  left: 35%;
+  bottom: 40%;
   top: auto;
   right: auto;
   --click-translate-x: -50%;
