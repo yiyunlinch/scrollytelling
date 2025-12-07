@@ -1673,21 +1673,19 @@ try {
       const p = page2Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p < 0.01) {
-        setFrame(0); // 仅在前 1% 显示 besuche
-      } else if (p >= 0.90) {
-        setFrame(2); // 90% 起出现 niemand（无空窗）
+      } else if (p < 0.005) {
+        setFrame(0); // 仅在前 0.5% 显示 besuche，更早切到 jeder
       } else {
-        setFrame(1); // 1%-90% 显示 jeder
+        setFrame(1); // 其余均显示 jeder，持续到进入第3页
       }
     } else if (manualIdx === 2) {
       const p = page3Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p >= 0.01) {
-        setFrame(3); // 第3页显示 Wir
+      } else if (p < 0.05) {
+        setFrame(1); // 第3页前 5% 保持 jeder，再切换
       } else {
-        setFrame(-1); // 其他区间空
+        setFrame(3); // 第3页显示 Wir
       }
     } else {
       setFrame(-1);
