@@ -763,9 +763,6 @@ body.page6-plus #page6 .schild-wrap {
   pointer-events: none;
   z-index: 2500; /* 高于背景与 privat，低于 Kinder/对白 */
 }
-#page6 .house-video-wrap {
-  display: none !important; /* 隐藏原建筑层 */
-}
 .house-video-wrap.visible {
   opacity: 1;
 }

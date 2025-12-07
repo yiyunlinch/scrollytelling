@@ -749,7 +749,7 @@ function playPageAudio(idx) {
     if (idx === 5) {
       privatStage = Math.max(privatStage, 2);
       kinderForceVisible = false;
-      buildingAnim.setIndex(0); // 默认显示第一层
+      buildingAnim.reset(); // 初始不显示建筑，改为点击触发
       setPage5ContentVisibility(false); // 进入第6页隐藏 page5 内容
     } else {
       buildingAnim.reset();
@@ -770,9 +770,45 @@ function playPageAudio(idx) {
   (function initPage6ClickIcon() {
     const icon = document.getElementById('clickIconPage6');
     if (!icon) return;
+    let clickStep = 0;
+    let autoAdvanceTimer = null;
     const update = idx => {
       icon.classList.toggle('is-hidden', idx !== 5);
+      if (idx !== 5) {
+        clickStep = 0;
+        if (autoAdvanceTimer) {
+          clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = null;
+        }
+      }
     };
+    icon.addEventListener('click', () => {
+      if (currentPageIndex !== 5) return;
+      if (typeof buildingAnim?.setIndex === 'function') {
+        if (autoAdvanceTimer) {
+          clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = null;
+        }
+        const wrap = document.getElementById('houseVideoWrap');
+        if (wrap) {
+          wrap.classList.add('visible');
+          wrap.style.opacity = '1';
+        }
+        if (clickStep === 2 && buildingAnim.max >= 3) {
+          // 第3次点击：先显示第3层，再快速推到第4层
+          buildingAnim.setIndex(2);
+          autoAdvanceTimer = setTimeout(() => {
+            buildingAnim.setIndex(3);
+            autoAdvanceTimer = null;
+          }, 140);
+          clickStep = 4;
+          return;
+        }
+        const nextIdx = Math.min(clickStep, buildingAnim.max);
+        buildingAnim.setIndex(nextIdx);
+        clickStep = Math.min(clickStep + 1, buildingAnim.max + 1);
+      }
+    });
     window.addEventListener('pagechange', e => update(e.detail.index));
     update(currentPageIndex);
   })();
@@ -943,76 +979,6 @@ function playPageAudio(idx) {
           setPrivatCooldown(300); // 短冷却防连触
           return;
         }
-      }
-      // page6 -> page7 过渡：掉落完成后盖楼、再消失 Kinder，最后才放行
-      if (currentPageIndex === 5 && dir > 0) {
-        if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
-          e.preventDefault();
-          return;
-        }
-        if (privatStage < 2) {
-          // 如果跳过了 page5，强制视为已掉落
-          privatStage = 2;
-        }
-        if (privatStage === 2) {
-          // 初到第6页，开始盖楼第一层已显示，滚一次才进入盖楼节奏
-          if (stillCooling) {
-            e.preventDefault();
-            return;
-          }
-          e.preventDefault();
-          privatStage = 3;
-          setBuildCooldown(280);
-          return;
-        } else if (privatStage === 3) {
-          // 盖楼：每次向下滚增加一层，直到最顶层
-          if (buildingIndex < buildingAnim.max) {
-            e.preventDefault();
-            buildingAnim.step(1);
-            setBuildCooldown(280);
-            return;
-          } else {
-            // 已经到最高层，进入下一阶段
-            e.preventDefault();
-            privatStage = 4;
-            return;
-          }
-        } else if (privatStage === 4) {
-          // 让孩童快速下落消失，仍留在第6页
-          if (stillCooling) {
-            e.preventDefault();
-            return;
-          }
-          e.preventDefault();
-          privatStage = 5;
-          kinderForceVisible = false;
-          kinderLockedHidden = true;
-          kinderVanish();
-          setPrivatCooldown(320); // 顶层后仅一次短冷却
-          return;
-        } else if (privatStage === 5) {
-          // 盖楼完成 & 孩童消失后，下一次滚动才能放行
-          if (stillCooling) {
-            e.preventDefault();
-            return;
-          }
-          // 释放到下一页，标记完成（楼层保持在第6页）
-          privatStage = 6;
-        }
-      }
-      // page6 向上滚动：一层层拆楼，回到顶部才允许离开
-      if (currentPageIndex === 5 && dir < 0) {
-        if (buildingIndex >= 0) {
-          e.preventDefault();
-          buildingAnim.step(-1);
-          setBuildCooldown(240);
-          // 回退到无楼层时，重置阶段
-          if (buildingIndex < 0) {
-            privatStage = 2;
-          }
-          return;
-        }
-        // 没有楼层显示时，允许继续往上回到上一页
       }
       return; // 后面正常竖向滚动
     }
