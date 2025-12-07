@@ -19,11 +19,26 @@ let kinderAudio = null;
 let kinderFadeRAF = null;
 let kinderTargetVolume = 0;
 let kinderPlaying = false;
-let kinderShouldPlay = false;
+let kinderShouldPlay = false; // 仅在第2/3页播放
 let kinderPlayPending = false;
+let sheepAudio = null;
+let sheepPlaying = false;
+let sheepPlayPending = false;
+let sheepShouldPlay = false; // 仅在第7页播放
+let noiceAudio = null;
+let noicePlaying = false;
+let noicePlayPending = false;
+let noiceShouldPlay = false; // 第5-6页播放
+let birdAudio = null;
+let birdPlaying = false;
+let birdPlayPending = false;
+let birdShouldPlay = false; // 第1页播放
 let hasLeftMaxiPage = false; // 是否曾离开过第一页（Maxi 层）
 const MAXI_SEEN_KEY = 'maxiSeen'; // session 标记：是否离开过第1页
 let heroAllowCheck = () => true; // 是否允许触发 hero（基于当前可见页）
+let firstInteractionBound = false;
+let audioKickstarted = false;
+let audioMuted = true; // 跟随喇叭状态
 
 function isElementVisible(el, threshold = 0.35) {
   if (!el) return false;
@@ -80,7 +95,7 @@ function fadeKinder(toVolume, duration = 800, stopAfter = false) {
 }
 
 function startKinderAudio() {
-  if (!kinderAudio) return;
+  if (!kinderAudio || audioMuted) return;
   kinderShouldPlay = true;
   stopKinderFade();
   try {
@@ -102,17 +117,144 @@ function startKinderAudio() {
   fadeKinder(1, 1200);
 }
 
-function fadeOutKinder() {
-  if (!kinderAudio || !kinderPlaying) return;
+function fadeOutKinder(stopRequest = false) {
+  if (!kinderAudio || !kinderPlaying) {
+    if (stopRequest) {
+      kinderShouldPlay = false;
+      kinderPlayPending = false;
+    }
+    return;
+  }
   fadeKinder(0, 1200, true);
-  kinderShouldPlay = false;
-  kinderPlayPending = false;
+  if (stopRequest) {
+    kinderShouldPlay = false;
+    kinderPlayPending = false;
+  }
 }
 
 function ensureKinderPlaybackIfNeeded() {
   if (kinderShouldPlay && (!kinderPlaying || kinderPlayPending)) {
     startKinderAudio();
   }
+}
+
+function startSheepAudio() {
+  if (!sheepAudio || audioMuted) return;
+  sheepShouldPlay = true;
+  try {
+    sheepAudio.muted = false;
+    sheepAudio.loop = true;
+    if (!sheepPlaying) {
+      sheepAudio.currentTime = 0;
+      sheepAudio.play().then(() => {
+        sheepPlaying = true;
+        sheepPlayPending = false;
+      }).catch(() => {
+        sheepPlayPending = true;
+      });
+    }
+  } catch (e) {
+    console.warn('sheep audio play failed', e);
+  }
+}
+
+function stopSheepAudio() {
+  if (!sheepAudio) return;
+  sheepAudio.pause();
+  sheepAudio.currentTime = 0;
+  sheepPlaying = false;
+  sheepPlayPending = false;
+}
+
+function ensureSheepPlaybackIfNeeded() {
+  if (sheepShouldPlay && (!sheepPlaying || sheepPlayPending)) {
+    startSheepAudio();
+  }
+}
+
+function startNoiceAudio() {
+  if (!noiceAudio || audioMuted) return;
+  noiceShouldPlay = true;
+  try {
+    noiceAudio.muted = false;
+    noiceAudio.loop = true;
+    if (!noicePlaying) {
+      noiceAudio.currentTime = 0;
+      noiceAudio.play().then(() => {
+        noicePlaying = true;
+        noicePlayPending = false;
+      }).catch(() => {
+        noicePlayPending = true;
+      });
+    }
+  } catch (e) {
+    console.warn('noice audio play failed', e);
+  }
+}
+
+function stopNoiceAudio() {
+  if (!noiceAudio) return;
+  noiceAudio.pause();
+  noiceAudio.currentTime = 0;
+  noicePlaying = false;
+  noicePlayPending = false;
+}
+
+function ensureNoicePlaybackIfNeeded() {
+  if (noiceShouldPlay && (!noicePlaying || noicePlayPending)) {
+    startNoiceAudio();
+  }
+}
+
+function startBirdAudio() {
+  if (!birdAudio || audioMuted) return;
+  birdShouldPlay = true;
+  try {
+    birdAudio.muted = false;
+    birdAudio.loop = true;
+    if (!birdPlaying) {
+      birdAudio.currentTime = 0;
+      birdAudio.play().then(() => {
+        birdPlaying = true;
+        birdPlayPending = false;
+      }).catch(() => {
+        birdPlayPending = true;
+      });
+    }
+  } catch (e) {
+    console.warn('bird audio play failed', e);
+  }
+}
+
+function stopBirdAudio() {
+  if (!birdAudio) return;
+  birdAudio.pause();
+  birdAudio.currentTime = 0;
+  birdPlaying = false;
+  birdPlayPending = false;
+}
+
+function ensureBirdPlaybackIfNeeded() {
+  if (birdShouldPlay && (!birdPlaying || birdPlayPending)) {
+    startBirdAudio();
+  }
+}
+
+function tryPlayPendingBird() {
+  if (!birdAudio || !birdPlayPending || !birdShouldPlay) return;
+  startBirdAudio();
+}
+
+function kickstartAllAudio() {
+  if (audioKickstarted) return;
+  audioKickstarted = true;
+  if (kinderShouldPlay) {
+    startKinderAudio();
+    tryPlayPendingKinder();
+  }
+  ensureNoicePlaybackIfNeeded();
+  ensureSheepPlaybackIfNeeded();
+  ensureBirdPlaybackIfNeeded();
 }
 
 function startHeroOnce() {
@@ -126,6 +268,9 @@ window.addEventListener('DOMContentLoaded', () => {
   trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
   allPages   = Array.from(document.querySelectorAll('.page'));
   kinderAudio = document.getElementById('kinderAudio');
+  sheepAudio  = document.getElementById('sheepAudio');
+  noiceAudio  = document.getElementById('noiceAudio');
+  birdAudio   = document.getElementById('birdAudio');
   const page3Elem = document.getElementById('page3');
   const track = document.querySelector('.cover-h-track');
   const page1 = document.getElementById('page1');
@@ -139,6 +284,46 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch (err) {
     seenFromSession = false;
   }
+
+function requestKinderPlay() {
+  if (!kinderShouldPlay) return;
+  startKinderAudio();
+  tryPlayPendingKinder();
+}
+
+function playPageAudio(idx) {
+  // bird：第1页
+  if (idx === 0) {
+    birdShouldPlay = true;
+      startBirdAudio();
+  } else {
+    birdShouldPlay = false;
+    stopBirdAudio();
+  }
+  // kinder：用于第2/3页
+    kinderShouldPlay = (idx === 1 || idx === 2);
+    if (kinderShouldPlay) {
+      requestKinderPlay();
+    } else {
+      fadeOutKinder(true);
+    }
+    // sheep：第7页
+    if (idx === 6) {
+      sheepShouldPlay = true;
+      startSheepAudio();
+    } else {
+      sheepShouldPlay = false;
+      stopSheepAudio();
+    }
+    // noice：第5/6页
+    if (idx === 4 || idx === 5) {
+      noiceShouldPlay = true;
+      startNoiceAudio();
+    } else {
+      noiceShouldPlay = false;
+      stopNoiceAudio();
+    }
+}
 
   function findMostVisiblePageIndex() {
     const vh = window.innerHeight || 1;
@@ -176,6 +361,15 @@ window.addEventListener('DOMContentLoaded', () => {
   currentPageIndex = findMostVisiblePageIndex();
   setActive(currentPageIndex);
   document.body.classList.toggle('page6-plus', currentPageIndex >= 5);
+  // 刷新时根据当前页尝试启动对应音频
+  playPageAudio(currentPageIndex);
+  // 默认就尝试启动音频请求（若被策略拦截，后续交互再重试）
+  requestKinderPlay();
+  ensureNoicePlaybackIfNeeded();
+  ensureSheepPlaybackIfNeeded();
+  ensureBirdPlaybackIfNeeded();
+  // 尽早尝试自动播放（若被策略拦截，将在首个交互捕获后再尝试）
+  kickstartAllAudio();
 
   function goToPage(idx, animate = true) {
     idx = clamp(idx, 0, allPages.length - 1);
@@ -234,6 +428,7 @@ window.addEventListener('DOMContentLoaded', () => {
         console.warn('sessionStorage set failed', err);
       }
     }
+    playPageAudio(idx);
     // 进入前几页（含从下方往上回拉至第4/3页）都可触发 hero，保证刷新后上拉也能出现
     if (idx === 1 || idx === 2) {
       startHeroOnce();
@@ -500,7 +695,7 @@ window.addEventListener('DOMContentLoaded', () => {
       setTimeout(ensureKinderPlaybackIfNeeded, 100); // 再尝试一次
     }
     if (idx >= 3 || idx < 1) {
-      fadeOutKinder(); // 离开第3页后淡出，或回到第一页前淡出
+      fadeOutKinder(false); // 离开第3页后淡出，但保留播放意愿
     }
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
@@ -939,36 +1134,41 @@ window.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(tick);
 })();
 
-  /* ====== 第1页箭头：滚到第2页 ====== */
+  /* ====== 全局向下箭头：第1-6页显示 ====== */
   try {
     (function initArrow() {
-      const btn = $('#toPage2');
+      const btn = $('#globalDownArrow');
       if (!btn) return;
+      const updateVisibility = idx => {
+        document.body.classList.toggle('hide-arrow', idx >= 6);
+      };
+      window.addEventListener('pagechange', e => updateVisibility(e.detail.index));
+      updateVisibility(currentPageIndex);
       btn.addEventListener('click', e => {
         e.preventDefault();
-        // 点击箭头模拟首屏三次下拉：1) 露出眼睛 2) Maxi 全图 3) 才进入第2页
-        if (currentPageIndex !== 0) {
+        if (currentPageIndex === 0) {
+          // 保持首屏三步逻辑
+          if (eyeStage === 0) {
+            eyeStage = 1;
+            eyeLayers.showMid();
+            setEyeCooldown();
+            return;
+          }
+          if (eyeStage === 1) {
+            eyeStage = 2;
+            eyeLayers.dissolveMid();
+            eyeLayers.showText();
+            setEyeCooldown(HERO_REVEAL_COOLDOWN);
+            return;
+          }
+          eyeStage = 3;
+          setEyeCooldown();
+          globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
           goToPage(1);
           return;
         }
-        if (eyeStage === 0) {
-          eyeStage = 1;
-          eyeLayers.showMid();
-          setEyeCooldown();
-          return;
-        }
-        if (eyeStage === 1) {
-          eyeStage = 2;
-          eyeLayers.dissolveMid();
-          eyeLayers.showText();
-          setEyeCooldown(HERO_REVEAL_COOLDOWN);
-          return;
-        }
-        // 第三次点击放行到第2页
-        eyeStage = 3;
-        setEyeCooldown();
-        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
-        goToPage(1);
+        // 其他页直接跳下一页
+        goToPage(currentPageIndex + 1);
       });
     })();
   } catch (e) { console.error('initArrow error', e); }
@@ -1608,9 +1808,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const videos = Array.from(document.querySelectorAll('video'));
   // 确保视频保持静音，避免自动播放被拦截
   videos.forEach(v => v.muted = true);
-  let muted = false; // 默认开启声音（仅控制音频）
+  let muted = true; // 初始显示静音，点击后开启
 
   function applyMuted() {
+    audioMuted = muted;
     audios.forEach(a => {
       a.muted = muted;
       if (!muted && a.volume === 0) a.volume = 1;
@@ -1624,13 +1825,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btn.addEventListener('click', () => {
+    // 第一次点击 = 关声音；再次点击恢复
     muted = !muted;
     applyMuted();
-    if (!muted && kinderShouldPlay) {
-      startKinderAudio(); // 用户点击解锁后再尝试播放
-      tryPlayPendingKinder(); // 尝试触发因策略阻止的播放
-    } else if (muted) {
-      fadeOutKinder(); // 关音时顺便淡出 kinder
+    if (!muted) {
+      // 重新开声：按当前页规则恢复各自播放
+      playPageAudio(currentPageIndex);
+      requestKinderPlay();
+      ensureSheepPlaybackIfNeeded();
+      ensureNoicePlaybackIfNeeded();
+      ensureBirdPlaybackIfNeeded();
+    } else {
+      // 关闭声音：停止并清空播放意愿
+      fadeOutKinder(true);
+      sheepShouldPlay = false;
+      stopSheepAudio();
+      noiceShouldPlay = false;
+      stopNoiceAudio();
+      birdShouldPlay = false;
+      stopBirdAudio();
     }
   });
 
@@ -1643,9 +1856,32 @@ function tryPlayPendingKinder() {
   startKinderAudio();
 }
 ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
-  window.addEventListener(evt, tryPlayPendingKinder, { passive: true });
+  window.addEventListener(evt, () => {
+    kickstartAllAudio();
+    tryPlayPendingKinder();
+    tryPlayPendingBird();
+    ensureSheepPlaybackIfNeeded();
+    ensureNoicePlaybackIfNeeded();
+    ensureBirdPlaybackIfNeeded();
+    if (!firstInteractionBound) {
+      firstInteractionBound = true;
+      // 首次交互：按当前页规则尝试播放
+      playPageAudio(currentPageIndex);
+      requestKinderPlay();
+      ensureSheepPlaybackIfNeeded();
+      ensureNoicePlaybackIfNeeded();
+      ensureBirdPlaybackIfNeeded();
+    }
+  }, { passive: true });
 });
-window.addEventListener('wheel', tryPlayPendingKinder, { passive: true });
+window.addEventListener('wheel', () => {
+  kickstartAllAudio();
+  tryPlayPendingKinder();
+  tryPlayPendingBird();
+  ensureSheepPlaybackIfNeeded();
+  ensureNoicePlaybackIfNeeded();
+  ensureBirdPlaybackIfNeeded();
+}, { passive: true });
 
 /* 第6页：pole 显隐（按页） */
 (function initPoleOnPage6() {

@@ -213,9 +213,7 @@ body {
 
 
 
-/* 向下箭头（第1页显示，底部居中，层级最高） */
-.page1 .down-arrow { display: block; }
-.page:not(.page1) .down-arrow { display: none !important; }
+/* 向下箭头（第1-6页显示，底部居中，层级最高） */
 .down-arrow {
   position: fixed;
   left: 50%;
@@ -227,7 +225,7 @@ body {
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  z-index: 9999;
+  z-index: 120000; /* 保证在页面元素之上 */
   outline: none;
 }
 .down-arrow .arrow-stem {
@@ -235,7 +233,7 @@ body {
   margin: 0 auto;
   width: 6px;
   height: 28px;
-  background: var(--accent-blue);
+  background: #ff8ac5; /* 粉色 */
   border-radius: 3px;
   animation: bounce 1.6s ease-in-out infinite;
 }
@@ -246,9 +244,12 @@ body {
   margin: 6px auto 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-top: 14px solid var(--accent-blue);
+  border-top: 14px solid #ff8ac5; /* 粉色 */
   animation: bounce 1.6s ease-in-out infinite;
   transform: translateY(6px);
+}
+body.hide-arrow .down-arrow {
+  display: none !important;
 }
 @keyframes bounce {
   0%, 100% { transform: translateY(6px); }

@@ -28,10 +28,6 @@
                 <img class="eye-layer eye-layer-middle" src="./images/sheepeye.png" alt="Sheep eye">
                 <img class="eye-layer eye-layer-top" src="./images/sheepblack.jpg" alt="Sheep black silhouette">
               </div>
-            <button class="down-arrow" id="toPage2" aria-label="滑到下一页">
-              <span class="arrow-stem"></span>
-              <span class="arrow-head"></span>
-            </button>
           </div>
           </section>
 
@@ -219,9 +215,16 @@
 
   <!-- 全局音量开关 -->
   <button class="volume-toggle muted" id="volumeToggle" aria-label="静音" type="button">🔇</button>
+  <button class="down-arrow" id="globalDownArrow" aria-label="滑到下一页">
+    <span class="arrow-stem"></span>
+    <span class="arrow-head"></span>
+  </button>
 </main>
 
 <audio id="kinderAudio" preload="auto" src="./sound/kinder.mp3"></audio>
+<audio id="sheepAudio" preload="auto" src="./sound/sheep.mp4"></audio>
+<audio id="noiceAudio" preload="auto" src="./sound/noice.mp4"></audio>
+<audio id="birdAudio" preload="auto" src="./sound/bird.mp3"></audio>
 
 
 <script defer src="./script.js?v=16"></script>
