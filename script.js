@@ -278,6 +278,26 @@ function startHeroOnce() {
     const page3 = document.getElementById('page3');
     const page4 = document.getElementById('page4');
     const page1ClickIcon = document.getElementById('clickIconPage1');
+    const downArrow = document.getElementById('globalDownArrow');
+    let page1ArrowReady = false;
+    let triggerPage1Advance = null;
+
+    function markPage1ArrowReady() {
+      if (page1ArrowReady) return;
+      page1ArrowReady = true;
+      syncPage1Arrow();
+    }
+
+    function syncPage1Arrow() {
+      if (!downArrow) return;
+      const idx = currentPageIndex;
+      const withinRange = idx <= 5;
+      const allowPage1 = page1ArrowReady;
+      const shouldShow = withinRange && (idx > 0 || allowPage1);
+      downArrow.classList.toggle('show', shouldShow);
+      downArrow.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    }
+
     const hidePage1ClickIcon = () => {
       if (page1ClickIcon) {
         page1ClickIcon.classList.add('is-hidden');
@@ -367,6 +387,11 @@ function playPageAudio(idx) {
   currentPageIndex = findMostVisiblePageIndex();
   setActive(currentPageIndex);
   document.body.classList.toggle('page6-plus', currentPageIndex >= 5);
+  if (currentPageIndex > 0) {
+    markPage1ArrowReady();
+  } else {
+    syncPage1Arrow();
+  }
   // 刷新时根据当前页尝试启动对应音频
   playPageAudio(currentPageIndex);
   // 默认就尝试启动音频请求（若被策略拦截，后续交互再重试）
@@ -510,6 +535,9 @@ function playPageAudio(idx) {
       }
       if (baseLayer) baseLayer.style.opacity = '1';
       if (visitsText) visitsText.classList.add('show');
+      hidePage1ClickIcon();
+      markPage1ArrowReady();
+      syncPage1Arrow();
     }
 
     if (midLayer) {
@@ -798,6 +826,44 @@ function playPageAudio(idx) {
         tryAdvanceEye();
       });
     }
+    triggerPage1Advance = tryAdvanceEye;
+  })();
+
+  /* 全局向下箭头：第1-6页显示（首屏需先露出 Maxi5） */
+  (function initDownArrow() {
+    if (!downArrow) return;
+
+    const canNavigate = () => {
+      const now = performance.now();
+      return now >= Math.max(globalScrollLockUntil, eyeLockUntil, privatLockUntil);
+    };
+
+    downArrow.addEventListener('click', e => {
+      e.preventDefault();
+      if (!canNavigate()) return;
+
+      if (currentPageIndex === 0) {
+        if (!page1ArrowReady) return;
+        if (typeof triggerPage1Advance === 'function') {
+          triggerPage1Advance();
+        } else {
+          goToPage(1);
+        }
+        return;
+      }
+
+      if (currentPageIndex >= allPages.length - 1) return;
+      goToPage(currentPageIndex + 1);
+    });
+
+    window.addEventListener('pagechange', e => {
+      if (e.detail.index > 0) {
+        markPage1ArrowReady();
+      }
+      syncPage1Arrow();
+    });
+
+    syncPage1Arrow();
   })();
 
   function isPage3GateActive() {
@@ -821,33 +887,9 @@ function playPageAudio(idx) {
     const onPage34 = currentPageIndex >= 2 && currentPageIndex <= 3;
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
-      if (stillCooling) {
-        e.preventDefault();
-        return;
-      }
-
-      if (eyeStage === 0) {
-        e.preventDefault();
-        eyeStage = 1;
-        eyeLayers.showMid();
-        setEyeCooldown();
-        return;
-      }
-      if (eyeStage === 1) {
-        e.preventDefault();
-        eyeStage = 2;
-        eyeLayers.revealBase();
-        setEyeCooldown(HERO_REVEAL_COOLDOWN); // 留一点时间看 Maxi5
-        return;
-      }
-      if (eyeStage === 2) {
-        e.preventDefault();
-        eyeStage = 3;
-        setEyeCooldown();
-        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
-        goToPage(1);
-        return;
-      }
+      // 首屏仅允许点击眼睛推进，滚轮不触发阶段或跳页
+      e.preventDefault();
+      return;
     }
 
     if (!inTrack) {
@@ -1180,50 +1222,6 @@ function playPageAudio(idx) {
 
   requestAnimationFrame(tick);
 })();
-
-  /* ====== 全局向下箭头：第1-6页显示 ====== */
-  try {
-    (function initArrow() {
-      const btn = $('#globalDownArrow');
-      if (!btn) return;
-      const updateVisibility = idx => {
-        document.body.classList.toggle('hide-arrow', idx >= 6);
-      };
-      window.addEventListener('pagechange', e => updateVisibility(e.detail.index));
-      updateVisibility(currentPageIndex);
-      btn.addEventListener('click', e => {
-        e.preventDefault();
-        if (currentPageIndex === 0) {
-          // 保持首屏三步逻辑
-          if (eyeStage === 0) {
-            eyeStage = 1;
-            eyeLayers.showMid();
-            setEyeCooldown();
-            return;
-          }
-          if (eyeStage === 1) {
-            eyeStage = 2;
-            eyeLayers.revealBase();
-            hidePage1ClickIcon();
-            setEyeCooldown(HERO_REVEAL_COOLDOWN);
-            return;
-          }
-          eyeStage = 3;
-          setEyeCooldown();
-          globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
-          goToPage(1);
-          return;
-        }
-        // 其他页直接跳下一页
-        goToPage(currentPageIndex + 1);
-      });
-    })();
-  } catch (e) { console.error('initArrow error', e); }
-
-  // 原首屏滚动滑页逻辑已整合到全局导航，单独逻辑移除
-
-
-
 
   /* ====== 小货车 (第10页) 往左循环，按页激活 ====== */
   try {

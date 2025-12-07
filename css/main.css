@@ -207,13 +207,7 @@ body {
   transform: translateZ(0);
 }
 
-
- 
-
-
-
-
-/* 向下箭头（第1-6页显示，底部居中，层级最高） */
+/* 向下箭头：第1-6页（Maxi5 露出后才在第1页出现） */
 .down-arrow {
   position: fixed;
   left: 50%;
@@ -225,15 +219,22 @@ body {
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  z-index: 120000; /* 保证在页面元素之上 */
+  z-index: 120000;
   outline: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.down-arrow.show {
+  opacity: 1;
+  pointer-events: auto;
 }
 .down-arrow .arrow-stem {
   display: block;
   margin: 0 auto;
   width: 6px;
   height: 28px;
-  background: #ff8ac5; /* 粉色 */
+  background: #ff8ac5;
   border-radius: 3px;
   animation: bounce 1.6s ease-in-out infinite;
 }
@@ -244,17 +245,11 @@ body {
   margin: 6px auto 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-top: 14px solid #ff8ac5; /* 粉色 */
+  border-top: 14px solid #ff8ac5;
   animation: bounce 1.6s ease-in-out infinite;
   transform: translateY(6px);
 }
-body.hide-arrow .down-arrow {
-  display: none !important;
-}
-@keyframes bounce {
-  0%, 100% { transform: translateY(6px); }
-  50% { transform: translateY(12px); }
-}
+
 /* 第2页 */
 
 /* 背景容器（纯铺图，无过渡） */
