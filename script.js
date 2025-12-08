@@ -879,6 +879,14 @@ function playPageAudio(idx) {
         tryAdvanceEye();
       });
     }
+    const handleSpaceAdvance = e => {
+      const isSpace = e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+      if (!isSpace) return;
+      if (currentPageIndex !== 0) return;
+      e.preventDefault(); // 避免空格触发页面滚动
+      tryAdvanceEye();
+    };
+    window.addEventListener('keydown', handleSpaceAdvance);
     triggerPage1Advance = tryAdvanceEye;
   })();
 
@@ -940,9 +948,12 @@ function playPageAudio(idx) {
     const onPage34 = currentPageIndex >= 2 && currentPageIndex <= 3;
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
-      // 首屏仅允许点击眼睛推进，滚轮不触发阶段或跳页
-      e.preventDefault();
-      return;
+      // 首屏：眼睛还未露出 Maxi5 时禁止滚轮翻页，露出后放行
+      const allowScrollAfterMaxi = eyeStage >= 2;
+      if (!allowScrollAfterMaxi) {
+        e.preventDefault();
+        return;
+      }
     }
 
     if (!inTrack) {
@@ -1849,13 +1860,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // 第一次点击 = 关声音；再次点击恢复
     muted = !muted;
     applyMuted();
+    // 点击喇叭也算用户手势，尝试激活所有音频
+    kickstartAllAudio();
     if (!muted) {
       // 重新开声：按当前页规则恢复各自播放
       playPageAudio(currentPageIndex);
       requestKinderPlay();
       ensureSheepPlaybackIfNeeded();
       ensureNoicePlaybackIfNeeded();
-      ensureBirdPlaybackIfNeeded();
+      // 确保第1页鸟声立即尝试播放（即便还在 sheepblack 阶段）
+      const onPage1 = currentPageIndex === 0 || isVisibleEnough(document.getElementById('page1'), 0.01);
+      if (onPage1) {
+        birdShouldPlay = true;
+        birdPlayPending = false;
+        birdPlaying = false;
+        if (birdAudio) {
+          birdAudio.muted = false;
+          birdAudio.loop = true;
+          birdAudio.volume = birdAudio.volume || 1;
+          birdAudio.currentTime = 0;
+        }
+        startBirdAudio();
+        tryPlayPendingBird();
+      } else {
+        ensureBirdPlaybackIfNeeded();
+      }
     } else {
       // 关闭声音：停止并清空播放意愿
       fadeOutKinder(true);

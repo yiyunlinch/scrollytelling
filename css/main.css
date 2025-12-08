@@ -1032,10 +1032,10 @@ body.page6-plus #page6 .schild-wrap {
 
 .click-pos-bottom-center {
   position: absolute;
-  left: 35%;
-  bottom: 40%;
-  top: auto;
+  left: 86%;
   right: auto;
+  bottom: 65%;
+  top: auto;
   --click-translate-x: -50%;
   --click-translate-y: 0;
   z-index: 10;
