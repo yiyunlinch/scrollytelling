@@ -20,22 +20,22 @@
     <div class="cover-h-row">
       <div class="cover-h-sticky">
         <div class="cover-h-track">
-          <!-- 第1页：眼睛交互 -->
-          <section class="page page1" id="page1" aria-label="第1页：眼睛交互">
+          <!-- Page 1: eye interaction -->
+          <section class="page page1" id="page1" aria-label="Page 1: eye interaction">
             <div class="eye-interaction-container">
               <div class="eye-layer-stack">
-                <img class="eye-layer eye-layer-base" src="./images/Maxi/Maxi5.jpg" alt="Maxi5 背景">
+                <img class="eye-layer eye-layer-base" src="./images/Maxi/Maxi5.jpg" alt="Maxi5 background">
                 <img class="eye-layer eye-layer-middle" src="./images/sheepeye.png" alt="Sheep eye">
                 <img class="eye-layer eye-layer-top" src="./images/sheepblack.jpg" alt="Sheep black silhouette">
               </div>
               <div class="click-icon click-pos-bottom-center" id="clickIconPage1">
-                <img src="./images/click.webp" alt="Click 提示">
+                <img src="./images/click.webp" alt="Click hint">
               </div>
             </div>
           </section>
 
-          <!-- 第2页：草地 -->
-          <section class="page page2" id="page2" aria-label="第2页：草地">
+          <!-- Page 2: grass field -->
+          <section class="page page2" id="page2" aria-label="Page 2: grass field">
             <main class="scene" id="scene1">
               <div class="season grass active" aria-hidden="true"></div>
                  <div class="page3-title-overlay" aria-hidden="true">
@@ -64,7 +64,7 @@
     </div>
   </div>
 
-  <!-- hero 羊（固定层） -->
+  <!-- Hero sheep (fixed layer) -->
   <div id="sheephero-wrapper" aria-hidden="true">
     <video class="sheep sheephero"
            id="sheephero"
@@ -78,8 +78,8 @@
     </div>
   </div>
 
-  <!-- 第3页：秋天上半 + 文本 -->
-  <section class="page page3" id="page3" aria-label="第3页：秋天上半">
+  <!-- Page 3: autumn upper + text -->
+  <section class="page page3" id="page3" aria-label="Page 3: autumn upper half">
     <div class="backgroundtop"
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
@@ -98,8 +98,8 @@
     </div>
   </section>
 
-  <!-- 第4页：秋天下半 -->
-  <section class="page page4" id="page4" aria-label="第4页：秋天下半部分">
+  <!-- Page 4: autumn lower -->
+  <section class="page page4" id="page4" aria-label="Page 4: autumn lower half">
     <div class="backgroundbottom"
          style="background-image:url('./images/autumn.jpg');"
          aria-hidden="true"></div>
@@ -111,8 +111,8 @@
   </section>
 
 
-  <!-- 第5页：工地上半 -->
-  <section class="page page5" id="page5" aria-label="第5页：工地上半部分">
+  <!-- Page 5: construction upper -->
+  <section class="page page5" id="page5" aria-label="Page 5: construction upper half">
     <div class="backgroundtop"
          style="
            background-image: url('./images/baustelle.jpg');
@@ -121,7 +121,7 @@
            background-repeat: no-repeat;
          "
          aria-hidden="true"></div>
-    <!-- 挖土机（只在第5页内部左右往返） -->
+    <!-- Digger (loops left/right only within page 5) -->
     <div id="digger-fixed" aria-hidden="true">
       <video src="./images/digger.webm"
              autoplay
@@ -150,8 +150,8 @@
     </div>
   </section>
 
-  <!-- 第6页：工地下半 -->
-  <section class="page page6" id="page6" aria-label="第6页：工地下半部分">
+  <!-- Page 6: construction lower -->
+  <section class="page page6" id="page6" aria-label="Page 6: construction lower half">
     <div class="backgroundbottom"
          style="
            background-image: url('./images/baustelle.jpg');
@@ -187,8 +187,8 @@
     </div>
   </section>
 
-  <!-- 第7页：羊轮廓 + 诗句 + 点击出现文字 -->
-  <section class="page page7" id="page7" aria-label="第7页：Fenster">
+  <!-- Page 7: sheep outline + poem + reveal text on click -->
+  <section class="page page7" id="page7" aria-label="Page 7: Fenster">
     <img class="sheep-outline-base" src="./images/sheepwhitefinal.webp" alt="Sheep outline">
 
     <div class="text-group-right" id="page7Yiyun">
@@ -223,9 +223,9 @@
     </aside>
   </section>
 
-  <!-- 全局音量开关 -->
-  <button class="volume-toggle muted" id="volumeToggle" aria-label="静音" type="button">🔇</button>
-  <button class="down-arrow" id="globalDownArrow" aria-label="滑到下一页" aria-hidden="true" type="button">
+  <!-- Global volume toggle -->
+  <button class="volume-toggle muted" id="volumeToggle" aria-label="Mute" type="button">🔇</button>
+  <button class="down-arrow" id="globalDownArrow" aria-label="Scroll to next page" aria-hidden="true" type="button">
     <span class="arrow-stem"></span>
     <span class="arrow-head"></span>
   </button>

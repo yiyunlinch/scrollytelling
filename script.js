@@ -2,42 +2,42 @@ const $ = (sel, root = document) => root.querySelector(sel);
 let currentPageIndex = 0;
 let trackPages = [];
 let allPages = [];
-let eyeLockUntil = 0;  // 首屏阶段的冷却时间戳，防止同一轮滚动直接翻页
-let eyeStage = 0;      // 0 初始, 1 去轮廓露出眼睛, 2 溶解眼层+hero, 3 可翻页
-let heroStarted = false; // 防止重复启动 hero
-let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
-let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已通过
+let eyeLockUntil = 0;  // First-screen cooldown timestamp to avoid flipping pages in one scroll burst
+let eyeStage = 0;      // 0 init, 1 hide outline to reveal eye, 2 dissolve eye layer + hero, 3 allow paging
+let heroStarted = false; // Guard against double-starting the hero
+let globalScrollLockUntil = 0; // Global cooldown after any scroll-based page turn
+let hold34Stage = 0;    // Page3->4 downward pause: 0 not paused, 1 paused, 2 completed
 let hold34LockUntil = 0;
-let privatStage = 0;   // page5-6 过渡：0 未触发，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行，6 完成
+let privatStage = 0;   // Page5-6 flow: 0 idle, 2 sign dropped, 3 building, 4 kids hidden, 5 unlocked, 6 done
 let privatLockUntil = 0;
-let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
-let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
-let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
-let page2DownGuardUntil = 0; // 第2页向下滑动后，短暂阻止回弹回 Maxi
+let kinderForceVisible = false; // Force Kinder/dialog to stay visible until explicitly hidden
+let kinderLockedHidden = false; // Once hidden, lock it so it never auto-appears again
+let buildingIndex = -1; // Current building layer; -1 means none shown
+let page2DownGuardUntil = 0; // After scrolling down on page2, briefly block snapping back to Maxi
 let kinderAudio = null;
 let kinderFadeRAF = null;
 let kinderTargetVolume = 0;
 let kinderPlaying = false;
-let kinderShouldPlay = false; // 仅在第2/3页播放
+let kinderShouldPlay = false; // Only play on pages 2/3
 let kinderPlayPending = false;
 let sheepAudio = null;
 let sheepPlaying = false;
 let sheepPlayPending = false;
-let sheepShouldPlay = false; // 仅在第7页播放
+let sheepShouldPlay = false; // Only play on page 7
 let noiceAudio = null;
 let noicePlaying = false;
 let noicePlayPending = false;
-let noiceShouldPlay = false; // 第5-6页播放
+let noiceShouldPlay = false; // Play on pages 5-6
 let birdAudio = null;
 let birdPlaying = false;
 let birdPlayPending = false;
-let birdShouldPlay = false; // 第1页播放
-let hasLeftMaxiPage = false; // 是否曾离开过第一页（Maxi 层）
-const MAXI_SEEN_KEY = 'maxiSeen'; // session 标记：是否离开过第1页
-let heroAllowCheck = () => true; // 是否允许触发 hero（基于当前可见页）
+let birdShouldPlay = false; // Play on page 1
+let hasLeftMaxiPage = false; // Whether we’ve ever left page 1 (Maxi layer)
+const MAXI_SEEN_KEY = 'maxiSeen'; // Session flag: have we left page 1
+let heroAllowCheck = () => true; // Whether hero is allowed based on visible pages
 let firstInteractionBound = false;
 let audioKickstarted = false;
-let audioMuted = true; // 跟随喇叭状态
+let audioMuted = true; // Follows speaker toggle
 
 function isElementVisible(el, threshold = 0.35) {
   if (!el) return false;
@@ -60,7 +60,7 @@ setViewportHeightVar();
 window.addEventListener('resize', setViewportHeightVar, { passive: true });
 window.addEventListener('orientationchange', setViewportHeightVar, { passive: true });
 
-// Page5 文字/对白显隐
+// Page5 text/dialog visibility
 let setPage5ContentVisibility = () => {};
 function stopKinderFade() {
   if (kinderFadeRAF) {
@@ -106,7 +106,7 @@ function startKinderAudio() {
         kinderPlaying = true;
         kinderPlayPending = false;
       }).catch(() => {
-        kinderPlayPending = true; // 等待用户手势再尝试
+        kinderPlayPending = true; // Retry after a user gesture
       });
     }
   } catch (e) {
@@ -302,7 +302,7 @@ function startHeroOnce() {
         page1ClickIcon.classList.add('is-hidden');
       }
     };
-    const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
+    const TRACK_COUNT = 1; // Only the first screen uses special logic; others scroll vertically
   let seenFromSession = false;
   try {
     seenFromSession = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
@@ -317,7 +317,7 @@ function requestKinderPlay() {
 }
 
 function playPageAudio(idx) {
-  // bird：第1页
+  // bird: page 1
   if (idx === 0) {
     birdShouldPlay = true;
       startBirdAudio();
@@ -325,14 +325,14 @@ function playPageAudio(idx) {
     birdShouldPlay = false;
     stopBirdAudio();
   }
-  // kinder：用于第2/3页
+  // kinder: pages 2/3
     kinderShouldPlay = (idx === 1 || idx === 2);
     if (kinderShouldPlay) {
       requestKinderPlay();
     } else {
       fadeOutKinder(true);
     }
-    // sheep：第7页
+    // sheep: page 7
     if (idx === 6) {
       sheepShouldPlay = true;
       startSheepAudio();
@@ -340,7 +340,7 @@ function playPageAudio(idx) {
       sheepShouldPlay = false;
       stopSheepAudio();
     }
-    // noice：仅第5页
+    // noice: page 5 only
     if (idx === 4) {
       noiceShouldPlay = true;
       startNoiceAudio();
@@ -367,7 +367,7 @@ function playPageAudio(idx) {
     return bestIdx;
   }
 
-  /* === 全局页面导航（仅前2页横滑） === */
+  /* === Global page navigation (horizontal only for the first 2 pages) === */
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
   function setActive(idx) {
     allPages.forEach((p, i) => p.classList.toggle('active', i === idx));
@@ -382,7 +382,7 @@ function playPageAudio(idx) {
     window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
   }
 
-  // 刷新时先同步当前可见页，避免进入第6页时残留第5页元素闪现
+  // On refresh, sync the visible page so page5 bits don’t flash when landing on page6
   currentPageIndex = findMostVisiblePageIndex();
   setActive(currentPageIndex);
   document.body.classList.toggle('page6-plus', currentPageIndex >= 5);
@@ -391,14 +391,14 @@ function playPageAudio(idx) {
   } else {
     syncPage1Arrow();
   }
-  // 刷新时根据当前页尝试启动对应音频
+  // On refresh, try to start audio for the current page
   playPageAudio(currentPageIndex);
-  // 默认就尝试启动音频请求（若被策略拦截，后续交互再重试）
+  // Attempt audio start by default; if blocked by autoplay policy, retry after later interactions
   requestKinderPlay();
   ensureNoicePlaybackIfNeeded();
   ensureSheepPlaybackIfNeeded();
   ensureBirdPlaybackIfNeeded();
-  // 尽早尝试自动播放（若被策略拦截，将在首个交互捕获后再尝试）
+  // Try autoplay early; if blocked, the first captured interaction will retry
   kickstartAllAudio();
 
   function goToPage(idx, animate = true) {
@@ -408,21 +408,21 @@ function playPageAudio(idx) {
     try {
       target.scrollIntoView({ behavior: animate ? 'smooth' : 'auto', block: 'start' });
     } catch (err) {
-      // 回退：不支持平滑滚动的环境直接设置
+      // Fallback: set scroll directly if smooth scroll isn’t supported
       const top = target.getBoundingClientRect().top + window.pageYOffset;
       window.scrollTo({ top, behavior: animate ? 'smooth' : 'auto' });
     }
     dispatchPageChange(idx);
-    // 进入新页面后添加冷却，防止连续翻页
+    // Add cooldown after entering a new page to prevent rapid flipping
     globalScrollLockUntil = performance.now() + 650;
   }
 
-  // 初始定位第一页（仅在未看过首屏时强制）
+  // Force landing on page 1 only if the first screen hasn’t been seen before
   if (!seenFromSession) {
     goToPage(0, false);
   }
 
-  // 如果刷新时停在第2页或更下方（例如第3页），直接触发 hero，避免刷新后消失
+  // If a refresh leaves us on page2+ (e.g. page3), trigger hero immediately to avoid missing it
   function maybeStartHeroFromScroll() {
     const visibleEnough = el => {
       if (!el) return false;
@@ -437,7 +437,7 @@ function playPageAudio(idx) {
   }
   requestAnimationFrame(maybeStartHeroFromScroll);
 
-  // hero 触发条件：仅当第1-4页有可见区域时才允许
+  // Hero can trigger only while pages 1-4 have visible area
   heroAllowCheck = () => {
     return (
       isElementVisible(page1, 0.6) ||
@@ -447,7 +447,7 @@ function playPageAudio(idx) {
     );
   };
 
-  // 进入第2页时再尝试触发 hero 羊出现（仅当 Maxi 已露出）
+  // When entering page2, try to trigger the hero sheep if Maxi is already revealed
   window.addEventListener('pagechange', e => {
     const idx = e.detail.index;
     if (idx > 0) {
@@ -459,22 +459,22 @@ function playPageAudio(idx) {
       }
     }
     playPageAudio(idx);
-    // 进入前几页（含从下方往上回拉至第4/3页）都可触发 hero，保证刷新后上拉也能出现
+    // Entering the early pages (including scrolling back up to page4/3) can trigger hero so it appears after refresh
     if (idx === 1 || idx === 2) {
       startHeroOnce();
     }
-    // 从下方向上返回第一页时，直接露出 Maxi 背景，不停留在 sheepblack
+    // When returning upward to page1, immediately reveal the Maxi background instead of staying on sheepblack
     if (idx === 0 && hasLeftMaxiPage) {
       eyeStage = 3;
       eyeLayers.revealBase();
     }
   });
 
-  // 滚动时补发文案解锁，保证上拉回到 page2/3 能看到 besuche/jeder
+  // On scroll, re-issue text unlock so pulling back to page2/3 still shows besuche/jeder
   window.addEventListener('scroll', () => {
     if (unlockOnScroll) unlockOnScroll();
     if (ensureManualByVisibility) ensureManualByVisibility();
-    // 若已离开过首屏且当前回到 page1，可见时确保露出 Maxi5 而不是 sheepblack
+    // If we left the first screen and come back to page1, make sure Maxi5 shows instead of sheepblack
     const page1 = document.getElementById('page1');
     if (page1 && hasLeftMaxiPage && eyeLayers && typeof eyeLayers.revealBase === 'function') {
       if (isVisibleEnough(page1, 0.4)) {
@@ -488,11 +488,11 @@ function playPageAudio(idx) {
     }
   }, { passive: true });
 
-  /* ====== 第1页：三张图分三次下拉 ====== */
+  /* ====== Page 1: three-step pull-down for three images ====== */
   const eyeLayers = (() => {
     const topLayer = document.querySelector('.eye-layer-top');       // sheepblack.jpg
     const midLayer = document.querySelector('.eye-layer-middle');    // sheepeye.png
-    const baseLayer = document.querySelector('.eye-layer-base');     // Maxi5 背景
+    const baseLayer = document.querySelector('.eye-layer-base');     // Maxi5 background
     const visitsText = document.getElementById('visitsText');
     const page1 = document.getElementById('page1');
     const stack = page1 ? page1.querySelector('.eye-interaction-container') : null;
@@ -526,7 +526,7 @@ function playPageAudio(idx) {
     }
 
     function revealBase() {
-      // 强制露出 Maxi5 背景（从下往上回到第一页时用）
+      // Force-show Maxi5 background (used when scrolling up back to page1)
       if (topLayer) topLayer.style.opacity = '0';
       if (midLayer) {
         midLayer.style.opacity = '0';
@@ -545,7 +545,7 @@ function playPageAudio(idx) {
       }, { once: true });
     }
 
-    // 首次渲染：根据 session 记录决定是否跳过遮罩；若当前就在 page1，则仍保留遮罩
+    // First render: decide whether to skip the mask based on session; if already on page1 keep the mask
     const initialOnPage1 = (() => {
       if (!page1) return true;
       const rect = page1.getBoundingClientRect();
@@ -561,7 +561,7 @@ function playPageAudio(idx) {
         eyeStage = 3;
         revealBase();
       } else {
-        reset(); // 首次或当前停在 page1 时保留遮罩
+        reset(); // On first load or when staying on page1, keep the mask
         if (stack) stack.style.visibility = 'visible';
       }
     } catch (err) {
@@ -578,7 +578,7 @@ function playPageAudio(idx) {
     if (!el || !page5) return { drop: () => {}, reset: () => {} };
 
     function lockAtCurrentPosition() {
-      // 动画结束后，锁定到 page5 中线位置（底边落在页面高度的 50%）
+      // After the animation, lock at the page5 midline (bottom edge at 50% page height)
       const box = el.getBoundingClientRect();
       const h = box.height || 0;
       const targetBottom = page5.clientHeight * 0.5;
@@ -588,7 +588,7 @@ function playPageAudio(idx) {
       el.style.left = '50%';
       el.style.transform = 'translate(-50%, 0) scale(1)';
       el.style.animation = 'none';
-      el.style.opacity = '1'; // 保持可见
+      el.style.opacity = '1'; // Keep visible
       el.style.zIndex = '2000';
       el.classList.add('landed');
       el.classList.remove('show');
@@ -597,13 +597,13 @@ function playPageAudio(idx) {
     let dropTimer = null;
 
     function drop() {
-      // 清理旧定时
+      // Clear any previous timer
       if (dropTimer) {
         clearTimeout(dropTimer);
         dropTimer = null;
       }
 
-      // 计算目标位置：底边落在 page5 高度的 50%
+      // Compute target position: bottom edge lands at 50% of page5 height
       const box = el.getBoundingClientRect();
       const h = box.height || 0;
       const targetBottom = page5.clientHeight * 0.5;
@@ -612,22 +612,22 @@ function playPageAudio(idx) {
       el.classList.remove('show', 'landed');
       el.style.position = 'absolute';
       el.style.left = '50%';
-      el.style.top = `${-Math.max(window.innerHeight, page5.clientHeight)}px`; // 从页面上方开始
+      el.style.top = `${-Math.max(window.innerHeight, page5.clientHeight)}px`; // Start above the page
       el.style.transform = 'translate(-50%, 0) scale(1)';
       el.style.animation = '';
       el.style.zIndex = '2000';
       el.style.opacity = '0';
       el.style.transition = 'none';
 
-      // 强制重排以应用起点
+      // Force reflow to apply the starting point
       void el.offsetWidth;
 
-      // 设置落点并启动过渡
+      // Set the landing point and start the transition
       el.style.transition = 'top 0.9s ease-out, opacity 0.45s ease-out';
       el.style.top = `${targetTop}px`;
       el.style.opacity = '1';
 
-      // 过渡结束后锁定最终状态
+      // Lock the final state after the transition ends
       dropTimer = setTimeout(() => {
         lockAtCurrentPosition();
         dropTimer = null;
@@ -647,7 +647,7 @@ function playPageAudio(idx) {
     return { drop, reset };
   })();
 
-  /* Page6 house 视频 */
+  /* Page6 house video */
   const buildingAnim = (() => {
     const wrap = document.getElementById('houseVideoWrap');
     const layers = wrap ? Array.from(wrap.querySelectorAll('.building-layer')) : [];
@@ -676,7 +676,7 @@ function playPageAudio(idx) {
         const lastIndex = layers.length - 1;
         nurOverlay.classList.toggle('show', idx >= lastIndex);
       }
-      setPage5ContentVisibility(false); // 盖楼开始后隐藏 Kinder/文本
+      setPage5ContentVisibility(false); // Hide Kinder/text once building starts
     }
 
     function setIndex(idx) {
@@ -699,7 +699,7 @@ function playPageAudio(idx) {
     };
   })();
 
-  // Page5 Kinder+文本显隐控制（盖楼开始即隐藏）
+  // Page5 Kinder + text visibility (hide once building starts)
   (function initPage5ContentVisibility() {
     const kinderImg  = document.getElementById('kinderImg');
     const dialog     = document.getElementById('dialogOverlay');
@@ -724,16 +724,16 @@ function playPageAudio(idx) {
       eimal.classList.toggle('show', idx === 6);
     }
     if (idx === 1) {
-      startKinderAudio(); // 进入第2页开始淡入
-      setTimeout(ensureKinderPlaybackIfNeeded, 100); // 再尝试一次
+      startKinderAudio(); // Fade in on entering page2
+      setTimeout(ensureKinderPlaybackIfNeeded, 100); // Try once more
     }
     if (idx >= 3 || idx < 1) {
-      fadeOutKinder(false); // 离开第3页后淡出，但保留播放意愿
+      fadeOutKinder(false); // Fade out after leaving page3 but keep intent
     }
     if (idx === 4) {
-      privatStage = 0; // 进入第5页时重置掉落
+      privatStage = 0; // Reset drop when entering page5
       privatDrop.reset();
-      // 若从第4页点击箭头直达第5页，直接触发掉落一次
+      // If jumping from page4 via arrow, trigger one drop immediately
       if (privatStage < 2 && performance.now() >= Math.max(privatLockUntil, globalScrollLockUntil)) {
         privatStage = 2;
         privatDrop.drop();
@@ -741,15 +741,15 @@ function playPageAudio(idx) {
       }
       buildingAnim.reset();
     } else if (idx <= 3) {
-      privatStage = 0; // 上拉到第4页及以上时清零并收起
+      privatStage = 0; // Pulling up to page4+ clears state and hides it
       privatDrop.reset();
       buildingAnim.reset();
     }
     if (idx === 5) {
       privatStage = Math.max(privatStage, 2);
       kinderForceVisible = false;
-      buildingAnim.reset(); // 初始不显示建筑，改为点击触发
-      setPage5ContentVisibility(false); // 进入第6页隐藏 page5 内容
+      buildingAnim.reset(); // Start with no building; show via clicks
+      setPage5ContentVisibility(false); // Hide page5 content on entering page6
     } else {
       buildingAnim.reset();
       if (idx >= 5) {
@@ -759,13 +759,13 @@ function playPageAudio(idx) {
       }
     }
     if (idx <= 2) {
-      hold34Stage = 0; // 回到第3页或更上方时重置停顿
+      hold34Stage = 0; // Reset pause when back to page3 or above
       hold34LockUntil = 0;
     }
-    // 其他页保持当前状态
+    // Other pages keep their current state
   });
 
-  // 第6页：显示点击手势提示
+  // Page6: show click hint
   (function initPage6ClickIcon() {
     const icon = document.getElementById('clickIconPage6');
     if (!icon) return;
@@ -794,7 +794,7 @@ function playPageAudio(idx) {
           wrap.style.opacity = '1';
         }
         if (clickStep === 2 && buildingAnim.max >= 3) {
-          // 第3次点击：先显示第3层，再快速推到第4层
+          // Third click: show layer 3, then quickly push to layer 4
           buildingAnim.setIndex(2);
           autoAdvanceTimer = setTimeout(() => {
             buildingAnim.setIndex(3);
@@ -812,12 +812,12 @@ function playPageAudio(idx) {
     update(currentPageIndex);
   })();
 
-  // Wheel 导航 + 首屏分阶段
+  // Wheel navigation + staged first screen
   const EYE_COOLDOWN = 650;
-  const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
-  const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
-  const PRIVAT_COOLDOWN = 100; // privat/盖楼相关冷却（更短）
-  const BUILD_COOLDOWN = 360; // 盖楼切换冷却（略放慢）
+  const HERO_REVEAL_COOLDOWN = 900; // Freeze after the second pull so Maxi5 stays on screen briefly
+  const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Extra cooldown from Maxi5 to the next page
+  const PRIVAT_COOLDOWN = 100; // privat/building cooldown (shorter)
+  const BUILD_COOLDOWN = 360; // Building-step cooldown (slightly slower)
 
   function setEyeCooldown(extra = 0) {
     const now = performance.now();
@@ -838,7 +838,7 @@ function playPageAudio(idx) {
     globalScrollLockUntil = Math.max(globalScrollLockUntil, lock);
   }
 
-  // 首屏：点击（整屏或手势提示）也能按步骤睁眼
+  // First screen: clicking (full area or hint) also advances the eye states
   (function initPage1ClickToOpenEye() {
     const page1 = document.getElementById('page1');
     const clickIcon = document.getElementById('clickIconPage1');
