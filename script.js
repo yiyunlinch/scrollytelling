@@ -10,7 +10,6 @@ let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已�
 let hold34LockUntil = 0;
 let privatStage = 0;   // page5-6 过渡：0 未触发，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行，6 完成
 let privatLockUntil = 0;
-let kinderVanish = () => {}; // 第6页孩童下落隐藏
 let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
 let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
 let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
@@ -341,8 +340,8 @@ function playPageAudio(idx) {
       sheepShouldPlay = false;
       stopSheepAudio();
     }
-    // noice：第5/6页
-    if (idx === 4 || idx === 5) {
+    // noice：仅第5页
+    if (idx === 4) {
       noiceShouldPlay = true;
       startNoiceAudio();
     } else {
@@ -1212,39 +1211,6 @@ function playPageAudio(idx) {
   requestAnimationFrame(tick);
 })();
 
-  /* ====== 小货车 (第10页) 往左循环，按页激活 ====== */
-  try {
-    function initMovingAnimOnce(elemId, pageIdx) {
-      const elem = document.getElementById(elemId);
-      if (!elem) return;
-
-      let x = window.innerWidth;
-      const speed = 1.25;
-      const elemWidth = 180;
-      let running = false;
-
-      function animate() {
-        if (!running) return;
-        x -= speed;
-        if (x < -elemWidth * 3) x = window.innerWidth;
-        elem.style.left = `${x}px`;
-        requestAnimationFrame(animate);
-      }
-
-      function onPageChange(idx) {
-        running = idx === pageIdx;
-        if (running) {
-          x = window.innerWidth;
-          requestAnimationFrame(animate);
-        }
-      }
-
-      window.addEventListener('resize', () => { x = window.innerWidth; }, { passive: true });
-  window.addEventListener('pagechange', e => onPageChange(e.detail.index));
-  onPageChange(currentPageIndex);
-}
-  } catch (e) { console.error('initMovingAnimOnce error', e); }
-
 /* ====== 挖土机：第8页内循环，按页激活 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
@@ -1361,11 +1327,11 @@ function playPageAudio(idx) {
 
       let activeState = false;
 
-      function sync(show) {
-        if (kinderLockedHidden) {
-          show = false;
-        }
-        const shouldShow = show || kinderForceVisible;
+    function sync(show) {
+      if (kinderLockedHidden) {
+        show = false;
+      }
+      const shouldShow = show || kinderForceVisible;
         if (shouldShow) {
           kinderImg.style.transition = 'transform 0.7s ease';
           kinderImg.style.transform = 'translateY(0%)';
@@ -1383,17 +1349,6 @@ function playPageAudio(idx) {
         activeState = active;
         sync(activeState);
       }
-
-      function vanishDown() {
-        kinderForceVisible = false;
-        kinderLockedHidden = true;
-        kinderImg.style.transition = 'transform 0.35s ease-in';
-        kinderImg.style.transform = 'translateY(180%)';
-        schauLeft.style.opacity = '0';
-        schauRight.style.opacity = '0';
-      }
-
-      kinderVanish = vanishDown;
 
       // 由 pagechange 和额外的 IntersectionObserver 双重保障，避免偶发不触发
       window.addEventListener('pagechange', e => {
