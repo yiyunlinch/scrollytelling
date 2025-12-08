@@ -1,6 +1,7 @@
 # sheepStory – Scrollbasierte Web-Erzählung
 
-Eine interaktive Website, die Illustration, Fotografie und Animation vereint und die Veränderung vor meiner Haustür erzählt. Sie ist ausschließlich für die Webansicht konzipiert.
+Eine interaktive Website, die Illustration, Fotografie und Animation vereint und die Veränderung vor meiner Haustür erzählt. 
+Sie ist ausschließlich für die Webansicht konzipiert.
 
 ## Projektübersicht#
 
@@ -12,38 +13,34 @@ Chronologische Darstellung: https://preview.shorthand.com/DJtHExqM2XXoq6Mn
 
 ➡️ Nach dem Vergleich habe ich mich für eine chronologische Erzählstruktur entschieden.
 
-## Entwicklungsphasen#
+## Entwicklungsphasen
 v1 – Vertikales Scrolling (von unten nach oben)
 
-Die erste Version basierte auf vertikalem Scrolling und enthielt mehrere interaktive Elemente. Nach einem Visualisieren-Coaching wurde jedoch deutlich, dass der erzählerische Kern noch nicht klar genug war. Deshalb habe ich Fotos neu aufgenommen und Illustrationen überarbeitet. Die Version v1.1 reduzierte zudem viele Interaktionen.
-➡️ Die erzählerische Klarheit verbesserte sich, jedoch blieb die Übergangs- und Scroll-Flüssigkeit hinter den Erwartungen.
+Die erste Version basierte auf vertikalem Scrolling und enthielt mehrere interaktive Elemente. Nach einem Visualisieren-Coaching wurde jedoch deutlich, dass der erzählerische Kern noch nicht klar genug war. Deshalb habe ich Fotos neu aufgenommen und Illustrationen überarbeitet. Die Version v1.1 reduzierte zudem viele Interaktionen.Die erzählerische Klarheit verbesserte sich, jedoch blieb die Übergangs- und Scroll-Flüssigkeit hinter den Erwartungen.
 
 v2 – Horizontaler Einstieg (Experiment)
 
-Durch Feedback von Kommiliton*innen im Visualisieren-Kurs wurde mir bewusst, dass die Aussage des Projekts – insbesondere im Schlussbereich – noch zu unklar war. Daher habe ich das Ende erneut visuell angepasst. Zur besseren Leserführung habe ich die ersten zwei Seiten auf eine horizontale Scrollebene (cover-h-track) umgestellt, die übrigen Seiten blieben vertikal.
-➡️ Der hybride Ansatz brachte neue Ideen, erwies sich jedoch in der praktischen Nutzung als wenig überzeugend und wurde verworfen.
+Durch Feedback von Kommiliton*innen im Visualisieren-Kurs wurde mir bewusst, dass die Aussage des Projekts – insbesondere im Schlussbereich – noch zu unklar war. Daher habe ich das Ende erneut visuell angepasst. Zur besseren Leserführung habe ich die ersten zwei Seiten auf eine horizontale Scrollebene (cover-h-track) umgestellt, die übrigen Seiten blieben vertikal.Der hybride Ansatz brachte neue Ideen, erwies sich jedoch in der praktischen Nutzung als wenig überzeugend und wurde verworfen.
 
 v3 – Finale Version: Vertikal + Maskierung auf der Startseite
 
-Die finale Version kehrte zu einem reinen vertikalen Layout zurück. Auf der ersten Seite wurden Maskierungen (sheepblack, sheeye, Maxi5) integriert, um das Hero-Schaf visuell zu führen. Gleichzeitig wurden Fotos und Illustrationen erneut überarbeitet, um das Thema klarer und visuell einheitlicher zu vermitteln.
-➡️ Dieses Konzept bildet die endgültige Darstellungsform des Projekts.
+Die finale Version kehrte zu einem reinen vertikalen Layout zurück. Auf der ersten Seite wurden Maskierungen (sheepblack, sheeye, Maxi5) integriert, um das Hero-Schaf visuell zu führen. Gleichzeitig wurden Fotos und Illustrationen erneut überarbeitet, um das Thema klarer und visuell einheitlicher zu vermitteln. Dieses Konzept bildet die endgültige Darstellungsform des Projekts.
 
-## Zentrale Herausforderungen & Lösungen#
+## Zentrale Herausforderungen & Lösungen
 
 1) Unklare Logik beim „Zurück nach oben“-Scrollen
 Zu Beginn war das Rückscroll-Verhalten nicht eindeutig definiert. Dadurch kam es beim Scrollen zum Ausgangspunkt zu Zustandsfehlern — insbesondere wegen der Maskierungen und Ebenen der ersten Seite.
 Lösung: Neudefinition des Rücksprungs, Vereinheitlichung der Zustände, damit der Ausgangspunkt stabil wiederhergestellt wird.
-![Nach dem Aktualisieren der Seite darf das Schaf beim Hochscrollen nicht die Maskenseite überdecken]
+![Nach dem Aktualisieren der Seite darf das Schaf beim Hochscrollen nicht die Maskenseite überdecken]\
 (./images/readme/sheepontop.png)
-
 
 2) Uneinheitliche Typografie → komplette Handschrift
 Mehrere Schriftarten störten die visuelle Kohärenz sowie die erzählerische Stimmung.
 Lösung: Umstellung auf eine einheitliche handschriftliche Typografie, passend zur Illustration und emotionalen Erzählweise.
 
-3) Fehlausrichtungen auf unterschiedlichen Bildschirmgrössen
-Maskenpositionen, Seitenhöhen sowie Elemente am Seitenende verschoben sich je nach Seitenverhältnis, wodurch visuelle Brüche entstanden.
-Lösung:Dynamische Viewport-Höhen,clamp() zur Begrenzung der Seitenhöhen, Media Queries zur präzisen Positionierung zentraler Elemente
+3) Sound-Trigger auf der Startseite
+Aufgrund der Maskierung auf der ersten Seite konnte der Sound nicht gleich beim Einstieg ausgelöst werden.
+Lösung: Verschiebung des Sound-Triggers auf einen bestimmten Scroll- oder Interaktionspunkt, der nicht von Masken blockiert wird.
 
 
 ## Werkzeuge & Erkenntnisse#
@@ -60,40 +57,18 @@ da dies mein erstes scrollbasiertes Erzählprojekt mit Animation war, war anfang
 Der gesamte Entwicklungsprozess dauerte ca. 3 Monate in Wochenend und führte schrittweise zur finalen Version v3. Dabei entstanden wertvolle praktische Erfahrungen zu Interaktionsdesign, Web-Animation und Cross-Device-Optimierung.
 
 
-## Known Bugs 
+## Bugs
 
-### Overall
-- Tapping spacebar going down and mouse scrolling down have different behavior, ideally tapping spacebar,  mouse scrolling down and clicking the arrow-down button all have the same behavior. 
-- Push to github and see if everything is the same from another computer. 
+Allgemein
 
-### Page 1
-- Clikcing the arrow-down button doesn't result in the page going down.  Better using finger icon than using the arrow-down if the page doesn't go down.
-- User cannot click everywhere.  
-- Cannot go back to start of page 1 unless refresh
-- The second click's transition is a bit weird,  first slow then super quickly the whole page image appeared.
-- Clicking the sound button gives no sound.
+Die Logik des verschwindenden Schafs wird ab Seite 4 ausgelöst. Wenn jedoch sehr schnell nach unten gescrollt wird, kann das Schaf auch auf Seite 5, 6 oder 7 noch sichtbar sein.
 
+Seite 1
 
-### Page 2
-- Arrow-down button disappears when mouse scrolling is expected. User doesn't know what to do when arrow-down disappears and then is often confused.
-- "Ich kannte jede" appears and disappears too quickly as I scroll down. 
-- Scrolling up to page 1,  the sheep is still there. 
+Ein Zurückscrollen zum Ausgangspunkt von Seite 1 ist nicht möglich; nur ein Neuladen der Seite funktioniert. Bisher gibt es keine überzeugende Lösung für diese Rücksprung-Logik.
 
-### Page 3 & 4 (grass)
-ok
+Aufgrund der schwarzen Maske auf der Startseite wird kein Ton abgespielt.
 
-### Page 5
-- Bagger and the private sign appears when page 5 is not completely showing, giving user the impression that the scrolling is stuck. 
-- When I scroll back to page 5,  either from up and from below,  I don't want to be stuck on page 5 to watch the animation,  rather I want to continue scrolling. 
-
-### Page 6
-- The first layer of the building appears for 1 second and disappears immiediately.  This is very confusing.
-- The scrolling-down action triggers adding new layer of the building.  This is also confusing.
-- The building can sometime disappear.  Not sure why. 
-
-### Page 7
-- The finger icon on the face of the sheep is a bit weird. Better to click everywhere on the screen. 
-- Adding a "Fin/End" page maybe to tell explicitly indicate the end ?
 
 ## Technologien#
 

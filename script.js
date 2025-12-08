@@ -816,7 +816,7 @@ function playPageAudio(idx) {
   const EYE_COOLDOWN = 650;
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
-  const PRIVAT_COOLDOWN = 300; // privat/盖楼相关冷却，更短
+  const PRIVAT_COOLDOWN = 100; // privat/盖楼相关冷却（更短）
   const BUILD_COOLDOWN = 360; // 盖楼切换冷却（略放慢）
 
   function setEyeCooldown(extra = 0) {
@@ -1827,7 +1827,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const onPage1 = currentPageIndex === 0 || isVisibleEnough(document.getElementById('page1'), 0.01);
       if (onPage1) {
         birdShouldPlay = true;
-        birdPlayPending = false;
+        // 标记待播放，若浏览器拦截会在后续交互继续重试
+        birdPlayPending = true;
         birdPlaying = false;
         if (birdAudio) {
           birdAudio.muted = false;
