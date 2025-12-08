@@ -920,6 +920,22 @@ body.page6-plus #page6 .schild-wrap {
   opacity: 1;
 }
 
+#page7 .end-image {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  width: clamp(90px, 17vw, 210px);
+  z-index: 4800;
+  pointer-events: none;
+}
+
+#page7 .end-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 
 
 /* === 第6页 pole（右下，从右侧滑入）=== */
