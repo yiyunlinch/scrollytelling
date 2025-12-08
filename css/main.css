@@ -10,14 +10,16 @@ body {
 .page {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+  min-height: calc(var(--vh, 1vh) * 100);
   overflow: visible;
 }
 
 
 #page2 {
   position: relative;
-  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+  min-height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
   z-index: 1;
 }
@@ -68,7 +70,7 @@ body {
   position: absolute;
   display: block;
   z-index: 1;
-  width: clamp(360px, 56vw, 800px); /* 放大一倍 */
+  width: clamp(288px, 44.8vw, 640px); /* 缩小约 20% */
   aspect-ratio: 1 / 1;
   background-size: contain;
   background-repeat: no-repeat;
@@ -178,24 +180,25 @@ body {
 .cover-transition-wrapper {
   position: relative;
   width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  height: auto;        /* 允许内容自然撑开 */
+  overflow: visible;   /* 正常竖向流动 */
   z-index: 4000; /* 确保第1/2页层级高于后续页背景 */
 }
 .cover-h-row,
 .cover-h-sticky {
   position: relative;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
 }
 .cover-h-track {
   display: flex;
   flex-direction: column;        /* 改为竖向堆叠 */
   width: 100%;
-  height: calc(100vh * 2);       /* 两屏高度 */
-  will-change: transform;
-  transition: transform 0.45s ease;
+  height: auto;                  /* 自然高度 */
+  will-change: auto;
+  transition: none;
+  transform: none !important;
 }
 .cover-h-track .page {
   flex: 0 0 100vh;               /* 每屏占满视口高度 */
@@ -204,15 +207,7 @@ body {
   transform: translateZ(0);
 }
 
-
- 
-
-
-
-
-/* 向下箭头（第1页显示，底部居中，层级最高） */
-.page1 .down-arrow { display: block; }
-.page:not(.page1) .down-arrow { display: none !important; }
+/* 向下箭头：第1-6页（Maxi5 露出后才在第1页出现） */
 .down-arrow {
   position: fixed;
   left: 50%;
@@ -224,15 +219,22 @@ body {
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  z-index: 9999;
+  z-index: 120000;
   outline: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.down-arrow.show {
+  opacity: 1;
+  pointer-events: auto;
 }
 .down-arrow .arrow-stem {
   display: block;
   margin: 0 auto;
   width: 6px;
   height: 28px;
-  background: var(--accent-blue);
+  background: #ff8ac5;
   border-radius: 3px;
   animation: bounce 1.6s ease-in-out infinite;
 }
@@ -243,14 +245,11 @@ body {
   margin: 6px auto 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-top: 14px solid var(--accent-blue);
+  border-top: 14px solid #ff8ac5;
   animation: bounce 1.6s ease-in-out infinite;
   transform: translateY(6px);
 }
-@keyframes bounce {
-  0%, 100% { transform: translateY(6px); }
-  50% { transform: translateY(12px); }
-}
+
 /* 第2页 */
 
 /* 背景容器（纯铺图，无过渡） */
@@ -324,11 +323,13 @@ body {
 
 #page7 .text-group-right {
   bottom: 42%;               /* 进一步上移 */
-  right: 65%;                /* 进一步靠左 */
+  right: 55%;                /* 向左移 */
   width: clamp(160px, 28vw, 360px);
   font-size: inherit;
   opacity: 0;
   transition: opacity 0.35s ease;
+  z-index: 5200;             /* 高于其他覆盖层 */
+  pointer-events: none;       /* 始终穿透，避免挡住手区域 */
 }
 
 #page7 .page7-yiyun-img {
@@ -339,6 +340,7 @@ body {
 
 #page7 #page7Yiyun.show {
   opacity: 1;
+  pointer-events: none;       /* 保持穿透，点击依然交给手区域 */
 }
 
 /* 第5页文本层级提升 */
@@ -510,12 +512,14 @@ body {
     opacity: 0;
   }
 }
-/* 点击图标（第4/第10页） */
+/* 点击图标 */
 .click-icon {
   position: absolute;
+  --click-translate-x: 0;
+  --click-translate-y: -50%;
   right: 50%;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translate(var(--click-translate-x), var(--click-translate-y));
   width: 64px;
   height: 64px;
   z-index: 10;
@@ -527,6 +531,13 @@ body {
   animation: clickBounce 1.6s ease-in-out infinite;
 }
 
+.click-icon.is-hidden {
+  opacity: 0;
+  animation: none;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
 .click-icon img {
   width: 100%;
   height: 100%;
@@ -535,8 +546,8 @@ body {
 
 /* ✨ 上下轻浮 keyframes */
 @keyframes clickBounce {
-  0%, 100% { transform: translateY(-50%) translateY(0); }
-  50% { transform: translateY(-50%) translateY(-8px); }
+  0%, 100% { transform: translate(var(--click-translate-x), var(--click-translate-y)); }
+  50% { transform: translate(var(--click-translate-x), calc(var(--click-translate-y) - 8px)); }
 }
 
 /* 第6/7页：autumn 上下半 */
@@ -959,32 +970,74 @@ body.page6-plus #page6 .schild-wrap {
 #page7 .handflower-wrap {
   position: absolute;
   right: 0;
-  bottom: 15%;
+  bottom: clamp(10%, 14vh, 18%);
   z-index: 2000;
-  pointer-events: none;
+  pointer-events: auto;
+  width: clamp(320px, 48vw, 720px);   /* 提升可点击区域 */
+  height: clamp(320px, 42vh, 560px);  /* 提升可点击区域 */
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: clamp(16px, 2vw, 32px);
 }
 
 /* 初始：藏在右边（正方向 = 容器外） */
 #page7 .last-handflower {
-  width: 200px;
+  width: clamp(140px, 22vw, 240px);
   transform-origin: bottom right;
-  transform: translateX(35%) scale(2); /* ✅ 从右外开始 */
+  transform: translateX(32%) scale(1.6); /* 更靠右起点 */
   opacity: 0;
   transition: transform .8s ease-out, opacity .6s ease-out;
+  pointer-events: auto;
 }
 
 /* 出现：滑回到画面 */
 #page7 .last-handflower.visible {
-  transform: translateX(35%) scale(2); /* ✅ 回到原位 */
+  transform: translateX(32%) scale(1.6); /* ✅ 回到原位 */
   opacity: 1;
+}
+
+@media (max-width: 1100px) {
+  #page7 .handflower-wrap {
+    right: 0;
+    bottom: clamp(8%, 12vh, 16%);
+    width: clamp(280px, 52vw, 640px);
+    height: clamp(280px, 46vh, 520px);
+    padding: clamp(12px, 2.5vw, 28px);
+  }
+  #page7 .last-handflower {
+    transform: translateX(24%) scale(1.45);
+  }
+  #page7 .last-handflower.visible {
+    transform: translateX(24%) scale(1.45);
+  }
+}
+
+@media (max-width: 820px) {
+  #page7 .handflower-wrap {
+    right: 0;
+    bottom: clamp(6%, 10vh, 14%);
+    width: clamp(240px, 56vw, 580px);
+    height: clamp(240px, 48vh, 480px);
+    padding: clamp(10px, 3vw, 24px);
+  }
+  #page7 .last-handflower {
+    transform: translateX(18%) scale(1.3);
+  }
+  #page7 .last-handflower.visible {
+    transform: translateX(18%) scale(1.3);
+  }
 }
 
 
 .click-pos-bottom-center {
   position: absolute;
-  left: 40%;
-  bottom: 18%;
-  transform: translateX(-50%);
+  left: 86%;
+  right: auto;
+  bottom: 65%;
+  top: auto;
+  --click-translate-x: -50%;
+  --click-translate-y: 0;
   z-index: 10;
 }
 
@@ -1032,7 +1085,6 @@ body.page6-plus #page6 .schild-wrap {
 .title-fixed .title {
   font-size: 3rem;
   color: #000000;
-  font-family: "Times New Roman", serif;
   text-shadow: 0 4px 8px rgba(0,0,0,0.5);
   letter-spacing: 2px;
 }

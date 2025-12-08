@@ -1,16 +1,9 @@
 /* ======================== 动画定义 ======================== */
 
-/* 向下箭头弹跳动画 */
+/* 向下箭头弹跳 */
 @keyframes bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(6px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
 }
 
 /* 第2页标题从底部滑入 */

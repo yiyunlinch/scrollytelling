@@ -8,9 +8,8 @@ let heroStarted = false; // 防止重复启动 hero
 let globalScrollLockUntil = 0; // 全局冷却，任意滚动翻页后生效
 let hold34Stage = 0;    // 第3->4页下滑停顿：0未停顿,1已停顿,2已通过
 let hold34LockUntil = 0;
-let privatStage = 0;   // page5-6 过渡：0 未触发，1 预冷却，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行
+let privatStage = 0;   // page5-6 过渡：0 未触发，2 已掉落，3 盖楼阶段，4 孩童消失，5 放行，6 完成
 let privatLockUntil = 0;
-let kinderVanish = () => {}; // 第6页孩童下落隐藏
 let kinderForceVisible = false; // 强制 Kinder/对白保持显示，直到主动消失
 let kinderLockedHidden = false; // 一旦隐藏则锁死，不再自动出现
 let buildingIndex = -1; // 当前盖楼层级 -1 表示未显示
@@ -19,8 +18,47 @@ let kinderAudio = null;
 let kinderFadeRAF = null;
 let kinderTargetVolume = 0;
 let kinderPlaying = false;
-let kinderShouldPlay = false;
+let kinderShouldPlay = false; // 仅在第2/3页播放
 let kinderPlayPending = false;
+let sheepAudio = null;
+let sheepPlaying = false;
+let sheepPlayPending = false;
+let sheepShouldPlay = false; // 仅在第7页播放
+let noiceAudio = null;
+let noicePlaying = false;
+let noicePlayPending = false;
+let noiceShouldPlay = false; // 第5-6页播放
+let birdAudio = null;
+let birdPlaying = false;
+let birdPlayPending = false;
+let birdShouldPlay = false; // 第1页播放
+let hasLeftMaxiPage = false; // 是否曾离开过第一页（Maxi 层）
+const MAXI_SEEN_KEY = 'maxiSeen'; // session 标记：是否离开过第1页
+let heroAllowCheck = () => true; // 是否允许触发 hero（基于当前可见页）
+let firstInteractionBound = false;
+let audioKickstarted = false;
+let audioMuted = true; // 跟随喇叭状态
+
+function isElementVisible(el, threshold = 0.35) {
+  if (!el) return false;
+  const rect = el.getBoundingClientRect();
+  const vh = window.innerHeight || 1;
+  const vw = window.innerWidth || 1;
+  if (rect.bottom <= 0 || rect.top >= vh) return false;
+  if (rect.right <= 0 || rect.left >= vw) return false;
+  const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+  const visibleRatio = visibleHeight / Math.max(1, rect.height);
+  return visibleRatio >= threshold;
+}
+const setViewportHeightVar = () => {
+  const vh = (window.innerHeight || document.documentElement.clientHeight || 0) * 0.01;
+  if (vh > 0) {
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  }
+};
+setViewportHeightVar();
+window.addEventListener('resize', setViewportHeightVar, { passive: true });
+window.addEventListener('orientationchange', setViewportHeightVar, { passive: true });
 
 // Page5 文字/对白显隐
 let setPage5ContentVisibility = () => {};
@@ -56,7 +94,7 @@ function fadeKinder(toVolume, duration = 800, stopAfter = false) {
 }
 
 function startKinderAudio() {
-  if (!kinderAudio) return;
+  if (!kinderAudio || audioMuted) return;
   kinderShouldPlay = true;
   stopKinderFade();
   try {
@@ -78,11 +116,19 @@ function startKinderAudio() {
   fadeKinder(1, 1200);
 }
 
-function fadeOutKinder() {
-  if (!kinderAudio || !kinderPlaying) return;
+function fadeOutKinder(stopRequest = false) {
+  if (!kinderAudio || !kinderPlaying) {
+    if (stopRequest) {
+      kinderShouldPlay = false;
+      kinderPlayPending = false;
+    }
+    return;
+  }
   fadeKinder(0, 1200, true);
-  kinderShouldPlay = false;
-  kinderPlayPending = false;
+  if (stopRequest) {
+    kinderShouldPlay = false;
+    kinderPlayPending = false;
+  }
 }
 
 function ensureKinderPlaybackIfNeeded() {
@@ -91,27 +137,243 @@ function ensureKinderPlaybackIfNeeded() {
   }
 }
 
+function startSheepAudio() {
+  if (!sheepAudio || audioMuted) return;
+  sheepShouldPlay = true;
+  try {
+    sheepAudio.muted = false;
+    sheepAudio.loop = true;
+    if (!sheepPlaying) {
+      sheepAudio.currentTime = 0;
+      sheepAudio.play().then(() => {
+        sheepPlaying = true;
+        sheepPlayPending = false;
+      }).catch(() => {
+        sheepPlayPending = true;
+      });
+    }
+  } catch (e) {
+    console.warn('sheep audio play failed', e);
+  }
+}
+
+function stopSheepAudio() {
+  if (!sheepAudio) return;
+  sheepAudio.pause();
+  sheepAudio.currentTime = 0;
+  sheepPlaying = false;
+  sheepPlayPending = false;
+}
+
+function ensureSheepPlaybackIfNeeded() {
+  if (sheepShouldPlay && (!sheepPlaying || sheepPlayPending)) {
+    startSheepAudio();
+  }
+}
+
+function startNoiceAudio() {
+  if (!noiceAudio || audioMuted) return;
+  noiceShouldPlay = true;
+  try {
+    noiceAudio.muted = false;
+    noiceAudio.loop = true;
+    if (!noicePlaying) {
+      noiceAudio.currentTime = 0;
+      noiceAudio.play().then(() => {
+        noicePlaying = true;
+        noicePlayPending = false;
+      }).catch(() => {
+        noicePlayPending = true;
+      });
+    }
+  } catch (e) {
+    console.warn('noice audio play failed', e);
+  }
+}
+
+function stopNoiceAudio() {
+  if (!noiceAudio) return;
+  noiceAudio.pause();
+  noiceAudio.currentTime = 0;
+  noicePlaying = false;
+  noicePlayPending = false;
+}
+
+function ensureNoicePlaybackIfNeeded() {
+  if (noiceShouldPlay && (!noicePlaying || noicePlayPending)) {
+    startNoiceAudio();
+  }
+}
+
+function startBirdAudio() {
+  if (!birdAudio || audioMuted) return;
+  birdShouldPlay = true;
+  try {
+    birdAudio.muted = false;
+    birdAudio.loop = true;
+    if (!birdPlaying) {
+      birdAudio.currentTime = 0;
+      birdAudio.play().then(() => {
+        birdPlaying = true;
+        birdPlayPending = false;
+      }).catch(() => {
+        birdPlayPending = true;
+      });
+    }
+  } catch (e) {
+    console.warn('bird audio play failed', e);
+  }
+}
+
+function stopBirdAudio() {
+  if (!birdAudio) return;
+  birdAudio.pause();
+  birdAudio.currentTime = 0;
+  birdPlaying = false;
+  birdPlayPending = false;
+}
+
+function ensureBirdPlaybackIfNeeded() {
+  if (birdShouldPlay && (!birdPlaying || birdPlayPending)) {
+    startBirdAudio();
+  }
+}
+
+function tryPlayPendingBird() {
+  if (!birdAudio || !birdPlayPending || !birdShouldPlay) return;
+  startBirdAudio();
+}
+
+function kickstartAllAudio() {
+  if (audioKickstarted) return;
+  audioKickstarted = true;
+  if (kinderShouldPlay) {
+    startKinderAudio();
+    tryPlayPendingKinder();
+  }
+  ensureNoicePlaybackIfNeeded();
+  ensureSheepPlaybackIfNeeded();
+  ensureBirdPlaybackIfNeeded();
+}
+
 function startHeroOnce() {
   if (heroStarted) return;
+  if (!heroAllowCheck()) return;
   heroStarted = true;
   window.dispatchEvent(new Event('hero-start'));
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
-  allPages   = Array.from(document.querySelectorAll('.page'));
-  kinderAudio = document.getElementById('kinderAudio');
-  const page3Elem = document.getElementById('page3');
-  const track = document.querySelector('.cover-h-track');
-  const TRACK_COUNT = trackPages.length;
+  window.addEventListener('DOMContentLoaded', () => {
+    trackPages = Array.from(document.querySelectorAll('.cover-h-track .page'));
+    allPages   = Array.from(document.querySelectorAll('.page'));
+    kinderAudio = document.getElementById('kinderAudio');
+    sheepAudio  = document.getElementById('sheepAudio');
+    noiceAudio  = document.getElementById('noiceAudio');
+    birdAudio   = document.getElementById('birdAudio');
+    const page3Elem = document.getElementById('page3');
+    const track = document.querySelector('.cover-h-track');
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const page3 = document.getElementById('page3');
+    const page4 = document.getElementById('page4');
+    const page1ClickIcon = document.getElementById('clickIconPage1');
+    const downArrow = document.getElementById('globalDownArrow');
+    let page1ArrowReady = false;
+    let triggerPage1Advance = null;
+
+    function markPage1ArrowReady() {
+      if (page1ArrowReady) return;
+      page1ArrowReady = true;
+      syncPage1Arrow();
+    }
+
+    function syncPage1Arrow() {
+      if (!downArrow) return;
+      const idx = currentPageIndex;
+      const withinRange = idx <= 5;
+      const allowPage1 = page1ArrowReady;
+      const shouldShow = withinRange && (idx > 0 || allowPage1);
+      downArrow.classList.toggle('show', shouldShow);
+      downArrow.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    }
+
+    const hidePage1ClickIcon = () => {
+      if (page1ClickIcon) {
+        page1ClickIcon.classList.add('is-hidden');
+      }
+    };
+    const TRACK_COUNT = 1; // 仅首屏使用特殊逻辑，其余页面按正常竖向流动
+  let seenFromSession = false;
+  try {
+    seenFromSession = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
+  } catch (err) {
+    seenFromSession = false;
+  }
+
+function requestKinderPlay() {
+  if (!kinderShouldPlay) return;
+  startKinderAudio();
+  tryPlayPendingKinder();
+}
+
+function playPageAudio(idx) {
+  // bird：第1页
+  if (idx === 0) {
+    birdShouldPlay = true;
+      startBirdAudio();
+  } else {
+    birdShouldPlay = false;
+    stopBirdAudio();
+  }
+  // kinder：用于第2/3页
+    kinderShouldPlay = (idx === 1 || idx === 2);
+    if (kinderShouldPlay) {
+      requestKinderPlay();
+    } else {
+      fadeOutKinder(true);
+    }
+    // sheep：第7页
+    if (idx === 6) {
+      sheepShouldPlay = true;
+      startSheepAudio();
+    } else {
+      sheepShouldPlay = false;
+      stopSheepAudio();
+    }
+    // noice：仅第5页
+    if (idx === 4) {
+      noiceShouldPlay = true;
+      startNoiceAudio();
+    } else {
+      noiceShouldPlay = false;
+      stopNoiceAudio();
+    }
+}
+
+  function findMostVisiblePageIndex() {
+    const vh = window.innerHeight || 1;
+    let bestIdx = 0;
+    let bestScore = 0;
+    allPages.forEach((p, idx) => {
+      const rect = p.getBoundingClientRect();
+      const visible = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+      if (visible <= 0) return;
+      const ratio = visible / Math.max(rect.height, 1);
+      if (ratio > bestScore) {
+        bestScore = ratio;
+        bestIdx = idx;
+      }
+    });
+    return bestIdx;
+  }
 
   /* === 全局页面导航（仅前2页横滑） === */
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
   function setActive(idx) {
     allPages.forEach((p, i) => p.classList.toggle('active', i === idx));
   }
-  function dispatchPageChange(idx) {
-    if (idx === currentPageIndex) {
+  function dispatchPageChange(idx, force = false) {
+    if (idx === currentPageIndex && !force) {
       setActive(idx);
       return;
     }
@@ -120,55 +382,45 @@ window.addEventListener('DOMContentLoaded', () => {
     window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
   }
 
+  // 刷新时先同步当前可见页，避免进入第6页时残留第5页元素闪现
+  currentPageIndex = findMostVisiblePageIndex();
+  setActive(currentPageIndex);
+  document.body.classList.toggle('page6-plus', currentPageIndex >= 5);
+  if (currentPageIndex > 0) {
+    markPage1ArrowReady();
+  } else {
+    syncPage1Arrow();
+  }
+  // 刷新时根据当前页尝试启动对应音频
+  playPageAudio(currentPageIndex);
+  // 默认就尝试启动音频请求（若被策略拦截，后续交互再重试）
+  requestKinderPlay();
+  ensureNoicePlaybackIfNeeded();
+  ensureSheepPlaybackIfNeeded();
+  ensureBirdPlaybackIfNeeded();
+  // 尽早尝试自动播放（若被策略拦截，将在首个交互捕获后再尝试）
+  kickstartAllAudio();
+
   function goToPage(idx, animate = true) {
-    idx = clamp(idx, 0, TRACK_COUNT - 1);
-    const target = trackPages[idx];
-    const globalIdx = allPages.indexOf(target);
-    if (track) {
-      track.style.transition = animate ? 'transform 1.5s ease' : 'none';
-      track.style.transform = `translateY(${-idx * 100}vh)`; // 竖向滑动
+    idx = clamp(idx, 0, allPages.length - 1);
+    const target = allPages[idx];
+    if (!target) return;
+    try {
+      target.scrollIntoView({ behavior: animate ? 'smooth' : 'auto', block: 'start' });
+    } catch (err) {
+      // 回退：不支持平滑滚动的环境直接设置
+      const top = target.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top, behavior: animate ? 'smooth' : 'auto' });
     }
-    if (globalIdx >= 0) {
-      dispatchPageChange(globalIdx);
-    }
+    dispatchPageChange(idx);
     // 进入新页面后添加冷却，防止连续翻页
     globalScrollLockUntil = performance.now() + 650;
   }
 
-  function findVisiblePageIndex() {
-    const vh = window.innerHeight || 1;
-    let bestIdx = 0;
-    let bestRatio = -1;
-    allPages.forEach((p, i) => {
-      const rect = p.getBoundingClientRect();
-      const overlap = Math.max(0, Math.min(vh, rect.bottom) - Math.max(0, rect.top));
-      const ratio = overlap / vh;
-      if (ratio > bestRatio) {
-        bestRatio = ratio;
-        bestIdx = i;
-      }
-    });
-    return bestIdx;
+  // 初始定位第一页（仅在未看过首屏时强制）
+  if (!seenFromSession) {
+    goToPage(0, false);
   }
-
-  function alignTrackTo(idx) {
-    if (!track) return;
-    track.style.transition = 'none';
-    track.style.transform = `translateY(${-idx * 100}vh)`;
-  }
-
-  // 延迟到 load/首帧后再根据可见区域定位，避免浏览器滚动恢复被覆盖
-  window.addEventListener('load', () => {
-    requestAnimationFrame(() => {
-      const initIdx = findVisiblePageIndex();
-      currentPageIndex = initIdx;
-      setActive(initIdx);
-      if (initIdx < TRACK_COUNT) {
-        alignTrackTo(initIdx);
-      }
-      window.dispatchEvent(new CustomEvent('pagechange', { detail: { index: currentPageIndex }}));
-    });
-  }, { once: true });
 
   // 如果刷新时停在第2页或更下方（例如第3页），直接触发 hero，避免刷新后消失
   function maybeStartHeroFromScroll() {
@@ -179,19 +431,62 @@ window.addEventListener('DOMContentLoaded', () => {
       return rect.top < vh * 0.65 && rect.bottom > vh * 0.35;
     };
     if (visibleEnough(document.getElementById('page2')) ||
-        visibleEnough(document.getElementById('page3')) ||
-        visibleEnough(document.getElementById('page4'))) {
+        visibleEnough(document.getElementById('page3'))) {
       startHeroOnce();
     }
   }
   requestAnimationFrame(maybeStartHeroFromScroll);
 
+  // hero 触发条件：仅当第1-4页有可见区域时才允许
+  heroAllowCheck = () => {
+    return (
+      isElementVisible(page1, 0.6) ||
+      isElementVisible(page2, 0.25) ||
+      isElementVisible(page3, 0.25) ||
+      isElementVisible(page4, 0.25)
+    );
+  };
+
   // 进入第2页时再尝试触发 hero 羊出现（仅当 Maxi 已露出）
   window.addEventListener('pagechange', e => {
-    if (e.detail.index === 1) {
+    const idx = e.detail.index;
+    if (idx > 0) {
+      hasLeftMaxiPage = true;
+      try {
+        sessionStorage.setItem(MAXI_SEEN_KEY, '1');
+      } catch (err) {
+        console.warn('sessionStorage set failed', err);
+      }
+    }
+    playPageAudio(idx);
+    // 进入前几页（含从下方往上回拉至第4/3页）都可触发 hero，保证刷新后上拉也能出现
+    if (idx === 1 || idx === 2) {
       startHeroOnce();
     }
+    // 从下方向上返回第一页时，直接露出 Maxi 背景，不停留在 sheepblack
+    if (idx === 0 && hasLeftMaxiPage) {
+      eyeStage = 3;
+      eyeLayers.revealBase();
+    }
   });
+
+  // 滚动时补发文案解锁，保证上拉回到 page2/3 能看到 besuche/jeder
+  window.addEventListener('scroll', () => {
+    if (unlockOnScroll) unlockOnScroll();
+    if (ensureManualByVisibility) ensureManualByVisibility();
+    // 若已离开过首屏且当前回到 page1，可见时确保露出 Maxi5 而不是 sheepblack
+    const page1 = document.getElementById('page1');
+    if (page1 && hasLeftMaxiPage && eyeLayers && typeof eyeLayers.revealBase === 'function') {
+      if (isVisibleEnough(page1, 0.4)) {
+        eyeStage = 3;
+        eyeLayers.revealBase();
+        const stack = page1.querySelector('.eye-interaction-container');
+        if (stack) {
+          stack.style.visibility = 'visible';
+        }
+      }
+    }
+  }, { passive: true });
 
   /* ====== 第1页：三张图分三次下拉 ====== */
   const eyeLayers = (() => {
@@ -199,6 +494,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const midLayer = document.querySelector('.eye-layer-middle');    // sheepeye.png
     const baseLayer = document.querySelector('.eye-layer-base');     // Maxi5 背景
     const visitsText = document.getElementById('visitsText');
+    const page1 = document.getElementById('page1');
+    const stack = page1 ? page1.querySelector('.eye-interaction-container') : null;
 
     function showMid() {
       if (topLayer) topLayer.style.opacity = '0';
@@ -228,14 +525,50 @@ window.addEventListener('DOMContentLoaded', () => {
       if (visitsText) visitsText.classList.remove('show');
     }
 
+    function revealBase() {
+      // 强制露出 Maxi5 背景（从下往上回到第一页时用）
+      if (topLayer) topLayer.style.opacity = '0';
+      if (midLayer) {
+        midLayer.style.opacity = '0';
+        midLayer.classList.add('dissolve');
+      }
+      if (baseLayer) baseLayer.style.opacity = '1';
+      if (visitsText) visitsText.classList.add('show');
+      hidePage1ClickIcon();
+      markPage1ArrowReady();
+      syncPage1Arrow();
+    }
+
     if (midLayer) {
       midLayer.addEventListener('animationend', () => {
         startHeroOnce();
       }, { once: true });
     }
 
-    reset();
-    return { showMid, dissolveMid, showText, reset };
+    // 首次渲染：根据 session 记录决定是否跳过遮罩；若当前就在 page1，则仍保留遮罩
+    const initialOnPage1 = (() => {
+      if (!page1) return true;
+      const rect = page1.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      const mostlyVisible = rect.top <= 0 && rect.bottom >= vh * 0.8;
+      const nearTop = (window.scrollY || window.pageYOffset || 0) < 10;
+      return mostlyVisible && nearTop;
+    })();
+    try {
+      const seen = sessionStorage.getItem(MAXI_SEEN_KEY) === '1';
+      if (seen && !initialOnPage1) {
+        hasLeftMaxiPage = true;
+        eyeStage = 3;
+        revealBase();
+      } else {
+        reset(); // 首次或当前停在 page1 时保留遮罩
+        if (stack) stack.style.visibility = 'visible';
+      }
+    } catch (err) {
+      reset();
+      if (stack) stack.style.visibility = 'visible';
+    }
+    return { showMid, dissolveMid, showText, reset, revealBase };
   })();
 
   /* Page5 掉落 privat */
@@ -379,7 +712,8 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     };
     setPage5ContentVisibility = update;
-    update(true);
+    const shouldShowInitially = currentPageIndex === 4 && buildingIndex < 0 && !kinderLockedHidden;
+    update(shouldShowInitially);
   })();
 
   window.addEventListener('pagechange', e => {
@@ -394,11 +728,17 @@ window.addEventListener('DOMContentLoaded', () => {
       setTimeout(ensureKinderPlaybackIfNeeded, 100); // 再尝试一次
     }
     if (idx >= 3 || idx < 1) {
-      fadeOutKinder(); // 离开第3页后淡出，或回到第一页前淡出
+      fadeOutKinder(false); // 离开第3页后淡出，但保留播放意愿
     }
     if (idx === 4) {
       privatStage = 0; // 进入第5页时重置掉落
       privatDrop.reset();
+      // 若从第4页点击箭头直达第5页，直接触发掉落一次
+      if (privatStage < 2 && performance.now() >= Math.max(privatLockUntil, globalScrollLockUntil)) {
+        privatStage = 2;
+        privatDrop.drop();
+        setPrivatCooldown(300);
+      }
       buildingAnim.reset();
     } else if (idx <= 3) {
       privatStage = 0; // 上拉到第4页及以上时清零并收起
@@ -407,8 +747,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     if (idx === 5) {
       privatStage = Math.max(privatStage, 2);
-      kinderForceVisible = true;
-      buildingAnim.setIndex(0); // 默认显示第一层
+      kinderForceVisible = false;
+      buildingAnim.reset(); // 初始不显示建筑，改为点击触发
       setPage5ContentVisibility(false); // 进入第6页隐藏 page5 内容
     } else {
       buildingAnim.reset();
@@ -425,11 +765,58 @@ window.addEventListener('DOMContentLoaded', () => {
     // 其他页保持当前状态
   });
 
+  // 第6页：显示点击手势提示
+  (function initPage6ClickIcon() {
+    const icon = document.getElementById('clickIconPage6');
+    if (!icon) return;
+    let clickStep = 0;
+    let autoAdvanceTimer = null;
+    const update = idx => {
+      icon.classList.toggle('is-hidden', idx !== 5);
+      if (idx !== 5) {
+        clickStep = 0;
+        if (autoAdvanceTimer) {
+          clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = null;
+        }
+      }
+    };
+    icon.addEventListener('click', () => {
+      if (currentPageIndex !== 5) return;
+      if (typeof buildingAnim?.setIndex === 'function') {
+        if (autoAdvanceTimer) {
+          clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = null;
+        }
+        const wrap = document.getElementById('houseVideoWrap');
+        if (wrap) {
+          wrap.classList.add('visible');
+          wrap.style.opacity = '1';
+        }
+        if (clickStep === 2 && buildingAnim.max >= 3) {
+          // 第3次点击：先显示第3层，再快速推到第4层
+          buildingAnim.setIndex(2);
+          autoAdvanceTimer = setTimeout(() => {
+            buildingAnim.setIndex(3);
+            autoAdvanceTimer = null;
+          }, 140);
+          clickStep = 4;
+          return;
+        }
+        const nextIdx = Math.min(clickStep, buildingAnim.max);
+        buildingAnim.setIndex(nextIdx);
+        clickStep = Math.min(clickStep + 1, buildingAnim.max + 1);
+      }
+    });
+    window.addEventListener('pagechange', e => update(e.detail.index));
+    update(currentPageIndex);
+  })();
+
   // Wheel 导航 + 首屏分阶段
   const EYE_COOLDOWN = 650;
   const HERO_REVEAL_COOLDOWN = 900; // 第二次下拉后停留的冷冻时间
   const PAGE_AFTER_MAXI_COOLDOWN = 1000; // Maxi5 -> 下一页额外冷却
-  const PRIVAT_COOLDOWN = 700; // page6 掉落冷却
+  const PRIVAT_COOLDOWN = 300; // privat/盖楼相关冷却，更短
   const BUILD_COOLDOWN = 360; // 盖楼切换冷却（略放慢）
 
   function setEyeCooldown(extra = 0) {
@@ -451,6 +838,94 @@ window.addEventListener('DOMContentLoaded', () => {
     globalScrollLockUntil = Math.max(globalScrollLockUntil, lock);
   }
 
+  // 首屏：点击（整屏或手势提示）也能按步骤睁眼
+  (function initPage1ClickToOpenEye() {
+    const page1 = document.getElementById('page1');
+    const clickIcon = document.getElementById('clickIconPage1');
+    if (!page1) return;
+
+    const tryAdvanceEye = () => {
+      if (currentPageIndex !== 0) return;
+      const now = performance.now();
+      const cooling = now < Math.max(eyeLockUntil, globalScrollLockUntil);
+      if (cooling) return;
+
+      if (eyeStage === 0) {
+        eyeStage = 1;
+        eyeLayers.showMid();
+        setEyeCooldown();
+        return;
+      }
+      if (eyeStage === 1) {
+        eyeStage = 2;
+        eyeLayers.revealBase();
+        hidePage1ClickIcon();
+        setEyeCooldown(HERO_REVEAL_COOLDOWN); // 留一点时间看 Maxi5
+        return;
+      }
+      if (eyeStage === 2) {
+        eyeStage = 3;
+        setEyeCooldown();
+        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
+        goToPage(1);
+      }
+    };
+
+    page1.addEventListener('click', tryAdvanceEye);
+    if (clickIcon) {
+      clickIcon.addEventListener('click', e => {
+        e.stopPropagation();
+        tryAdvanceEye();
+      });
+    }
+    const handleSpaceAdvance = e => {
+      const isSpace = e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+      if (!isSpace) return;
+      if (currentPageIndex !== 0) return;
+      e.preventDefault(); // 避免空格触发页面滚动
+      tryAdvanceEye();
+    };
+    window.addEventListener('keydown', handleSpaceAdvance);
+    triggerPage1Advance = tryAdvanceEye;
+  })();
+
+  /* 全局向下箭头：第1-6页显示（首屏需先露出 Maxi5） */
+  (function initDownArrow() {
+    if (!downArrow) return;
+
+    const canNavigate = () => {
+      const now = performance.now();
+      return now >= Math.max(globalScrollLockUntil, eyeLockUntil, privatLockUntil);
+    };
+
+    downArrow.addEventListener('click', e => {
+      e.preventDefault();
+      if (!canNavigate()) return;
+
+      if (currentPageIndex === 0) {
+        if (!page1ArrowReady) return;
+        if (typeof triggerPage1Advance === 'function') {
+          triggerPage1Advance();
+        } else {
+          goToPage(1);
+        }
+        return;
+      }
+
+      if (currentPageIndex >= allPages.length - 1) return;
+      goToPage(currentPageIndex + 1);
+    });
+
+    window.addEventListener('pagechange', e => {
+      if (e.detail.index > 0) {
+        markPage1ArrowReady();
+      }
+      syncPage1Arrow();
+    });
+
+    syncPage1Arrow();
+  })();
+
   function isPage3GateActive() {
     if (!page3Elem) return false;
     const rect = page3Elem.getBoundingClientRect();
@@ -470,45 +945,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const stillCooling = now < Math.max(eyeLockUntil, privatLockUntil, globalScrollLockUntil);
     const inTrack = currentPageIndex < TRACK_COUNT;
     const onPage34 = currentPageIndex >= 2 && currentPageIndex <= 3;
-    const onLastTrackPage = inTrack && currentPageIndex === TRACK_COUNT - 1;
-
-    // 从第2页向下滑时会设置一个短暂的“反弹保护”，避免惯性小幅上滑把视图送回 Maxi5
-    if (onLastTrackPage) {
-      if (dir > 0) {
-        page2DownGuardUntil = Math.max(page2DownGuardUntil, now + 750);
-      } else if (dir < 0 && now < page2DownGuardUntil) {
-        e.preventDefault();
-        return;
-      }
-    }
 
     if (inTrack && currentPageIndex === 0 && dir > 0) {
-      if (stillCooling) {
+      // 首屏：眼睛还未露出 Maxi5 时禁止滚轮翻页，露出后放行
+      const allowScrollAfterMaxi = eyeStage >= 2;
+      if (!allowScrollAfterMaxi) {
         e.preventDefault();
-        return;
-      }
-
-      if (eyeStage === 0) {
-        e.preventDefault();
-        eyeStage = 1;
-        eyeLayers.showMid();
-        setEyeCooldown();
-        return;
-      }
-      if (eyeStage === 1) {
-        e.preventDefault();
-        eyeStage = 2;
-        eyeLayers.dissolveMid();
-        eyeLayers.showText();
-        setEyeCooldown(HERO_REVEAL_COOLDOWN);
-        return;
-      }
-      if (eyeStage === 2) {
-        e.preventDefault();
-        eyeStage = 3;
-        setEyeCooldown();
-        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
-        goToPage(1);
         return;
       }
     }
@@ -534,94 +976,19 @@ window.addEventListener('DOMContentLoaded', () => {
           hold34Stage = 2;
         }
       }
-      // page5 掉落 privat：先冷却，再掉落，中段停下
+      // page5 掉落 privat：一次下滚即掉落，冷却更短
       if (currentPageIndex === 4 && dir > 0) {
         if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
           e.preventDefault();
           return;
         }
-        if (privatStage === 0) {
-          e.preventDefault();
-          privatStage = 1;
-          setPrivatCooldown(500);
-          return;
-        } else if (privatStage === 1) {
+        if (privatStage < 2) {
           e.preventDefault();
           privatStage = 2;
           privatDrop.drop();
-          setPrivatCooldown(600); // 掉落后稍作停顿
+          setPrivatCooldown(300); // 短冷却防连触
           return;
         }
-      }
-      // page6 -> page7 过渡：掉落完成后盖楼、再消失 Kinder，最后才放行
-      if (currentPageIndex === 5 && dir > 0) {
-        if (now < Math.max(privatLockUntil, globalScrollLockUntil)) {
-          e.preventDefault();
-          return;
-        }
-        if (privatStage < 2) {
-          // 如果跳过了 page5，强制视为已掉落
-          privatStage = 2;
-        }
-        if (privatStage === 2) {
-          // 初到第6页，开始盖楼第一层已显示，滚一次才进入盖楼节奏
-          if (stillCooling) {
-            e.preventDefault();
-            return;
-          }
-          e.preventDefault();
-          privatStage = 3;
-          setBuildCooldown(280);
-          return;
-        } else if (privatStage === 3) {
-          // 盖楼：每次向下滚增加一层，直到最顶层
-          if (buildingIndex < buildingAnim.max) {
-            e.preventDefault();
-            buildingAnim.step(1);
-            setBuildCooldown(280);
-            return;
-          } else {
-            // 已经到最高层，进入下一阶段
-            e.preventDefault();
-            privatStage = 4;
-            return;
-          }
-        } else if (privatStage === 4) {
-          // 让孩童快速下落消失，仍留在第6页
-          if (stillCooling) {
-            e.preventDefault();
-            return;
-          }
-          e.preventDefault();
-          privatStage = 5;
-          kinderForceVisible = false;
-          kinderLockedHidden = true;
-          kinderVanish();
-          setPrivatCooldown(320); // 顶层后仅一次短冷却
-          return;
-        } else if (privatStage === 5) {
-          // 盖楼完成 & 孩童消失后，下一次滚动才能放行
-          if (stillCooling) {
-            e.preventDefault();
-            return;
-          }
-          // 释放到下一页，标记完成（楼层保持在第6页）
-          privatStage = 6;
-        }
-      }
-      // page6 向上滚动：一层层拆楼，回到顶部才允许离开
-      if (currentPageIndex === 5 && dir < 0) {
-        if (buildingIndex >= 0) {
-          e.preventDefault();
-          buildingAnim.step(-1);
-          setBuildCooldown(240);
-          // 回退到无楼层时，重置阶段
-          if (buildingIndex < 0) {
-            privatStage = 2;
-          }
-          return;
-        }
-        // 没有楼层显示时，允许继续往上回到上一页
       }
       return; // 后面正常竖向滚动
     }
@@ -689,9 +1056,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const TARGET_BIAS    = 0.08;   // 向目标点的慢慢靠近
 
   // 内场边距（避免贴边）：左右 22%，上 5%，下 40%
-  const PAD_X_FRAC      = 0.30;  // 左右各 30%
+  const PAD_X_FRAC      = 0.18;  // 左右各 18%（扩大可用宽度，减少集中在右侧）
   const PAD_Y_TOP_FRAC  = 0.05;
-  const PAD_Y_BOT_FRAC  = 0.40;
+  const PAD_Y_BOT_FRAC  = 0.25;  // 底部预留减少，扩大垂直活动区
 
   const rand  = (a, b) => a + Math.random() * (b - a);
 
@@ -844,78 +1211,6 @@ window.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(tick);
 })();
 
-  /* ====== 第1页箭头：滚到第2页 ====== */
-  try {
-    (function initArrow() {
-      const btn = $('#toPage2');
-      if (!btn) return;
-      btn.addEventListener('click', e => {
-        e.preventDefault();
-        // 点击箭头模拟首屏三次下拉：1) 露出眼睛 2) Maxi 全图 3) 才进入第2页
-        if (currentPageIndex !== 0) {
-          goToPage(1);
-          return;
-        }
-        if (eyeStage === 0) {
-          eyeStage = 1;
-          eyeLayers.showMid();
-          setEyeCooldown();
-          return;
-        }
-        if (eyeStage === 1) {
-          eyeStage = 2;
-          eyeLayers.dissolveMid();
-          eyeLayers.showText();
-          setEyeCooldown(HERO_REVEAL_COOLDOWN);
-          return;
-        }
-        // 第三次点击放行到第2页
-        eyeStage = 3;
-        setEyeCooldown();
-        globalScrollLockUntil = Math.max(globalScrollLockUntil, performance.now() + PAGE_AFTER_MAXI_COOLDOWN);
-        goToPage(1);
-      });
-    })();
-  } catch (e) { console.error('initArrow error', e); }
-
-  // 原首屏滚动滑页逻辑已整合到全局导航，单独逻辑移除
-
-
-
-
-  /* ====== 小货车 (第10页) 往左循环，按页激活 ====== */
-  try {
-    function initMovingAnimOnce(elemId, pageIdx) {
-      const elem = document.getElementById(elemId);
-      if (!elem) return;
-
-      let x = window.innerWidth;
-      const speed = 1.25;
-      const elemWidth = 180;
-      let running = false;
-
-      function animate() {
-        if (!running) return;
-        x -= speed;
-        if (x < -elemWidth * 3) x = window.innerWidth;
-        elem.style.left = `${x}px`;
-        requestAnimationFrame(animate);
-      }
-
-      function onPageChange(idx) {
-        running = idx === pageIdx;
-        if (running) {
-          x = window.innerWidth;
-          requestAnimationFrame(animate);
-        }
-      }
-
-      window.addEventListener('resize', () => { x = window.innerWidth; }, { passive: true });
-  window.addEventListener('pagechange', e => onPageChange(e.detail.index));
-  onPageChange(currentPageIndex);
-}
-  } catch (e) { console.error('initMovingAnimOnce error', e); }
-
 /* ====== 挖土机：第8页内循环，按页激活 ====== */
 (function initDiggerFixed() {
   const digger = document.getElementById('digger-fixed');
@@ -1032,11 +1327,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
       let activeState = false;
 
-      function sync(show) {
-        if (kinderLockedHidden) {
-          show = false;
-        }
-        const shouldShow = show || kinderForceVisible;
+    function sync(show) {
+      if (kinderLockedHidden) {
+        show = false;
+      }
+      const shouldShow = show || kinderForceVisible;
         if (shouldShow) {
           kinderImg.style.transition = 'transform 0.7s ease';
           kinderImg.style.transform = 'translateY(0%)';
@@ -1055,22 +1350,11 @@ window.addEventListener('DOMContentLoaded', () => {
         sync(activeState);
       }
 
-      function vanishDown() {
-        kinderForceVisible = false;
-        kinderLockedHidden = true;
-        kinderImg.style.transition = 'transform 0.35s ease-in';
-        kinderImg.style.transform = 'translateY(180%)';
-        schauLeft.style.opacity = '0';
-        schauRight.style.opacity = '0';
-      }
-
-      kinderVanish = vanishDown;
-
       // 由 pagechange 和额外的 IntersectionObserver 双重保障，避免偶发不触发
       window.addEventListener('pagechange', e => {
         const onPage5 = e.detail.index === 4;
         if (!kinderLockedHidden) {
-          kinderForceVisible = onPage5 || (privatStage >= 2 && privatStage < 5);
+          kinderForceVisible = onPage5;
         }
         // 进入第5页先收起，等可视度达标再出现
         if (onPage5 && !kinderLockedHidden && buildingIndex < 0) {
@@ -1100,7 +1384,10 @@ window.addEventListener('DOMContentLoaded', () => {
     console.error('initKinderAndDialogOnPage8 error', e);
   }
 
-}); // END DOMContentLoaded
+  // 初始化后强制同步当前页状态，避免直接落在第6页时第5页元素短暂可见
+  dispatchPageChange(currentPageIndex, true);
+
+  }); // END DOMContentLoaded
 
 /* ====== 第1页 hand 图片出现/消失（草地手） ====== */
 
@@ -1172,6 +1459,7 @@ try {
   let heroTextTimer = null;
   let manualOverride = false; // 第2/3页由滚动控制文案
   let manualLoop = null;
+  let ensureManualByVisibility = () => {}; // 可视驱动的手动模式
   const baseX = 50;     // 正常位置
   const exitX = 170;    // 向右离场的位置（超出视口）
   const baseY = 80;     // 垂直位置更低一些
@@ -1187,8 +1475,22 @@ try {
   ];
   let currentTextFrame = -1;
   let autoAdvanceTimer = null;
+  let unlockOnScroll = () => {}; // 占位，scroll 时补发解锁
 
   const clamp01 = v => Math.max(0, Math.min(1, v));
+
+  // 判断元素是否可见到一定比例
+  function isVisibleEnough(el, threshold = 0.35) {
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || 1;
+    const vw = window.innerWidth || 1;
+    if (rect.bottom <= 0 || rect.top >= vh) return false;
+    if (rect.right <= 0 || rect.left >= vw) return false;
+    const visibleHeight = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+    const visibleRatio = visibleHeight / Math.max(1, rect.height);
+    return visibleRatio >= threshold;
+  }
 
   function page4Progress() {
     if (!page4) return 0;
@@ -1304,31 +1606,65 @@ try {
       stopManualLoop();
       return;
     }
-    if (currentPageIndex === 1) {
+    // 若 currentPageIndex 未切回 1/2，但页面可视度显示我们确实在 page2/3，上拉时也能显示气泡
+    let manualIdx = currentPageIndex;
+    if (manualIdx !== 1 && manualIdx !== 2) {
+      if (isVisibleEnough(page2, 0.28)) manualIdx = 1;
+      else if (isVisibleEnough(page3, 0.28)) manualIdx = 2;
+    }
+
+    if (manualIdx === 1) {
       const p = page2Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p < 0.01) {
-        setFrame(0); // 仅在前 1% 显示 besuche
-      } else if (p >= 0.90) {
-        setFrame(2); // 90% 起出现 niemand（无空窗）
+      } else if (p < 0.005) {
+        setFrame(0); // 仅在前 0.5% 显示 besuche，更早切到 jeder
       } else {
-        setFrame(1); // 1%-90% 显示 jeder
+        setFrame(1); // 其余均显示 jeder，持续到进入第3页
       }
-    } else if (currentPageIndex === 2) {
+    } else if (manualIdx === 2) {
       const p = page3Progress();
       if (!textReady) {
         setFrame(-1);
-      } else if (p >= 0.01) {
-        setFrame(3); // 第3页显示 Wir
+      } else if (p < 0.05) {
+        setFrame(1); // 第3页前 5% 保持 jeder，再切换
       } else {
-        setFrame(-1); // 其他区间空
+        setFrame(3); // 第3页显示 Wir
       }
     } else {
       setFrame(-1);
     }
     manualLoop = requestAnimationFrame(tickManualText);
   }
+
+  // 在回到第2/3页并滚动时，如果文案尚未解锁，则直接解锁，保证 besuche/jeder 出现
+  unlockOnScroll = () => {
+    if (textUnlocked) return;
+    if (!heroStarted) return;
+    const onP2 = currentPageIndex === 1 || isVisibleEnough(page2, 0.25);
+    const onP3 = currentPageIndex === 2 || isVisibleEnough(page3, 0.25);
+    if (onP2 || onP3) {
+      textReady = true;
+      textUnlocked = true;
+      manualOverride = true;
+      if (manualOverride && !manualLoop) {
+        tickManualText();
+      }
+    }
+  };
+
+  // 根据可视度直接进入手动模式并更新文案，避免 pagechange 未触发时缺失气泡
+  ensureManualByVisibility = () => {
+    const p2Visible = isVisibleEnough(page2, 0.18);
+    const p3Visible = isVisibleEnough(page3, 0.18);
+    if (!p2Visible && !p3Visible) return;
+    manualOverride = true;
+    textReady = true;
+    textUnlocked = true;
+    if (!manualLoop) {
+      tickManualText();
+    }
+  };
 
   function step() {
     if (!running) return;
@@ -1428,10 +1764,27 @@ function clickToggle(iconId, targetId) {
   });
 }
 
-/* === 最后一页绑定：手 ↔ 文字 === */
+/* === 最后一页：点击（手或点击图标）切换 Yiyun 文本 === */
 document.addEventListener('DOMContentLoaded', () => {
-  clickToggle('clickIconFinal', 'finalText');
-  clickToggle('clickIconFinal', 'page7Yiyun');
+  const target = document.getElementById('page7Yiyun');
+  const icon = document.getElementById('clickIconFinal');
+  const handWrap = document.querySelector('#page7 .handflower-wrap');
+  const toggle = () => {
+    if (!target) return;
+    const willShow = !target.classList.contains('show');
+    target.classList.toggle('show', willShow);
+    target.style.opacity = willShow ? '1' : '0';
+    target.style.display = 'block'; // 保持占位，避免切换失效
+  };
+  const bind = el => {
+    if (!el) return;
+    el.addEventListener('click', e => {
+      e.stopPropagation(); // 避免冒泡导致双触发
+      toggle();
+    });
+  };
+  bind(icon);      // 点击提示图标
+  bind(handWrap);  // 整个手区域（含手图）
 });
 
 /* 全局静音/开音量开关 */
@@ -1442,9 +1795,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const videos = Array.from(document.querySelectorAll('video'));
   // 确保视频保持静音，避免自动播放被拦截
   videos.forEach(v => v.muted = true);
-  let muted = false; // 默认开启声音（仅控制音频）
+  let muted = true; // 初始显示静音，点击后开启
 
   function applyMuted() {
+    audioMuted = muted;
     audios.forEach(a => {
       a.muted = muted;
       if (!muted && a.volume === 0) a.volume = 1;
@@ -1458,13 +1812,43 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btn.addEventListener('click', () => {
+    // 第一次点击 = 关声音；再次点击恢复
     muted = !muted;
     applyMuted();
-    if (!muted && kinderShouldPlay) {
-      startKinderAudio(); // 用户点击解锁后再尝试播放
-      tryPlayPendingKinder(); // 尝试触发因策略阻止的播放
-    } else if (muted) {
-      fadeOutKinder(); // 关音时顺便淡出 kinder
+    // 点击喇叭也算用户手势，尝试激活所有音频
+    kickstartAllAudio();
+    if (!muted) {
+      // 重新开声：按当前页规则恢复各自播放
+      playPageAudio(currentPageIndex);
+      requestKinderPlay();
+      ensureSheepPlaybackIfNeeded();
+      ensureNoicePlaybackIfNeeded();
+      // 确保第1页鸟声立即尝试播放（即便还在 sheepblack 阶段）
+      const onPage1 = currentPageIndex === 0 || isVisibleEnough(document.getElementById('page1'), 0.01);
+      if (onPage1) {
+        birdShouldPlay = true;
+        birdPlayPending = false;
+        birdPlaying = false;
+        if (birdAudio) {
+          birdAudio.muted = false;
+          birdAudio.loop = true;
+          birdAudio.volume = birdAudio.volume || 1;
+          birdAudio.currentTime = 0;
+        }
+        startBirdAudio();
+        tryPlayPendingBird();
+      } else {
+        ensureBirdPlaybackIfNeeded();
+      }
+    } else {
+      // 关闭声音：停止并清空播放意愿
+      fadeOutKinder(true);
+      sheepShouldPlay = false;
+      stopSheepAudio();
+      noiceShouldPlay = false;
+      stopNoiceAudio();
+      birdShouldPlay = false;
+      stopBirdAudio();
     }
   });
 
@@ -1477,9 +1861,32 @@ function tryPlayPendingKinder() {
   startKinderAudio();
 }
 ['pointerdown', 'keydown', 'touchstart'].forEach(evt => {
-  window.addEventListener(evt, tryPlayPendingKinder, { passive: true });
+  window.addEventListener(evt, () => {
+    kickstartAllAudio();
+    tryPlayPendingKinder();
+    tryPlayPendingBird();
+    ensureSheepPlaybackIfNeeded();
+    ensureNoicePlaybackIfNeeded();
+    ensureBirdPlaybackIfNeeded();
+    if (!firstInteractionBound) {
+      firstInteractionBound = true;
+      // 首次交互：按当前页规则尝试播放
+      playPageAudio(currentPageIndex);
+      requestKinderPlay();
+      ensureSheepPlaybackIfNeeded();
+      ensureNoicePlaybackIfNeeded();
+      ensureBirdPlaybackIfNeeded();
+    }
+  }, { passive: true });
 });
-window.addEventListener('wheel', tryPlayPendingKinder, { passive: true });
+window.addEventListener('wheel', () => {
+  kickstartAllAudio();
+  tryPlayPendingKinder();
+  tryPlayPendingBird();
+  ensureSheepPlaybackIfNeeded();
+  ensureNoicePlaybackIfNeeded();
+  ensureBirdPlaybackIfNeeded();
+}, { passive: true });
 
 /* 第6页：pole 显隐（按页） */
 (function initPoleOnPage6() {

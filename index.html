@@ -7,7 +7,6 @@
 
   <link href="./css/resets.css?v=7" rel="stylesheet" />
   <link href="./css/variables.css?v=7" rel="stylesheet" />
-  <link href="./css/fonts.css?v=7" rel="stylesheet" />
   <link href="./css/animations.css?v=7" rel="stylesheet" />
   <link href="./css/main.css?v=18" rel="stylesheet" />
 </head>
@@ -29,11 +28,10 @@
                 <img class="eye-layer eye-layer-middle" src="./images/sheepeye.png" alt="Sheep eye">
                 <img class="eye-layer eye-layer-top" src="./images/sheepblack.jpg" alt="Sheep black silhouette">
               </div>
-            <button class="down-arrow" id="toPage2" aria-label="滑到下一页">
-              <span class="arrow-stem"></span>
-              <span class="arrow-head"></span>
-            </button>
-          </div>
+              <div class="click-icon click-pos-bottom-center" id="clickIconPage1">
+                <img src="./images/click.webp" alt="Click 提示">
+              </div>
+            </div>
           </section>
 
           <!-- 第2页：草地 -->
@@ -45,7 +43,6 @@
     </div>
   
 
-            
 
               <div class="flock" id="flock-page1" aria-hidden="true">
                 <div class="sheep" id="sheep1" style="background-image:url('./images/sheep/sheep1.webp')"></div>
@@ -184,6 +181,10 @@
       <img src="./images/building/3.png" alt="building layer 3" class="building-layer">
       <img src="./images/building/4.png" alt="building layer 4" class="building-layer">
     </div>
+
+    <div class="click-icon click-pos-bottom-center is-hidden" id="clickIconPage6">
+      <img src="./images/click.webp" alt="Click">
+    </div>
   </section>
 
   <!-- 第7页：羊轮廓 + 诗句 + 点击出现文字 -->
@@ -220,9 +221,16 @@
 
   <!-- 全局音量开关 -->
   <button class="volume-toggle muted" id="volumeToggle" aria-label="静音" type="button">🔇</button>
+  <button class="down-arrow" id="globalDownArrow" aria-label="滑到下一页" aria-hidden="true" type="button">
+    <span class="arrow-stem"></span>
+    <span class="arrow-head"></span>
+  </button>
 </main>
 
 <audio id="kinderAudio" preload="auto" src="./sound/kinder.mp3"></audio>
+<audio id="sheepAudio" preload="auto" src="./sound/sheep.mp4"></audio>
+<audio id="noiceAudio" preload="auto" src="./sound/noice.mp4"></audio>
+<audio id="birdAudio" preload="auto" src="./sound/bird.mp3"></audio>
 
 
 <script defer src="./script.js?v=16"></script>
