@@ -21,7 +21,7 @@ body {
   height: calc(var(--vh, 1vh) * 100);
   min-height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
-  z-index: 1;
+  z-index: 118;
 }
 .scene {
   position: absolute;
@@ -50,11 +50,6 @@ body {
   background-size: cover;         /* 保持比例 */
   background-position: center bottom; /* 底部区域 */
   background-repeat: no-repeat;
-}
-
-/* ===== 羊群只在 Page1 ===== */
-#page2 {
-  position: relative;
 }
 
 /* 羊群容器（跟随第2页滚动）*/
@@ -132,10 +127,6 @@ body {
   transform: translate(-120%, -125%); /* Wir 单独左移 */
 }
 
-.hero-text {
-  position: fixed;
-}
-
 .hero-text .hero-text-overlay {
   position: absolute;
   inset: 0;
@@ -166,14 +157,6 @@ body {
   z-index: 3600;          /* 高于 privat 掉落，低于 Kinder/文本 */
   transform: translate(-50%, -50%) scale(5);
   display: none;         
-}
-
-/* 第2页 */
-#page2 {
-  position: relative;
-  height: 100vh;
-  overflow: hidden;
-  z-index: 118;
 }
 
 /* 所有页面横向滑动轨道 */
@@ -416,25 +399,6 @@ body {
   animation: sheepScatter 1s ease forwards;
 }
 
-@keyframes sheepScatter {
-  0% {
-    opacity: 0.9;
-    transform: translateX(-8vw) scale(1);
-    filter: blur(0px);
-  }
-  70% {
-    opacity: 0.4;
-    transform: translateX(-20vw) scale(1.2);
-    filter: blur(4px);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-28vw) scale(1.3);
-    filter: blur(6px);
-  }
-}
-
-
 #page1 {
   position: relative;
 }
@@ -502,16 +466,6 @@ body {
   object-position: 42% 50%;
 }
 
-@keyframes eyeMiddleDissolve {
-  from {
-    --cut: 0%;
-    opacity: 1;
-  }
-  to {
-    --cut: 140%;
-    opacity: 0;
-  }
-}
 /* 点击图标 */
 .click-icon {
   position: absolute;
@@ -542,12 +496,6 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-/* ✨ 上下轻浮 keyframes */
-@keyframes clickBounce {
-  0%, 100% { transform: translate(var(--click-translate-x), var(--click-translate-y)); }
-  50% { transform: translate(var(--click-translate-x), calc(var(--click-translate-y) - 8px)); }
 }
 
 /* 第6/7页：autumn 上下半 */
@@ -627,11 +575,6 @@ body.page6-plus #page5 .text-group-left {
 }
 .privat-drop.show {
   animation: privatFall 0.9s ease-out forwards;
-}
-@keyframes privatFall {
-  0%   { transform: translate(-50%, -200vh) scale(1); opacity: 0; }
-  60%  { transform: translate(-50%, 50vh) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, 50vh) scale(1); opacity: 1; }
 }
 
 /* block67 两半式背景（可复用） */
@@ -796,10 +739,6 @@ body.page6-plus #page6 .schild-wrap {
   width: 100%;
   height: auto;
   display: block;
-}
-@keyframes carDrive {
-  0%   { transform: translateX(120vw); }
-  100% { transform: translateX(-120vw); }
 }
 
 /* === 第1页 handhandy（草地手） === */

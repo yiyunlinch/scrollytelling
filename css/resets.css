@@ -5,9 +5,3 @@
 html, body { 
   height: 100%; 
 }
-
-.page { 
-  position: relative; 
-  width: 100%; 
-  min-height: 100vh; 
-}

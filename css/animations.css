@@ -19,4 +19,54 @@
   }
 }
 
+/* Hero sheep outline scatter */
+@keyframes sheepScatter {
+  0% {
+    opacity: 0.9;
+    transform: translateX(-8vw) scale(1);
+    filter: blur(0px);
+  }
+  70% {
+    opacity: 0.4;
+    transform: translateX(-20vw) scale(1.2);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-28vw) scale(1.3);
+    filter: blur(6px);
+  }
+}
+
+/* Eye layer dissolve (page 1) */
+@keyframes eyeMiddleDissolve {
+  from {
+    --cut: 0%;
+    opacity: 1;
+  }
+  to {
+    --cut: 140%;
+    opacity: 0;
+  }
+}
+
+/* Gentle up/down bounce for click hint */
+@keyframes clickBounce {
+  0%, 100% { transform: translate(var(--click-translate-x), var(--click-translate-y)); }
+  50% { transform: translate(var(--click-translate-x), calc(var(--click-translate-y) - 8px)); }
+}
+
+/* Privat sign fall */
+@keyframes privatFall {
+  0%   { transform: translate(-50%, -200vh) scale(1); opacity: 0; }
+  60%  { transform: translate(-50%, 50vh) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, 50vh) scale(1); opacity: 1; }
+}
+
+/* Car loop across the bottom */
+@keyframes carDrive {
+  0%   { transform: translateX(120vw); }
+  100% { transform: translateX(-120vw); }
+}
+
 /* ======================== 第一页缩小移动动画 ======================== */
