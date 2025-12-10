@@ -1,6 +1,6 @@
 :root{
   --fg:#e9edf2;
   --muted:#9aa0a6;
-  --accent-blue:#ff4df3;   /* [第1页] 向下箭头的蓝色 */
-  --title-orange:#ff9a2f;  /* [第3页] 橘黄色标题 */
+  --accent-blue:#ff4df3;   /* Page1 down-arrow blue */
+  --title-orange:#ff9a2f;  /* Page3 orange title */
 }

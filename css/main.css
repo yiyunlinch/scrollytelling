@@ -1,9 +1,9 @@
-/* 全局基础 */
+/* Global base styles */
 body {
   margin: 0;
   background: #000;
   overflow-x: hidden;
-  overflow-y: auto; /* 允许竖向滚动，横向仍隐藏 */
+  overflow-y: auto; /* Allow vertical scroll, keep horizontal hidden */
   font-size: 20px;
 }
 
@@ -46,26 +46,26 @@ body {
   transform: scale(1);
 }
 .grass {
-  background-image: url('../images/Maxi/Maxi5.jpg'); /* 改为 Maxi5 放大后下半张 */
-  background-size: cover;         /* 保持比例 */
-  background-position: center bottom; /* 底部区域 */
+  background-image: url('../images/Maxi/Maxi5.jpg'); /* Use Maxi5, enlarged lower half */
+  background-size: cover;         /* Preserve aspect */
+  background-position: center bottom; /* Focus lower area */
   background-repeat: no-repeat;
 }
 
-/* 羊群容器（跟随第2页滚动）*/
+/* Flock container (follows page 2 scroll) */
 #flock-page1 {
-  position: absolute;  /* 相对第2页，随页面移动 */
+  position: absolute;  /* Relative to page2 */
   inset: 0;
   pointer-events: none;
-  z-index: 2000; /* 确保在背景图之上 */
+  z-index: 2000; /* Above the background */
 }
 
-/* 小羊样式 */
+/* Sheep styles */
 #flock-page1 .sheep {
   position: absolute;
   display: block;
   z-index: 1;
-  width: clamp(288px, 44.8vw, 640px); /* 缩小约 20% */
+  width: clamp(288px, 44.8vw, 640px); /* About 20% smaller */
   aspect-ratio: 1 / 1;
   background-size: contain;
   background-repeat: no-repeat;
@@ -76,23 +76,23 @@ body {
 
 
 
-/* hero 羊 */
+/* Hero sheep */
 #sheephero-wrapper {
   position: fixed;
   inset: 0;
-  left: 50%;                  /* 居中 */
-  top: 20%;                   /* 距视口顶部 20% */
+  left: 50%;                  /* Centered */
+  top: 20%;                   /* 20% from viewport top */
   pointer-events: none;
   z-index: 100000;
 }
 
 .sheephero {
   position: fixed;
-  left: 50%;                  /* 居中 */
-  top: 20%;                   /* 距视口顶部 20% */
+  left: 50%;                  /* Centered */
+  top: 20%;                   /* 20% from viewport top */
   transform: translate(-50%, -50%) scale(1);
 
-  width: clamp(360px, 48vw, 800px);  /* 响应式大小（你可调） */
+  width: clamp(360px, 48vw, 800px);  /* Responsive size (tweakable) */
   aspect-ratio: 1/1;
   height: auto;
   object-fit: contain;
@@ -101,20 +101,20 @@ body {
   z-index: 99999;
   pointer-events: none;
 
-  opacity: 0;                 /* 初始隐藏（避免第3页闪现） */
-  transition: opacity 0.4s ease;  /* 进入时柔和 */
+  opacity: 0;                 /* Hidden initially (avoid flash on page3) */
+  transition: opacity 0.4s ease;  /* Soft entry */
 }
 
 .hero-text {
   position: fixed;
   left: 50%;
   top: 20%;
-  transform: translate(60%, -125%); /* 向右偏移，保持原先大小 */
-  width: clamp(234px, 34vw, 416px); /* 放大约 1.3 倍 */
+  transform: translate(60%, -125%); /* Offset right, keep size */
+  width: clamp(234px, 34vw, 416px); /* ~1.3x bigger */
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.35s ease;
-  z-index: 100000; /* 紧跟 hero */
+  z-index: 100000; /* Just above hero */
 }
 
 .hero-text img {
@@ -124,7 +124,7 @@ body {
 }
 
 .hero-text.hero-text-wir {
-  transform: translate(-120%, -125%); /* Wir 单独左移 */
+  transform: translate(-120%, -125%); /* Shift left for Wir */
 }
 
 .hero-text .hero-text-overlay {
@@ -136,9 +136,9 @@ body {
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
-  transform: translate(120%, 0); /* 更大幅度向右平移 */
+  transform: translate(120%, 0); /* Larger right offset */
   display: block;
-  z-index: 2; /* 覆盖主图 */
+  z-index: 2; /* Above the main image */
 }
 
 .hero-text .hero-text-overlay.show {
@@ -146,26 +146,26 @@ body {
 }
 
 
-/* 挖土机（固定层） */
+/* Digger (fixed layer) */
 #digger-fixed {
-  position: absolute;       /* 锚定在第5页内部 */
-  top: 50%;                 /* 页面中线 */
-  left: 120%;               /* 初始在屏幕右侧外 */
+  position: absolute;       /* Anchored inside page 5 */
+  top: 50%;                 /* Page midline */
+  left: 120%;               /* Start off-screen to the right */
   width: 180px;
   height: 100px;
   pointer-events: none;
-  z-index: 3600;          /* 高于 privat 掉落，低于 Kinder/文本 */
+  z-index: 3600;          /* Above privat drop, below Kinder/text */
   transform: translate(-50%, -50%) scale(5);
   display: none;         
 }
 
-/* 所有页面横向滑动轨道 */
+/* Horizontal track container */
 .cover-transition-wrapper {
   position: relative;
   width: 100vw;
-  height: auto;        /* 允许内容自然撑开 */
-  overflow: visible;   /* 正常竖向流动 */
-  z-index: 4000; /* 确保第1/2页层级高于后续页背景 */
+  height: auto;        /* Let content define height */
+  overflow: visible;   /* Normal vertical flow */
+  z-index: 4000; /* Keep pages 1/2 above later backgrounds */
 }
 .cover-h-row,
 .cover-h-sticky {
@@ -176,21 +176,21 @@ body {
 }
 .cover-h-track {
   display: flex;
-  flex-direction: column;        /* 改为竖向堆叠 */
+  flex-direction: column;        /* Stack vertically */
   width: 100%;
-  height: auto;                  /* 自然高度 */
+  height: auto;                  /* Natural height */
   will-change: auto;
   transition: none;
   transform: none !important;
 }
 .cover-h-track .page {
-  flex: 0 0 100vh;               /* 每屏占满视口高度 */
+  flex: 0 0 100vh;               /* Each page fills the viewport height */
   width: 100vw;
   position: relative;
   transform: translateZ(0);
 }
 
-/* 向下箭头：第1-6页（Maxi5 露出后才在第1页出现） */
+/* Down arrow: pages 1-6 (only appears on page1 after Maxi5 is revealed) */
 .down-arrow {
   position: fixed;
   left: 50%;
@@ -233,9 +233,9 @@ body {
   transform: translateY(6px);
 }
 
-/* 第2页 */
+/* Page 2 */
 
-/* 背景容器（纯铺图，无过渡） */
+/* Background containers (static fill, no transition) */
 .Besuche1,
 .Besuche2 {
   position: absolute;
@@ -244,16 +244,16 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
-  opacity: 1 !important;        /* 始终不透明 */
+  opacity: 1 !important;        /* Always opaque */
   transition: none !important;
 }
 
-/* 对应背景图 */
+/* Background images */
 .Besuche1 { background-image: url('../images/Maxi/Maxi2.jpg'); }
 .Besuche2 { background-image: url('../images/Maxi/Maxi3.jpg'); }
 
 
-/* 第5页 */
+/* Page 5 */
 #page5 { position: relative; }
 .backgroundtop {
   position: absolute;
@@ -286,7 +286,7 @@ body {
   width: 30vw;
   text-align: right;
   z-index: 20;
-  font-size: 8rem; /* 放大至原来的4倍 */
+  font-size: 8rem; /* 4x larger than original */
   line-height: 1.5;
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
   transition: transform 1.2s cubic-bezier(.7,0,.3,1);
@@ -298,21 +298,21 @@ body {
   width: 30vw;
   text-align: left;
   z-index: 20;
-  font-size: 8rem; /* 放大至原来的4倍 */
+  font-size: 8rem; /* 4x larger than original */
   line-height: 1.5;
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
   transition: transform 1.2s cubic-bezier(.7,0,.3,1);
 }
 
 #page7 .text-group-right {
-  bottom: 42%;               /* 进一步上移 */
-  right: 55%;                /* 向左移 */
+  bottom: 42%;               /* Further up */
+  right: 55%;                /* Shift left */
   width: clamp(160px, 28vw, 360px);
   font-size: inherit;
   opacity: 0;
   transition: opacity 0.35s ease;
-  z-index: 5200;             /* 高于其他覆盖层 */
-  pointer-events: none;       /* 始终穿透，避免挡住手区域 */
+  z-index: 5200;             /* Above other overlays */
+  pointer-events: none;       /* Always pass through; keep hand clickable */
 }
 
 #page7 .page7-yiyun-img {
@@ -323,38 +323,38 @@ body {
 
 #page7 #page7Yiyun.show {
   opacity: 1;
-  pointer-events: none;       /* 保持穿透，点击依然交给手区域 */
+  pointer-events: none;       /* Stay passthrough so clicks reach the hand area */
 }
 
-/* 第5页文本层级提升 */
+/* Raise text layer on page 5 */
 #page5 .text-group-left {
-  z-index: 3100; /* 高于 digger/privat */
+  z-index: 3100; /* Above digger/privat */
 }
 .text {
   margin-top: 1em;
   margin-bottom: 1em;
-  color: #ff9800 !important; /* 橘色 */
+  color: #ff9800 !important; /* Orange */
   text-shadow: 0 1px 4px rgba(0,0,0,.25);
 }
 
 #page2 .title-fixed .title {
-  color: #ff9800; /* 橘色 */
+  color: #ff9800; /* Orange */
 }
 
-/* 将第6页文案固定到顶部 */
+/* Pin page6 copy to the top */
 #page6 .text-group-left {
   top: 2%;
   bottom: auto;
 }
 
-/* 第6页 */
+/* Page 6 */
 #page3 { position: relative; }
 .page3-title-overlay {
   position: absolute;
   top: 8%;
   left: 50%;
   transform: translate(-50%, -20%);
-  z-index: 120000; /* 高于 hero 羊等前景，保证可见 */
+  z-index: 120000; /* Above hero and foreground to stay visible */
   pointer-events: none;
 }
 .page3-title-overlay img {
@@ -380,7 +380,7 @@ body {
   transition: background 1s ease-out;
 }
 
-/* 第4页：眼睛交互块 */
+/* Page 4: eye interaction block */
 .sheep-outline {
   position: absolute;
   inset: 0;
@@ -391,7 +391,7 @@ body {
   pointer-events: none;
   opacity: 0.9;
 
-  /* ✅ 缩小 + 左移 */
+  /* Shrink + shift left */
   transform-origin: left center;
   transform: translateX(-8vw) scale(1);
 }
@@ -408,8 +408,8 @@ body {
   width: 100%;
   height: 100%;
   background-image: url('../images/Maxi/Maxi5.jpg');
-  background-size: cover;       /* 保持比例，不再拉伸 */
-  background-position: center top; /* 取上半区域 */
+  background-size: cover;       /* Preserve ratio, no stretch */
+  background-position: center top; /* Focus upper area */
   background-repeat: no-repeat;
 }
 .eye-interaction-container.show-maxi {
@@ -432,7 +432,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 42% 50%; /* 整体略向左移 */
+  object-position: 42% 50%; /* Slight left shift */
   pointer-events: none;
 }
 .eye-layer-base {
@@ -462,11 +462,11 @@ body {
 .eye-layer-top {
   z-index: 3;
   opacity: 1;
-  object-fit: cover;          /* 与眼层保持一致，避免跳变 */
+  object-fit: cover;          /* Match eye layer, avoid jumps */
   object-position: 42% 50%;
 }
 
-/* 点击图标 */
+/* Click icon */
 .click-icon {
   position: absolute;
   --click-translate-x: 0;
@@ -481,7 +481,7 @@ body {
   opacity: 0.8;
   pointer-events: auto;
 
-  /* ✨ 轻微上下浮动动画 */
+  /* Subtle up/down float */
   animation: clickBounce 1.6s ease-in-out infinite;
 }
 
@@ -498,22 +498,22 @@ body {
   object-fit: contain;
 }
 
-/* 第6/7页：autumn 上下半 */
+/* Pages 6/7: autumn halves */
 #page3 .backgroundtop {
   background-image: url('../images/autumn.jpg') !important;
-  background-size: cover !important;           /* 等比放大铺满，避免左右留黑边 */
-  background-position: center top !important;  /* 对齐上半区 */
+  background-size: cover !important;           /* Scale to fill, avoid side gaps */
+  background-position: center top !important;  /* Align upper half */
   background-repeat: no-repeat !important;
 }
 #page4 .backgroundbottom {
   background-image: url('../images/autumn.jpg') !important;
-  background-size: cover !important;             /* 同步放大，铺满宽度 */
-  background-position: center bottom !important; /* 取下半区，与上页拼接 */
+  background-size: cover !important;             /* Fill width consistently */
+  background-position: center bottom !important; /* Lower half to stitch with above */
   background-repeat: no-repeat !important;
 }
 
 
-/* 第8/9页 */
+/* Pages 8/9 */
 #page5, #page6 {
   position: relative;
   width: 100%;
@@ -521,7 +521,7 @@ body {
   overflow: hidden;
 }
 #page5 {
-  overflow: visible; /* 允许 Kinder/文本和盖楼上移不被截断 */
+  overflow: visible; /* Allow Kinder/text/building to rise without clipping */
   z-index: 2500;
 }
 #page6 {
@@ -529,18 +529,18 @@ body {
 }
 #page5 .backgroundtop {
   background-image: url('../images/baustelle.jpg') !important;
-  background-size: 100% 200% !important;      /* 拉伸高度到2倍，仅显示上半部 */
-  background-position: center 0% !important;  /* 贴顶取上半 */
+  background-size: 100% 200% !important;      /* Stretch height to 2x, show upper half */
+  background-position: center 0% !important;  /* Anchor to top half */
   background-repeat: no-repeat !important;
 }
 #page6 .backgroundbottom {
   background-image: url('../images/baustelle.jpg') !important;
-  background-size: 100% 200% !important;       /* 拉伸高度到2倍，仅显示下半部 */
-  background-position: center 100% !important; /* 贴底取下半 */
+  background-size: 100% 200% !important;       /* Stretch height to 2x, show lower half */
+  background-position: center 100% !important; /* Anchor to bottom half */
   background-repeat: no-repeat !important;
 }
 
-/* 进入第6页及以后强制隐藏第5页的 Kinder/对白/文本 */
+/* Hide page5 Kinder/dialog/text once in page6+ */
 body.page6-plus #page5 .kinder-wrap,
 body.page6-plus #page5 #dialogOverlay,
 body.page6-plus #page5 .text-group-left {
@@ -548,7 +548,7 @@ body.page6-plus #page5 .text-group-left {
   pointer-events: none !important;
 }
 
-/* fallback 防止没inline style时塌掉 */
+/* Fallback to prevent collapse if inline style is missing */
 #page5 .backgroundtop,
 #page6 .backgroundbottom {
   position: absolute;
@@ -558,18 +558,18 @@ body.page6-plus #page5 .text-group-left {
   background-repeat: no-repeat;
 }
 
-/* Page6 privat 掉落 */
+/* Page6 privat drop */
 .privat-drop {
-  position: fixed; /* 脱离局部 stacking，确保在页面层级之上 */
+  position: fixed; /* Leave local stacking to sit above page layers */
   left: 50%;
   top: 0;
-  transform: translate(-50%, -200vh) scale(1); /* 从视窗上方远处开始 */
+  transform: translate(-50%, -200vh) scale(1); /* Start far above viewport */
   opacity: 0;
   pointer-events: none;
-  z-index: 1400; /* 低于 digger/Kinder 文本 */
+  z-index: 1400; /* Below digger/Kinder text */
 }
 .privat-drop .privat-img {
-  width: 560px; /* 放大一倍 */
+  width: 560px; /* Scaled up */
   height: auto;
   display: block;
 }
@@ -577,7 +577,7 @@ body.page6-plus #page5 .text-group-left {
   animation: privatFall 0.9s ease-out forwards;
 }
 
-/* block67 两半式背景（可复用） */
+/* block67 split background (reusable) */
 .block67-top .backgroundtop {
   position: absolute;
   inset: 0;
@@ -597,25 +597,25 @@ body.page6-plus #page5 .text-group-left {
   z-index: 0;
 }
 
-/* 这个容器是整张图的运动空间（参考底边） */
+/* Container defines movement bounds relative to bottom */
 .kinder-wrap {
   position: absolute;
   left: 40%;
-  bottom: 0%;               /* 7页的底部*/
+  bottom: 0%;               /* Bottom of page 7 */
   transform: translateX(-50%);
   pointer-events: none;
-  z-index: 3800; /* 高于 digger，低于对白层 */
+  z-index: 3800; /* Above digger, below dialog */
 
 }
 
-/* 真正的 Kinder 图本身 */
+/* Actual Kinder image */
 .kinder-img {
   display: block;
-  width: min(100vw, 800px); /* 你可以调大小 */
+  width: min(100vw, 800px); /* Adjustable size */
   max-width: 800px;
   height: auto;
 
-  /* 初始状态：完全在第7页下面，所以我们先把它往下藏 */
+  /* Start hidden below page7 */
   transform: translateY(100%);
   will-change: transform;
 }
@@ -627,25 +627,25 @@ body.page6-plus #page5 .text-group-left {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 4000; /* 高于 Kinder/文本 */
+  z-index: 4000; /* Above Kinder/text */
 }
 
 .dialog-img {
   position: absolute;
   opacity: 0;
   transition: opacity 0.6s ease;
-  max-width: 14vw; /* 缩小一半 */
+  max-width: 14vw; /* Half size */
   height: auto;
 }
 
 #schauLeft {
   left: 2%;
-  top: 35%; /* 下移 */
+  top: 35%; /* Lowered */
 }
 
 #schauRight {
-  right: 20%; /* 向右回一些 */
-  top: 35%; /* 下移 */
+  right: 20%; /* Nudged right */
+  top: 35%; /* Lowered */
 
   
 }
@@ -654,12 +654,12 @@ body.page6-plus #page5 .text-group-left {
   position: absolute;
   top: 4%;
   right: 4%;
-  width: clamp(156px, 31vw, 351px); /* 进一步放大约 1.3 倍 */
+  width: clamp(156px, 31vw, 351px); /* About 1.3x larger */
   opacity: 0;
   transform: translateY(-6px);
   transition: opacity 0.35s ease, transform 0.35s ease;
   pointer-events: none;
-  z-index: 3600; /* 高于建筑层 */
+  z-index: 3600; /* Above building layers */
 }
 
 #page6 .schild-wrap img {
@@ -677,12 +677,12 @@ body.page6-plus #page6 .schild-wrap {
   position: absolute;
   top: 38%;
   left: 35%;
-  transform: translate(-50%, -50%); /* 向左平移 */
-  width: clamp(182px, 36vw, 338px); /* 放大约 1.3 倍 */
+  transform: translate(-50%, -50%); /* Shift left */
+  width: clamp(182px, 36vw, 338px); /* About 1.3x larger */
   opacity: 0;
   transition: opacity 0.35s ease;
   pointer-events: none;
-  z-index: 3700; /* 高于建筑层 */
+  z-index: 3700; /* Above building layers */
 }
 
 #page6 .nur-overlay img {
@@ -704,7 +704,7 @@ body.page6-plus #page6 .schild-wrap {
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  z-index: 2500; /* 高于背景与 privat，低于 Kinder/对白 */
+  z-index: 2500; /* Above background and privat, below Kinder/dialog */
 }
 .house-video-wrap.visible {
   opacity: 1;
@@ -713,7 +713,7 @@ body.page6-plus #page6 .schild-wrap {
   position: absolute;
   top: -10%;
   left: 50%;
-  transform: translate(-50%, 10%); /* 对应新的 top 位置 */
+  transform: translate(-50%, 10%); /* Match new top offset */
   max-width: 45vw;
   width: 45vw;
   max-height: 70vh;
@@ -724,16 +724,16 @@ body.page6-plus #page6 .schild-wrap {
   pointer-events: none;
 }
 
-/* 第6页底部车辆（往返左右行驶） */
+/* Page6 bottom car (loops left-right) */
 .car-wrap {
   position: absolute;
   left: 0;
   bottom: -10%;
   width: 960px;
   height: auto;
-  z-index: 2600; /* 需高于 building 层，仍低于 Kinder/文本 */
+  z-index: 2600; /* Above building, below Kinder/text */
   pointer-events: none;
-  animation: carDrive 14s linear infinite; /* 右->左，循环后重置到右侧再出现 */
+  animation: carDrive 14s linear infinite; /* Right-to-left loop */
 }
 .car-video {
   width: 100%;
@@ -741,7 +741,7 @@ body.page6-plus #page6 .schild-wrap {
   display: block;
 }
 
-/* === 第1页 handhandy（草地手） === */
+/* === Page1 handhandy (grass hand) === */
 #page2 .handhandy-wrap {
   position: absolute;
   bottom: 70%;
@@ -764,12 +764,12 @@ body.page6-plus #page6 .schild-wrap {
   opacity: 1;
 }
 
-/* 手臂草动画（第6页） */
+/* Hand-with-grass animation (page 6) */
 #page3 .hand-wrap {
   position: absolute;
-  bottom: 50%;  /* 下移到页面中部位置 */
+  bottom: 50%;  /* Move toward middle of page */
   left: 100%;
-  transform: translateY(100%);  /* 如果太低就改 80% 或 60% */
+  transform: translateY(100%);  /* Adjust to 80%/60% if too low */
   z-index: 1000;
   overflow: visible;
 }
@@ -791,7 +791,7 @@ body.page6-plus #page6 .schild-wrap {
 
 
 
-/* ===== 最后一页 ===== */
+/* ===== Final page ===== */
 #page7 {
   background: #000;
   position: relative;
@@ -799,7 +799,7 @@ body.page6-plus #page6 .schild-wrap {
   overflow: hidden;
 }
 
-/* 羊全屏 */
+/* Sheep full-screen */
 .sheep-outline-base {
 
   position: absolute;
@@ -811,13 +811,13 @@ body.page6-plus #page6 .schild-wrap {
   pointer-events: none;
   opacity: 0.9;
 
-  /* ✅ 缩小 + 左移 */
+  /* Shrink + shift left */
   transform-origin: left center;
   transform: translateX(-8vw) scale(0.7);
 }
 
 
-/* 点击出现的文字 */
+/* Click-to-reveal text */
 .final-text {
   position: absolute;
   left: 30%;
@@ -832,21 +832,21 @@ body.page6-plus #page6 .schild-wrap {
   transition: opacity .6s ease;
 }
 
-/* 最后一页：点击出现文字的显隐类 */
+/* Final page: visibility class for click text */
 .final-text.show {
   opacity: 1;
 }
 
 #page7 .eimal-overlay {
   position: absolute;
-  top: 30%; /* 上移 */
+  top: 30%; /* Move up */
   left: 60%;
   transform: translate(-50%, -50%);
   width: clamp(140px, 28vw, 320px);
   opacity: 0;
   transition: opacity 0.35s ease;
   pointer-events: none;
-  z-index: 5000; /* 高于背景线条等 */
+  z-index: 5000; /* Above background strokes, etc. */
 }
 
 #page7 .eimal-overlay img {
@@ -877,7 +877,7 @@ body.page6-plus #page6 .schild-wrap {
 
 
 
-/* === 第6页 pole（右下，从右侧滑入）=== */
+/* === Page6 pole (bottom-right, slides in from right) === */
 #page3 .pole-wrap {
   position: absolute;
   right: 0;
@@ -886,69 +886,69 @@ body.page6-plus #page6 .schild-wrap {
   overflow: visible;
 }
 #page3 .pole-img {
-  width: 240px;             /* 你可调 */
+  width: 240px;             /* Adjustable */
   height: auto;
   transform-origin: bottom right;
-  transform: translateX(0) scale(2); /* 起点：画面右外（结合 visible 的 -100% ）*/
+  transform: translateX(0) scale(2); /* Starts outside right edge (pairs with visible -100%) */
   transition: transform 1s ease-out, opacity 0.5s ease-out;
   opacity: 0;
 }
 #page3 .pole-img.visible {
-  transform: translateX(0%) scale(2); /* 向内滑入 */
+  transform: translateX(0%) scale(2); /* Slide inward */
   opacity: 1;
 }
 
-/* === 第7页 pol1（左下侧滑入）=== */
+/* === Page7 pol1 (bottom-left slide-in) === */
 #page4 .pol1-wrap {
   position: absolute;
-  right: 12%;               /* 终点向左移，调大数值则更靠左 */
-  bottom: -20%;             /* 上移 */
-  z-index: 2600;            /* 高于第5页背景层 */
+  right: 12%;               /* Higher value moves further left */
+  bottom: -20%;             /* Raised upward */
+  z-index: 2600;            /* Above page5 background */
   overflow: visible;
 }
 #page4 .pol1-img {
-  width: 340px;             /* 你可调 */
+  width: 340px;             /* Adjustable */
   height: auto;
   transform-origin: bottom left;
-  transform: translateX(-140%) scaleX(-1) scale(2.4);  /* 更靠左起点，往右滑入 */
+  transform: translateX(-140%) scaleX(-1) scale(2.4);  /* Further left start, slide right */
   transition: transform 1s ease-out;
-  opacity: 1; /* 不再通过透明度控制，避免向左离开时闪隐 */
+  opacity: 1; /* No opacity control to avoid flicker when exiting left */
 }
 #page4 .pol1-img.visible {
-  transform: translateX(-55%) scaleX(-1) scale(2.4); /* 终点左移，可微调数值 */
+  transform: translateX(-55%) scaleX(-1) scale(2.4); /* End position, tweak as needed */
 }
 
 
 
 
-/* 最后一页 handflower 位置 */
+/* Final page handflower position */
 #page7 .handflower-wrap {
   position: absolute;
   right: 0;
   bottom: clamp(10%, 14vh, 18%);
   z-index: 2000;
   pointer-events: auto;
-  width: clamp(320px, 48vw, 720px);   /* 提升可点击区域 */
-  height: clamp(320px, 42vh, 560px);  /* 提升可点击区域 */
+  width: clamp(320px, 48vw, 720px);   /* Larger tap target */
+  height: clamp(320px, 42vh, 560px);  /* Larger tap target */
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   padding: clamp(16px, 2vw, 32px);
 }
 
-/* 初始：藏在右边（正方向 = 容器外） */
+/* Initial: hidden to the right (positive direction = outside container) */
 #page7 .last-handflower {
   width: clamp(140px, 22vw, 240px);
   transform-origin: bottom right;
-  transform: translateX(32%) scale(1.6); /* 更靠右起点 */
+  transform: translateX(32%) scale(1.6); /* Further right start */
   opacity: 0;
   transition: transform .8s ease-out, opacity .6s ease-out;
   pointer-events: auto;
 }
 
-/* 出现：滑回到画面 */
+/* Visible: slide back into view */
 #page7 .last-handflower.visible {
-  transform: translateX(32%) scale(1.6); /* ✅ 回到原位 */
+  transform: translateX(32%) scale(1.6); /* Back to position */
   opacity: 1;
 }
 
@@ -1029,12 +1029,12 @@ body.page6-plus #page6 .schild-wrap {
   border-color: #ff8f8f;
 }
 
-/* 第1页标题 Hier war ich einmal */
+/* Page1 title: Hier war ich einmal */
 .title-fixed {
   position: absolute;
   top: 15%;
   left: 10%;
-  z-index: 2000; /* 高于羊群 */
+  z-index: 2000; /* Above the flock */
 }
 
 .title-fixed .title {

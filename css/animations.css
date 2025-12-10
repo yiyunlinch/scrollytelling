@@ -1,12 +1,12 @@
-/* ======================== 动画定义 ======================== */
+/* ======================== Animations ======================== */
 
-/* 向下箭头弹跳 */
+/* Down arrow bounce */
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(6px); }
 }
 
-/* 第2页标题从底部滑入 */
+/* Page2 title slide up from bottom */
 @keyframes p2-title-up {
   from {
     transform: translate(-50%, 120%);
@@ -69,4 +69,4 @@
   100% { transform: translateX(-120vw); }
 }
 
-/* ======================== 第一页缩小移动动画 ======================== */
+/* ======================== Page1 scale/move animation ======================== */

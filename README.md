@@ -61,7 +61,7 @@ Der gesamte Entwicklungsprozess dauerte ca. 3 Monate in Wochenend und führte sc
 
 Allgemein
 
-Die Logik des verschwindenden Schafs wird ab Seite 4 ausgelöst. Wenn jedoch sehr schnell nach unten gescrollt wird, kann das Schaf auch auf Seite 5, 6 oder 7 noch sichtbar sein.
+Die Logik für das Verschwinden des Schafs wird ab Seite 4 von rechts ausgelöst. Wenn jedoch sehr schnell nach unten gescrollt wird, kann das Schaf trotzdem noch auf Seite 5, 6 oder 7 sichtbar sein.
 
 Seite 1
 
