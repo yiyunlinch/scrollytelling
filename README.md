@@ -8,10 +8,8 @@ Sie ist ausschließlich für die Webansicht konzipiert.
 Mockup-Vergleich
 
 Retrospektive Darstellung: https://preview.shorthand.com/6AGye9WPh2N9sGaH
-
 Chronologische Darstellung: https://preview.shorthand.com/DJtHExqM2XXoq6Mn
-
-➡️ Nach dem Vergleich habe ich mich für eine chronologische Erzählstruktur entschieden.
+Nach dem Vergleich habe ich mich für eine chronologische Erzählstruktur entschieden.
 
 ## Entwicklungsphasen
 v1 – Vertikales Scrolling (von unten nach oben)
@@ -31,8 +29,7 @@ Die finale Version kehrte zu einem reinen vertikalen Layout zurück. Auf der ers
 1) Unklare Logik beim „Zurück nach oben“-Scrollen
 Zu Beginn war das Rückscroll-Verhalten nicht eindeutig definiert. Dadurch kam es beim Scrollen zum Ausgangspunkt zu Zustandsfehlern — insbesondere wegen der Maskierungen und Ebenen der ersten Seite.
 Lösung: Neudefinition des Rücksprungs, Vereinheitlichung der Zustände, damit der Ausgangspunkt stabil wiederhergestellt wird.
-![Nach dem Aktualisieren der Seite darf das Schaf beim Hochscrollen nicht die Maskenseite überdecken]\
-(./images/readme/sheepontop.png)
+![Nach dem Aktualisieren der Seite darf das Schaf beim Hochscrollen nicht die Maskenseite überdecken](images/readme/sheepontop.png)
 
 2) Uneinheitliche Typografie → komplette Handschrift
 Mehrere Schriftarten störten die visuelle Kohärenz sowie die erzählerische Stimmung.
